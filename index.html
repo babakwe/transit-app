@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Transit">
+<meta name="theme-color" content="#080810">
+<title>Transit · Kwasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --surface: #11111c;
+  --surface2: #181826;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
+  --text: #eeeef5;
+  --muted: #52526e;
+  --accent: #00e5b0;
+  --warn: #f5a623;
+  --danger: #ff4455;
+  --q50:  #00b4ff;
+  --bx:   #ff6b35;
+  --bx12: #c084fc;
+  --bx23: #c084fc;
+  --q65:  #ffd600;
+  --q25:  #ffd600;
+  --bx5:  #4ade80;
+  --q44:  #fb923c;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow-x:hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,176,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,176,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none; z-index:0;
+}
+.app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding-bottom:40px; }
+header {
+  padding: 56px 20px 16px;
+  display: flex; justify-content:space-between; align-items:flex-end;
+}
+.h-left h1 {
+  font-family:'Syne',sans-serif; font-size:30px; font-weight:800;
+  letter-spacing:-0.5px; line-height:1;
+}
+.h-left .sub { font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-top:3px; }
+.clock-box { text-align:right; }
+.clock-box .time { font-size:14px; color:var(--accent); letter-spacing:0.04em; }
+.clock-box .date { font-size:10px; color:var(--muted); display:block; margin-top:2px; }
+.status {
+  margin: 0 20px 20px;
+  padding: 9px 14px;
+  background: rgba(0,229,176,0.05);
+  border: 1px solid rgba(0,229,176,0.12);
+  border-radius: 8px;
+  display:flex; align-items:center; gap:9px;
+  font-size:11px; color:var(--accent);
+}
+.dot { width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.sec {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:600;
+  letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--muted); padding:0 20px; margin-bottom:12px;
+}
+.bubbles { padding: 0 20px; margin-bottom:28px; }
+.bubble-grid { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+.bwrap { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
+.bubble {
+  border-radius:50%; border:2px solid;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.bubble::before {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.13), transparent 55%);
+}
+.bubble:active { transform:scale(0.88); }
+.sz1 { width:92px; height:92px; }
+.sz2 { width:76px; height:76px; }
+.sz3 { width:64px; height:64px; }
+.sz4 { width:54px; height:54px; }
+.b-name { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; line-height:1; }
+.sz1 .b-name { font-size:17px; }
+.sz4 .b-name { font-size:12px; }
+.b-mins { font-size:11px; margin-top:2px; }
+.sz4 .b-mins { font-size:9px; }
+.b-label { font-size:9px; color:var(--muted); text-align:center; max-width:72px; letter-spacing:0.02em; }
+.urgent-ring { animation: uring 1.1s infinite; }
+@keyframes uring { 0%,100%{box-shadow:0 0 0 0 rgba(255,68,85,0.55)} 50%{box-shadow:0 0 0 9px rgba(255,68,85,0)} }
+.cards { padding:0 20px; }
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:15px; margin-bottom:10px;
+}
+.card.live { border-color: rgba(0,229,176,0.15); }
+.card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; }
+.rbadge { display:flex; align-items:center; gap:7px; }
+.rdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.rname { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
+.rdir { font-size:10px; color:var(--muted); margin-left:2px; }
+.pill { font-size:10px; padding:4px 9px; border-radius:20px; font-weight:500; white-space:nowrap; }
+.pill-ok     { background:rgba(0,229,176,0.1);  color:var(--accent); }
+.pill-warn   { background:rgba(245,166,35,0.1); color:var(--warn); }
+.pill-urgent { background:rgba(255,68,85,0.12); color:var(--danger); }
+.pill-muted  { background:rgba(82,82,110,0.15); color:var(--muted); }
+.chips { display:flex; gap:7px; flex-wrap:wrap; }
+.chip {
+  background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  border-radius:8px; padding:6px 11px;
+}
+.chip .cm { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; display:block; line-height:1.1; }
+.chip .cl { font-size:9px; color:var(--muted); letter-spacing:0.05em; }
+.chip.c-live .cm { color:var(--accent); }
+.chip.c-soon .cm { color:var(--warn); }
+.card-foot { margin-top:9px; }
+.walk-note { font-size:10px; color:var(--muted); margin-top:3px; }
+.walk-note b { color:rgba(238,238,245,0.6); font-weight:400; }
+.foot { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 0; }
+.foot-ts { font-size:10px; color:var(--muted); }
+.refresh-btn {
+  font-family:'DM Mono',monospace; font-size:11px;
+  color:var(--accent); background:none;
+  border:1px solid rgba(0,229,176,0.18); border-radius:6px;
+  padding:6px 12px; cursor:pointer;
+}
+.mom-btn {
+  margin:0 20px 20px;
+  padding:12px 16px;
+  background:rgba(192,132,252,0.07); border:1px solid rgba(192,132,252,0.18);
+  border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:10px;
+  font-size:12px; color:#c084fc;
+}
+.mom-card {
+  margin:0 20px 20px; padding:18px;
+  background:var(--surface2); border:1px solid rgba(192,132,252,0.2);
+  border-radius:14px; display:none;
+}
+.mom-card.show { display:block; }
+.mom-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#c084fc; margin-bottom:12px; }
+.mom-route { font-size:13px; line-height:1.9; }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="h-left">
+    <h1>Transit</h1>
+    <div class="sub">140 ALCOTT PL · CO-OP CITY</div>
+  </div>
+  <div class="clock-box">
+    <span class="time" id="clk"></span>
+    <span class="date" id="cld"></span>
+  </div>
+</header>
+<div class="status">
+  <div class="dot"></div>
+  <span id="status-msg">Loading live arrivals…</span>
+</div>
+<div class="mom-btn" onclick="toggleMom()">
+  <span>👩🏾</span> Mom's commute · Alcott → Medco
+</div>
+<div class="mom-card" id="mom-card">
+  <div class="mom-title">MEDCO ENTERPRISES · 3530 WAYNE AVE</div>
+  <div class="mom-route" id="mom-route">Loading best route…</div>
+</div>
+<div class="sec">Your Lines</div>
+<div class="bubbles"><div class="bubble-grid" id="bubble-grid"></div></div>
+<div class="sec">Leave When Ready</div>
+<div class="cards" id="cards"></div>
+<div class="foot">
+  <span class="foot-ts" id="ts">–</span>
+  <button class="refresh-btn" onclick="fetchAll()">↻ Refresh</button>
+</div>
+</div>
+<script>
+const ROUTES = [
+  { id:'Q50',   color:'#00b4ff', dir:'→ Flushing / Work',    stopId:'504969', walkMins:7,  freq:1, sz:'sz1' },
+  { id:'BX38',  color:'#ff6b35', dir:'→ Gun Hill / Friend',  stopId:'200540', walkMins:4,  freq:2, sz:'sz2' },
+  { id:'BX28',  color:'#ff6b35', dir:'→ Gun Hill / Webster', stopId:'200539', walkMins:4,  freq:2, sz:'sz2' },
+  { id:'BX12+', color:'#c084fc', dir:'→ Bruckner SBS',       stopId:'200760', walkMins:10, freq:3, sz:'sz3' },
+  { id:'BX23',  color:'#c084fc', dir:'→ Bruckner / Edson',   stopId:'200761', walkMins:12, freq:3, sz:'sz3' },
+  { id:'BX5',   color:'#4ade80', dir:'→ Home Depot / Q44',   stopId:'200300', walkMins:5,  freq:3, sz:'sz3' },
+  { id:'Q65',   color:'#ffd600', dir:'→ From Flushing',      stopId:'550310', walkMins:2,  freq:4, sz:'sz4' },
+  { id:'Q25',   color:'#ffd600', dir:'→ From Flushing',      stopId:'550311', walkMins:2,  freq:4, sz:'sz4' },
+];
+const BUFFER = 3;
+const MOM_ROUTES = [
+  { id:'BX28', stopId:'200539', walkMins:4 },
+  { id:'BX38', stopId:'200540', walkMins:4 },
+];
+let data = {}, momData = {}, momVisible = false;
+function tick() {
+  const n = new Date();
+  document.getElementById('clk').textContent = n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  document.getElementById('cld').textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+setInterval(tick,1000); tick();
+async function fetchRoute(stopId, routeId) {
+  try {
+    const res = await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.arrivals?.map(a=>a.mins)||null;
+  } catch { return null; }
+}
+function simMins(route) {
+  const seeds=[6,11,19,8,14,22,5,17];
+  const i=ROUTES.findIndex(r=>r.id===route.id);
+  const offset=(Date.now()/60000)%25;
+  const base=seeds[i%seeds.length];
+  const first=((base-offset+30)%25)+1;
+  return [Math.round(first),Math.round(first+9),Math.round(first+19)];
+}
+function leaveStatus(walkMins,mins) {
+  const leaveIn=mins-walkMins-BUFFER;
+  if(leaveIn<=0) return{text:'LEAVE NOW',cls:'pill-urgent',leaveIn:0,urgency:0};
+  if(leaveIn<=3) return{text:`LEAVE IN ${leaveIn}m`,cls:'pill-warn',leaveIn,urgency:1};
+  return{text:`Leave in ${leaveIn}m`,cls:'pill-ok',leaveIn,urgency:2};
+}
+async function fetchAll() {
+  document.getElementById('status-msg').textContent='Updating…';
+  const results=await Promise.all(ROUTES.map(r=>fetchRoute(r.stopId,r.id)));
+  let anyLive=false;
+  ROUTES.forEach((r,i)=>{
+    if(results[i]?.length){data[r.id]=results[i];anyLive=true;}
+    else data[r.id]=simMins(r);
+  });
+  document.getElementById('status-msg').textContent=anyLive?'Live · refreshes every 30s':'Estimated · tap refresh to retry';
+  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  renderBubbles(); renderCards(); fetchMom();
+}
+async function fetchMom() {
+  const results=await Promise.all(MOM_ROUTES.map(r=>fetchRoute(r.stopId,r.id)));
+  MOM_ROUTES.forEach((r,i)=>{momData[r.id]=results[i]?.length?results[i]:[12,22,32];});
+  renderMom();
+}
+function renderBubbles() {
+  const grid=document.getElementById('bubble-grid');
+  grid.innerHTML='';
+  ROUTES.forEach(r=>{
+    const mins=data[r.id],next=mins?.[0];
+    const s=next!=null?leaveStatus(r.walkMins,next):null;
+    const urgent=s?.urgency===0;
+    const wrap=document.createElement('div');
+    wrap.className='bwrap';
+    wrap.onclick=()=>document.getElementById('card-'+r.id)?.scrollIntoView({behavior:'smooth',block:'center'});
+    const bubble=document.createElement('div');
+    bubble.className=`bubble ${r.sz}${urgent?' urgent-ring':''}`;
+    bubble.style.borderColor=r.color;
+    bubble.style.background=r.color+'16';
+    const mc=s?.urgency===0?'var(--danger)':s?.urgency===1?'var(--warn)':'var(--accent)';
+    bubble.innerHTML=`<span class="b-name" style="color:${r.color}">${r.id}</span><span class="b-mins" style="color:${next!=null?mc:'var(--muted)'}">${next!=null?next+'m':'…'}</span>`;
+    const label=document.createElement('div');
+    label.className='b-label';
+    label.textContent=r.dir.replace('→ ','');
+    wrap.appendChild(bubble);wrap.appendChild(label);grid.appendChild(wrap);
+  });
+}
+function renderCards() {
+  const container=document.getElementById('cards');
+  container.innerHTML='';
+  const sorted=[...ROUTES].sort((a,b)=>{
+    const aL=(data[a.id]?.[0]??999)-a.walkMins-BUFFER;
+    const bL=(data[b.id]?.[0]??999)-b.walkMins-BUFFER;
+    return aL-bL;
+  });
+  sorted.forEach(r=>{
+    const mins=data[r.id],next=mins?.[0];
+    const s=next!=null?leaveStatus(r.walkMins,next):null;
+    const chipsHtml=mins?.length?mins.map((m,i)=>{
+      const cc=i===0&&m<=3?'c-live':i===0&&m<=8?'c-soon':'';
+      const lbl=i===0?'NEXT':i===1?'2ND':'3RD';
+      return`<div class="chip ${cc}"><span class="cm">${m}m</span><span class="cl">${lbl}</span></div>`;
+    }).join(''):'<span style="font-size:11px;color:var(--muted)">Fetching…</span>';
+    const card=document.createElement('div');
+    card.className=`card${mins?.length?' live':''}`;
+    card.id='card-'+r.id;
+    card.innerHTML=`
+      <div class="card-top">
+        <div class="rbadge">
+          <div class="rdot" style="background:${r.color}"></div>
+          <span class="rname" style="color:${r.color}">${r.id}</span>
+          <span class="rdir">${r.dir}</span>
+        </div>
+        ${s?`<span class="pill ${s.cls}">${s.text}</span>`:'<span class="pill pill-muted">–</span>'}
+      </div>
+      <div class="chips">${chipsHtml}</div>
+      <div class="card-foot">
+        <div class="walk-note">🚶 <b>${r.walkMins} min walk</b> + ${BUFFER} min buffer</div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+function toggleMom() {
+  momVisible=!momVisible;
+  document.getElementById('mom-card').classList.toggle('show',momVisible);
+  if(momVisible)fetchMom();
+}
+function renderMom() {
+  const el=document.getElementById('mom-route');
+  if(!Object.keys(momData).length){el.innerHTML='Loading…';return;}
+  let best=null;
+  MOM_ROUTES.forEach(r=>{
+    const next=momData[r.id]?.[0];
+    if(next!=null){const leaveIn=next-r.walkMins-BUFFER;if(!best||leaveIn<best.leaveIn)best={...r,next,leaveIn};}
+  });
+  if(!best){el.innerHTML='No arrivals found.';return;}
+  const ls=best.leaveIn<=0?'<b style="color:var(--danger)">LEAVE NOW</b>':best.leaveIn<=3?`<b style="color:var(--warn)">Leave in ${best.leaveIn} min</b>`:`Leave in <b>${best.leaveIn} min</b>`;
+  el.innerHTML=`${ls}<br>Take the <b style="color:#ff6b35">${best.id}</b> → Gun Hill / Wayne Ave<br>Bus in <b>${best.next} min</b> · Walk <b>${best.walkMins} min</b>`;
+}
+fetchAll();
+setInterval(fetchAll,30000);
+</script>
+</body>
+</html>
