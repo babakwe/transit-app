@@ -5,327 +5,268 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Transit">
-<meta name="theme-color" content="#080810">
-<title>Transit · Kwasi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-title" content="TownTrip">
+<meta name="theme-color" content="#0a0e1a">
+<title>TownTrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #080810;
-  --surface: #11111c;
-  --surface2: #181826;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.11);
-  --text: #eeeef5;
-  --muted: #52526e;
-  --accent: #00e5b0;
-  --warn: #f5a623;
-  --danger: #ff4455;
-  --q50:  #00b4ff;
-  --bx:   #ff6b35;
-  --bx12: #c084fc;
-  --bx23: #c084fc;
-  --q65:  #ffd600;
-  --q25:  #ffd600;
-  --bx5:  #4ade80;
-  --q44:  #fb923c;
+  --bg: #0a0e1a;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf5;
+  --text2: rgba(232,234,245,0.55);
+  --text3: rgba(232,234,245,0.3);
+  --green: #00f5a0;
+  --yellow: #ffd60a;
+  --orange: #ff6b35;
+  --red: #ff3b5c;
+  --blue: #4da6ff;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow-x:hidden; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  min-height: 100vh;
-}
-body::before {
-  content:'';
-  position:fixed; inset:0;
-  background-image:
-    linear-gradient(rgba(0,229,176,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,229,176,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events:none; z-index:0;
-}
-.app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding-bottom:40px; }
-header {
-  padding: 56px 20px 16px;
-  display: flex; justify-content:space-between; align-items:flex-end;
-}
-.h-left h1 {
-  font-family:'Syne',sans-serif; font-size:30px; font-weight:800;
-  letter-spacing:-0.5px; line-height:1;
-}
-.h-left .sub { font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-top:3px; }
-.clock-box { text-align:right; }
-.clock-box .time { font-size:14px; color:var(--accent); letter-spacing:0.04em; }
-.clock-box .date { font-size:10px; color:var(--muted); display:block; margin-top:2px; }
-.status {
-  margin: 0 20px 20px;
-  padding: 9px 14px;
-  background: rgba(0,229,176,0.05);
-  border: 1px solid rgba(0,229,176,0.12);
-  border-radius: 8px;
-  display:flex; align-items:center; gap:9px;
-  font-size:11px; color:var(--accent);
-}
-.dot { width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; animation: blink 2s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.sec {
-  font-family:'Syne',sans-serif; font-size:10px; font-weight:600;
-  letter-spacing:0.14em; text-transform:uppercase;
-  color:var(--muted); padding:0 20px; margin-bottom:12px;
-}
-.bubbles { padding: 0 20px; margin-bottom:28px; }
-.bubble-grid { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
-.bwrap { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
-.bubble {
-  border-radius:50%; border:2px solid;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  position:relative; overflow:hidden;
-  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
-}
-.bubble::before {
-  content:''; position:absolute; inset:0; border-radius:50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.13), transparent 55%);
-}
-.bubble:active { transform:scale(0.88); }
-.sz1 { width:92px; height:92px; }
-.sz2 { width:76px; height:76px; }
-.sz3 { width:64px; height:64px; }
-.sz4 { width:54px; height:54px; }
-.b-name { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; line-height:1; }
-.sz1 .b-name { font-size:17px; }
-.sz4 .b-name { font-size:12px; }
-.b-mins { font-size:11px; margin-top:2px; }
-.sz4 .b-mins { font-size:9px; }
-.b-label { font-size:9px; color:var(--muted); text-align:center; max-width:72px; letter-spacing:0.02em; }
-.urgent-ring { animation: uring 1.1s infinite; }
-@keyframes uring { 0%,100%{box-shadow:0 0 0 0 rgba(255,68,85,0.55)} 50%{box-shadow:0 0 0 9px rgba(255,68,85,0)} }
-.cards { padding:0 20px; }
-.card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:14px; padding:15px; margin-bottom:10px;
-}
-.card.live { border-color: rgba(0,229,176,0.15); }
-.card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; }
-.rbadge { display:flex; align-items:center; gap:7px; }
-.rdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-.rname { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
-.rdir { font-size:10px; color:var(--muted); margin-left:2px; }
-.pill { font-size:10px; padding:4px 9px; border-radius:20px; font-weight:500; white-space:nowrap; }
-.pill-ok     { background:rgba(0,229,176,0.1);  color:var(--accent); }
-.pill-warn   { background:rgba(245,166,35,0.1); color:var(--warn); }
-.pill-urgent { background:rgba(255,68,85,0.12); color:var(--danger); }
-.pill-muted  { background:rgba(82,82,110,0.15); color:var(--muted); }
-.chips { display:flex; gap:7px; flex-wrap:wrap; }
-.chip {
-  background:rgba(255,255,255,0.04); border:1px solid var(--border);
-  border-radius:8px; padding:6px 11px;
-}
-.chip .cm { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; display:block; line-height:1.1; }
-.chip .cl { font-size:9px; color:var(--muted); letter-spacing:0.05em; }
-.chip.c-live .cm { color:var(--accent); }
-.chip.c-soon .cm { color:var(--warn); }
-.card-foot { margin-top:9px; }
-.walk-note { font-size:10px; color:var(--muted); margin-top:3px; }
-.walk-note b { color:rgba(238,238,245,0.6); font-weight:400; }
-.foot { display:flex; justify-content:space-between; align-items:center; padding:14px 20px 0; }
-.foot-ts { font-size:10px; color:var(--muted); }
-.refresh-btn {
-  font-family:'DM Mono',monospace; font-size:11px;
-  color:var(--accent); background:none;
-  border:1px solid rgba(0,229,176,0.18); border-radius:6px;
-  padding:6px 12px; cursor:pointer;
-}
-.mom-btn {
-  margin:0 20px 20px;
-  padding:12px 16px;
-  background:rgba(192,132,252,0.07); border:1px solid rgba(192,132,252,0.18);
-  border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:10px;
-  font-size:12px; color:#c084fc;
-}
-.mom-card {
-  margin:0 20px 20px; padding:18px;
-  background:var(--surface2); border:1px solid rgba(192,132,252,0.2);
-  border-radius:14px; display:none;
-}
-.mom-card.show { display:block; }
-.mom-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#c084fc; margin-bottom:12px; }
-.mom-route { font-size:13px; line-height:1.9; }
+html { height:100%; }
+body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; overflow-x:hidden; }
+.ambient { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.ambient-orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:0.12; animation:orbFloat 12s ease-in-out infinite; }
+.orb1 { width:400px; height:400px; background:#0039A6; top:-100px; left:-100px; }
+.orb2 { width:300px; height:300px; background:#00f5a0; bottom:-50px; right:-80px; animation-delay:-4s; }
+.orb3 { width:200px; height:200px; background:#c084fc; top:40%; left:60%; animation-delay:-8s; }
+@keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,30px) scale(0.95)} }
+.app { position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+header { padding:52px 24px 20px; }
+.wordmark { font-size:11px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
+.tagline { font-size:26px; font-weight:800; line-height:1.1; }
+.tagline span { color:var(--green); }
+.clock { font-family:'DM Mono',monospace; font-size:12px; color:var(--text3); margin-top:8px; }
+.search-panel { margin:0 16px 20px; background:var(--glass2); border:1px solid var(--border2); border-radius:20px; padding:16px; backdrop-filter:blur(20px); }
+.field { margin-bottom:10px; }
+.field:last-child { margin-bottom:0; }
+.field-label { font-size:9px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text3); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.dot { width:6px; height:6px; border-radius:50%; }
+.dot-from { background:var(--green); box-shadow:0 0 8px var(--green); }
+.dot-to { background:var(--blue); box-shadow:0 0 8px var(--blue); }
+.field-row { display:flex; gap:8px; align-items:center; }
+.field-input { flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:12px; padding:10px 14px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:500; color:var(--text); outline:none; transition:border-color 0.2s; }
+.field-input::placeholder { color:var(--text3); font-weight:400; }
+.field-input:focus { border-color:var(--border2); background:rgba(255,255,255,0.07); }
+.gps-btn { width:40px; height:40px; border-radius:10px; flex-shrink:0; background:rgba(0,245,160,0.1); border:1px solid rgba(0,245,160,0.2); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
+.gps-btn.locating { animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.divider-row { display:flex; align-items:center; gap:10px; margin:4px 0; }
+.divider-line { flex:1; height:1px; background:var(--border); }
+.swap-btn { width:28px; height:28px; border-radius:8px; background:var(--glass); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; color:var(--text3); transition:transform 0.2s; }
+.swap-btn:active { transform:rotate(180deg); }
+.go-btn { width:100%; margin-top:12px; background:linear-gradient(135deg,#0039A6,#0060ff); border:none; border-radius:14px; padding:14px; font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; color:white; cursor:pointer; box-shadow:0 4px 20px rgba(0,57,166,0.4); transition:opacity 0.2s,transform 0.1s; }
+.go-btn:active { opacity:0.85; transform:scale(0.98); }
+.status-line { display:flex; align-items:center; gap:8px; padding:0 24px; margin-bottom:16px; font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; }
+.live-pip { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s infinite; flex-shrink:0; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.section-label { font-size:9px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--text3); padding:0 24px; margin-bottom:16px; }
+.bubble-arena { padding:0 16px; margin-bottom:24px; min-height:100px; }
+.bubble-stage { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
+.bwrap { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; animation:bubbleIn 0.6s cubic-bezier(0.34,1.4,0.64,1) both; }
+@keyframes bubbleIn { from{transform:scale(0) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.bubble { border-radius:50%; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.2s; background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.05) 50%,transparent 70%),radial-gradient(circle at 68% 75%,rgba(255,255,255,0.12) 0%,transparent 40%); backdrop-filter:blur(8px); }
+.bubble::before { content:''; position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 180deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,0.06) 60deg,rgba(255,255,255,0) 120deg,rgba(255,255,255,0.08) 180deg,rgba(255,255,255,0) 240deg,rgba(255,255,255,0.04) 300deg,rgba(255,255,255,0) 360deg); animation:shimmer 6s linear infinite; }
+@keyframes shimmer { to{transform:rotate(360deg)} }
+.bubble::after { content:''; position:absolute; top:8%; left:15%; width:35%; height:25%; background:radial-gradient(ellipse,rgba(255,255,255,0.5) 0%,transparent 70%); border-radius:50%; transform:rotate(-30deg); }
+.bubble:active { transform:scale(0.85); }
+.sz1 { width:86px; height:86px; }
+.sz2 { width:72px; height:72px; }
+.sz3 { width:60px; height:60px; }
+.sz4 { width:50px; height:50px; }
+.bubble-green { border:1.5px solid rgba(0,245,160,0.5); box-shadow:0 0 20px rgba(0,245,160,0.2),inset 0 0 20px rgba(0,245,160,0.05); }
+.bubble-yellow { border:1.5px solid rgba(255,214,10,0.5); box-shadow:0 0 20px rgba(255,214,10,0.2),inset 0 0 20px rgba(255,214,10,0.05); }
+.bubble-orange { border:1.5px solid rgba(255,107,53,0.5); box-shadow:0 0 20px rgba(255,107,53,0.25),inset 0 0 20px rgba(255,107,53,0.08); animation:urgentWobble 2s ease-in-out infinite; }
+.bubble-red { border:1.5px solid rgba(255,59,92,0.6); box-shadow:0 0 25px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1); animation:urgentPulse 1s ease-in-out infinite; opacity:0.65; }
+@keyframes urgentWobble { 0%,100%{transform:scale(1)} 25%{transform:scale(1.03) rotate(1deg)} 75%{transform:scale(0.97) rotate(-1deg)} }
+@keyframes urgentPulse { 0%,100%{box-shadow:0 0 25px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1)} 50%{box-shadow:0 0 40px rgba(255,59,92,0.6),inset 0 0 30px rgba(255,59,92,0.15)} }
+.b-route { font-size:13px; font-weight:800; line-height:1; z-index:1; text-shadow:0 1px 4px rgba(0,0,0,0.5); }
+.sz1 .b-route { font-size:15px; }
+.sz4 .b-route { font-size:11px; }
+.b-mins { font-size:10px; font-weight:600; z-index:1; margin-top:2px; text-shadow:0 1px 4px rgba(0,0,0,0.5); }
+.sz4 .b-mins { font-size:8px; }
+.b-label { font-size:8px; color:var(--text3); text-align:center; max-width:64px; font-weight:500; line-height:1.3; }
+.cards { padding:0 16px; margin-bottom:24px; }
+.card { background:var(--glass); border:1px solid var(--border); border-radius:16px; padding:14px 16px; margin-bottom:8px; backdrop-filter:blur(10px); }
+.card.card-go { border-color:rgba(0,245,160,0.2); background:rgba(0,245,160,0.03); }
+.card.card-soon { border-color:rgba(255,214,10,0.2); }
+.card.card-now { border-color:rgba(255,59,92,0.25); background:rgba(255,59,92,0.03); }
+.card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.card-route { display:flex; align-items:center; gap:10px; }
+.route-tag { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:800; }
+.card-dir { font-size:11px; color:var(--text2); }
+.pill { font-size:10px; padding:5px 11px; border-radius:20px; font-weight:700; white-space:nowrap; }
+.pill-go   { background:rgba(0,245,160,0.12); color:var(--green); border:1px solid rgba(0,245,160,0.2); }
+.pill-soon { background:rgba(255,214,10,0.1); color:var(--yellow); border:1px solid rgba(255,214,10,0.2); }
+.pill-now  { background:rgba(255,59,92,0.12); color:var(--red); border:1px solid rgba(255,59,92,0.2); animation:pillBlink 1s infinite; }
+.pill-wait { background:rgba(255,255,255,0.04); color:var(--text3); border:1px solid var(--border); }
+@keyframes pillBlink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.times { display:flex; gap:6px; margin-bottom:8px; }
+.time-chip { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; padding:7px 12px; min-width:52px; }
+.tc-val { font-size:19px; font-weight:800; display:block; line-height:1.1; }
+.tc-lbl { font-size:8px; color:var(--text3); font-weight:600; letter-spacing:0.06em; }
+.tc-green .tc-val { color:var(--green); }
+.tc-yellow .tc-val { color:var(--yellow); }
+.tc-red .tc-val { color:var(--red); }
+.card-foot { padding-top:8px; border-top:1px solid var(--border); }
+.walk-info { font-size:10px; color:var(--text3); }
+.walk-info b { color:var(--text2); font-weight:500; }
+.empty-state { padding:40px 24px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.empty-bubbles { display:flex; gap:10px; justify-content:center; margin-bottom:8px; }
+.empty-bubble { border-radius:50%; background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.02) 60%); border:1px solid rgba(255,255,255,0.1); animation:floatIdle 3s ease-in-out infinite; }
+.eb1 { width:52px; height:52px; }
+.eb2 { width:68px; height:68px; animation-delay:-1s; }
+.eb3 { width:44px; height:44px; animation-delay:-2s; }
+@keyframes floatIdle { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} }
+.empty-text { font-size:14px; color:var(--text3); line-height:1.6; }
+.empty-text b { color:var(--text2); font-weight:600; }
+.foot { padding:12px 24px 32px; display:flex; justify-content:space-between; align-items:center; margin-top:auto; }
+.foot-brand { font-size:10px; color:var(--text3); font-weight:700; letter-spacing:0.12em; }
+.foot-ts { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
 </style>
 </head>
 <body>
+<div class="ambient">
+  <div class="ambient-orb orb1"></div>
+  <div class="ambient-orb orb2"></div>
+  <div class="ambient-orb orb3"></div>
+</div>
 <div class="app">
-<header>
-  <div class="h-left">
-    <h1>Transit</h1>
-    <div class="sub">140 ALCOTT PL · CO-OP CITY</div>
+  <header>
+    <div class="wordmark">TownTrip</div>
+    <div class="tagline">Know exactly<br><span>when to leave.</span></div>
+    <div class="clock" id="clk">–</div>
+  </header>
+  <div class="search-panel">
+    <div class="field">
+      <div class="field-label"><div class="dot dot-from"></div>From</div>
+      <div class="field-row">
+        <input class="field-input" id="from-input" placeholder="Where are you now?" autocomplete="off">
+        <div class="gps-btn" id="gps-btn" onclick="getGPS()">📍</div>
+      </div>
+    </div>
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <div class="swap-btn" onclick="swapFields()">⇅</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="field">
+      <div class="field-label"><div class="dot dot-to"></div>To</div>
+      <input class="field-input" id="to-input" placeholder="Where are you going?" autocomplete="off">
+    </div>
+    <button class="go-btn" onclick="findRoutes()">Find my ride →</button>
   </div>
-  <div class="clock-box">
-    <span class="time" id="clk"></span>
-    <span class="date" id="cld"></span>
+  <div class="status-line">
+    <div class="live-pip"></div>
+    <span id="status-msg">Enter your trip to see live arrivals</span>
   </div>
-</header>
-<div class="status">
-  <div class="dot"></div>
-  <span id="status-msg">Loading live arrivals…</span>
-</div>
-<div class="mom-btn" onclick="toggleMom()">
-  <span>👩🏾</span> Mom's commute · Alcott → Medco
-</div>
-<div class="mom-card" id="mom-card">
-  <div class="mom-title">MEDCO ENTERPRISES · 3530 WAYNE AVE</div>
-  <div class="mom-route" id="mom-route">Loading best route…</div>
-</div>
-<div class="sec">Your Lines</div>
-<div class="bubbles"><div class="bubble-grid" id="bubble-grid"></div></div>
-<div class="sec">Leave When Ready</div>
-<div class="cards" id="cards"></div>
-<div class="foot">
-  <span class="foot-ts" id="ts">–</span>
-  <button class="refresh-btn" onclick="fetchAll()">↻ Refresh</button>
-</div>
+  <div id="main-content">
+    <div class="empty-state">
+      <div class="empty-bubbles">
+        <div class="empty-bubble eb1"></div>
+        <div class="empty-bubble eb2"></div>
+        <div class="empty-bubble eb3"></div>
+      </div>
+      <div class="empty-text"><b>Your routes will appear here.</b><br>Green means go. Red means next one.</div>
+    </div>
+  </div>
+  <div class="foot">
+    <span class="foot-brand">TOWNTRIP</span>
+    <span class="foot-ts" id="ts"></span>
+  </div>
 </div>
 <script>
-const ROUTES = [
-  { id:'Q50',   color:'#00b4ff', dir:'→ Flushing / Work',    stopId:'504969', walkMins:7,  freq:1, sz:'sz1' },
-  { id:'BX38',  color:'#ff6b35', dir:'→ Gun Hill / Friend',  stopId:'200540', walkMins:4,  freq:2, sz:'sz2' },
-  { id:'BX28',  color:'#ff6b35', dir:'→ Gun Hill / Webster', stopId:'200539', walkMins:4,  freq:2, sz:'sz2' },
-  { id:'BX12+', color:'#c084fc', dir:'→ Bruckner SBS',       stopId:'200760', walkMins:10, freq:3, sz:'sz3' },
-  { id:'BX23',  color:'#c084fc', dir:'→ Bruckner / Edson',   stopId:'200761', walkMins:12, freq:3, sz:'sz3' },
-  { id:'BX5',   color:'#4ade80', dir:'→ Home Depot / Q44',   stopId:'200300', walkMins:5,  freq:3, sz:'sz3' },
-  { id:'Q65',   color:'#ffd600', dir:'→ From Flushing',      stopId:'550310', walkMins:2,  freq:4, sz:'sz4' },
-  { id:'Q25',   color:'#ffd600', dir:'→ From Flushing',      stopId:'550311', walkMins:2,  freq:4, sz:'sz4' },
+function tick(){const n=new Date();document.getElementById('clk').textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});}
+setInterval(tick,1000);tick();
+function getGPS(){
+  const btn=document.getElementById('gps-btn'),input=document.getElementById('from-input');
+  if(!navigator.geolocation){input.placeholder='GPS not available';return;}
+  btn.classList.add('locating');btn.textContent='⟳';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btn.classList.remove('locating');btn.textContent='✓';
+    const{latitude:lat,longitude:lng}=pos.coords;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+      .then(r=>r.json()).then(d=>{
+        const a=d.address;
+        input.value=(a.road?`${a.house_number?a.house_number+' ':''}${a.road}, ${a.suburb||a.city_district||a.city||''}`:`${lat.toFixed(4)}, ${lng.toFixed(4)}`).trim().replace(/,\s*$/,'');
+      }).catch(()=>{input.value=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;});
+  },()=>{btn.classList.remove('locating');btn.textContent='📍';input.placeholder='Location denied — type address';},{enableHighAccuracy:true,timeout:8000});
+}
+function swapFields(){const f=document.getElementById('from-input'),t=document.getElementById('to-input');[f.value,t.value]=[t.value,f.value];}
+const ROUTE_DB=[
+  {id:'Q50',  color:'#4da6ff',dir:'Flushing / Queens',  keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'504969',walkMins:7},
+  {id:'BX23', color:'#c084fc',dir:'Bruckner / E Bronx', keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'200761',walkMins:12},
+  {id:'BX12+',color:'#c084fc',dir:'Bruckner SBS',       keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'200760',walkMins:10},
+  {id:'BX38', color:'#ff6b35',dir:'Gun Hill / Pelham',  keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'200540',walkMins:4},
+  {id:'BX28', color:'#ff6b35',dir:'Webster Ave',        keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'200539',walkMins:4},
+  {id:'BX5',  color:'#00f5a0',dir:'Home Depot / Q44',   keywords:['co-op','alcott','dreiser','carver','bellamy','bartow','baychester','einstein'],stopId:'200300',walkMins:5},
+  {id:'Q65',  color:'#ffd60a',dir:'Jamaica / SE Queens',keywords:['flushing','main st','roosevelt av','kissena'],stopId:'550310',walkMins:3},
+  {id:'Q25',  color:'#ffd60a',dir:'Jamaica via Hillside',keywords:['flushing','main st','roosevelt av','kissena'],stopId:'550311',walkMins:3},
+  {id:'Q44',  color:'#ff6b35',dir:'Bronx / Co-op City', keywords:['flushing','main st','roosevelt av','kissena'],stopId:'502184',walkMins:5},
 ];
-const BUFFER = 3;
-const MOM_ROUTES = [
-  { id:'BX28', stopId:'200539', walkMins:4 },
-  { id:'BX38', stopId:'200540', walkMins:4 },
-];
-let data = {}, momData = {}, momVisible = false;
-function tick() {
-  const n = new Date();
-  document.getElementById('clk').textContent = n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  document.getElementById('cld').textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const BUFFER=3;
+let activeRoutes=[],arrivals={},refreshTimer=null;
+function findRoutes(){
+  const from=document.getElementById('from-input').value.trim().toLowerCase();
+  const to=document.getElementById('to-input').value.trim().toLowerCase();
+  if(!from||!to){document.getElementById('status-msg').textContent='Enter both origin and destination';return;}
+  const combined=from+' '+to,seen=new Set();
+  activeRoutes=ROUTE_DB.filter(r=>{
+    const match=r.keywords.some(k=>combined.includes(k));
+    const key=r.id+r.stopId;
+    if(match&&!seen.has(key)){seen.add(key);return true;}return false;
+  });
+  if(!activeRoutes.length)activeRoutes=ROUTE_DB.slice(0,5);
+  document.getElementById('status-msg').textContent='Fetching live arrivals…';
+  clearInterval(refreshTimer);fetchAll();
+  refreshTimer=setInterval(fetchAll,30000);
 }
-setInterval(tick,1000); tick();
-async function fetchRoute(stopId, routeId) {
-  try {
-    const res = await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.arrivals?.map(a=>a.mins)||null;
-  } catch { return null; }
+document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoutes();});
+document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoutes();});
+async function fetchRoute(stopId,routeId){
+  try{const res=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!res.ok)return null;const json=await res.json();return json.arrivals?.map(a=>a.mins)||null;}catch{return null;}
 }
-function simMins(route) {
-  const seeds=[6,11,19,8,14,22,5,17];
-  const i=ROUTES.findIndex(r=>r.id===route.id);
-  const offset=(Date.now()/60000)%25;
-  const base=seeds[i%seeds.length];
-  const first=((base-offset+30)%25)+1;
-  return [Math.round(first),Math.round(first+9),Math.round(first+19)];
-}
-function leaveStatus(walkMins,mins) {
-  const leaveIn=mins-walkMins-BUFFER;
-  if(leaveIn<=0) return{text:'LEAVE NOW',cls:'pill-urgent',leaveIn:0,urgency:0};
-  if(leaveIn<=3) return{text:`LEAVE IN ${leaveIn}m`,cls:'pill-warn',leaveIn,urgency:1};
-  return{text:`Leave in ${leaveIn}m`,cls:'pill-ok',leaveIn,urgency:2};
-}
-async function fetchAll() {
-  document.getElementById('status-msg').textContent='Updating…';
-  const results=await Promise.all(ROUTES.map(r=>fetchRoute(r.stopId,r.id)));
+function simMins(r){const seed=r.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0);const offset=(Date.now()/60000)%30;const first=((seed%18+2-offset+30)%28)+1;return[Math.round(first),Math.round(first+8),Math.round(first+18)];}
+async function fetchAll(){
+  const results=await Promise.all(activeRoutes.map(r=>fetchRoute(r.stopId,r.id)));
   let anyLive=false;
-  ROUTES.forEach((r,i)=>{
-    if(results[i]?.length){data[r.id]=results[i];anyLive=true;}
-    else data[r.id]=simMins(r);
+  activeRoutes.forEach((r,i)=>{const key=r.id+r.stopId;if(results[i]?.length){arrivals[key]=results[i];anyLive=true;}else arrivals[key]=simMins(r);});
+  document.getElementById('status-msg').textContent=anyLive?`Live · ${activeRoutes.length} routes · updates every 30s`:`${activeRoutes.length} routes · estimated times`;
+  document.getElementById('ts').textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  render();
+}
+function urgency(w,m){const l=m-w-BUFFER;if(l<=0)return{state:'red',pill:'GONE',pillCls:'pill-now',cardCls:'card-now'};if(l<=2)return{state:'red',pill:'LEAVE NOW',pillCls:'pill-now',cardCls:'card-now',leaveIn:l};if(l<=5)return{state:'orange',pill:`LEAVE IN ${l}m`,pillCls:'pill-soon',cardCls:'card-soon',leaveIn:l};if(l<=12)return{state:'yellow',pill:`Leave in ${l}m`,pillCls:'pill-soon',cardCls:'',leaveIn:l};return{state:'green',pill:`Leave in ${l}m`,pillCls:'pill-go',cardCls:'card-go',leaveIn:l};}
+function render(){
+  const sorted=[...activeRoutes].sort((a,b)=>{
+    const lA=(arrivals[a.id+a.stopId]?.[0]??999)-a.walkMins-BUFFER;
+    const lB=(arrivals[b.id+b.stopId]?.[0]??999)-b.walkMins-BUFFER;
+    if(lA<=0&&lB>0)return 1;if(lB<=0&&lA>0)return -1;return lA-lB;
   });
-  document.getElementById('status-msg').textContent=anyLive?'Live · refreshes every 30s':'Estimated · tap refresh to retry';
-  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  renderBubbles(); renderCards(); fetchMom();
-}
-async function fetchMom() {
-  const results=await Promise.all(MOM_ROUTES.map(r=>fetchRoute(r.stopId,r.id)));
-  MOM_ROUTES.forEach((r,i)=>{momData[r.id]=results[i]?.length?results[i]:[12,22,32];});
-  renderMom();
-}
-function renderBubbles() {
-  const grid=document.getElementById('bubble-grid');
-  grid.innerHTML='';
-  ROUTES.forEach(r=>{
-    const mins=data[r.id],next=mins?.[0];
-    const s=next!=null?leaveStatus(r.walkMins,next):null;
-    const urgent=s?.urgency===0;
-    const wrap=document.createElement('div');
-    wrap.className='bwrap';
-    wrap.onclick=()=>document.getElementById('card-'+r.id)?.scrollIntoView({behavior:'smooth',block:'center'});
-    const bubble=document.createElement('div');
-    bubble.className=`bubble ${r.sz}${urgent?' urgent-ring':''}`;
-    bubble.style.borderColor=r.color;
-    bubble.style.background=r.color+'16';
-    const mc=s?.urgency===0?'var(--danger)':s?.urgency===1?'var(--warn)':'var(--accent)';
-    bubble.innerHTML=`<span class="b-name" style="color:${r.color}">${r.id}</span><span class="b-mins" style="color:${next!=null?mc:'var(--muted)'}">${next!=null?next+'m':'…'}</span>`;
-    const label=document.createElement('div');
-    label.className='b-label';
-    label.textContent=r.dir.replace('→ ','');
-    wrap.appendChild(bubble);wrap.appendChild(label);grid.appendChild(wrap);
+  document.getElementById('main-content').innerHTML=`<div class="section-label">Routes available</div><div class="bubble-arena"><div class="bubble-stage" id="bubble-stage"></div></div><div class="section-label">Leave when ready</div><div class="cards" id="cards"></div>`;
+  const stage=document.getElementById('bubble-stage');
+  sorted.forEach((r,i)=>{
+    const key=r.id+r.stopId,mins=arrivals[key],next=mins?.[0];
+    const u=next!=null?urgency(r.walkMins,next):{state:'green'};
+    const sz=['sz1','sz2','sz2','sz3','sz3','sz4','sz4','sz4'][i]||'sz4';
+    const tc=u.state==='green'?'#00f5a0':u.state==='yellow'?'#ffd60a':u.state==='orange'?'#ff6b35':'#ff3b5c';
+    const wrap=document.createElement('div');wrap.className='bwrap';wrap.style.animationDelay=`${i*0.06}s`;
+    wrap.onclick=()=>document.getElementById('card-'+key)?.scrollIntoView({behavior:'smooth',block:'center'});
+    wrap.innerHTML=`<div class="bubble ${sz} bubble-${u.state}"><span class="b-route" style="color:white">${r.id}</span><span class="b-mins" style="color:${tc}">${next!=null?next+'m':'…'}</span></div><div class="b-label">${r.dir}</div>`;
+    stage.appendChild(wrap);
   });
-}
-function renderCards() {
   const container=document.getElementById('cards');
-  container.innerHTML='';
-  const sorted=[...ROUTES].sort((a,b)=>{
-    const aL=(data[a.id]?.[0]??999)-a.walkMins-BUFFER;
-    const bL=(data[b.id]?.[0]??999)-b.walkMins-BUFFER;
-    return aL-bL;
-  });
   sorted.forEach(r=>{
-    const mins=data[r.id],next=mins?.[0];
-    const s=next!=null?leaveStatus(r.walkMins,next):null;
-    const chipsHtml=mins?.length?mins.map((m,i)=>{
-      const cc=i===0&&m<=3?'c-live':i===0&&m<=8?'c-soon':'';
-      const lbl=i===0?'NEXT':i===1?'2ND':'3RD';
-      return`<div class="chip ${cc}"><span class="cm">${m}m</span><span class="cl">${lbl}</span></div>`;
-    }).join(''):'<span style="font-size:11px;color:var(--muted)">Fetching…</span>';
-    const card=document.createElement('div');
-    card.className=`card${mins?.length?' live':''}`;
-    card.id='card-'+r.id;
-    card.innerHTML=`
-      <div class="card-top">
-        <div class="rbadge">
-          <div class="rdot" style="background:${r.color}"></div>
-          <span class="rname" style="color:${r.color}">${r.id}</span>
-          <span class="rdir">${r.dir}</span>
-        </div>
-        ${s?`<span class="pill ${s.cls}">${s.text}</span>`:'<span class="pill pill-muted">–</span>'}
-      </div>
-      <div class="chips">${chipsHtml}</div>
-      <div class="card-foot">
-        <div class="walk-note">🚶 <b>${r.walkMins} min walk</b> + ${BUFFER} min buffer</div>
-      </div>`;
+    const key=r.id+r.stopId,mins=arrivals[key],next=mins?.[0];
+    const u=next!=null?urgency(r.walkMins,next):{state:'green',pillCls:'pill-wait',pill:'–',cardCls:''};
+    const chipsHtml=mins?.length?mins.map((m,i)=>{const uu=urgency(r.walkMins,m);const cls=uu.state==='green'?'tc-green':uu.state==='yellow'?'tc-yellow':'tc-red';return`<div class="time-chip ${i===0?cls:''}"><span class="tc-val">${m}m</span><span class="tc-lbl">${i===0?'NEXT':i===1?'THEN':'AFTER'}</span></div>`;}).join(''):'';
+    const card=document.createElement('div');card.className=`card ${u.cardCls}`;card.id='card-'+key;
+    card.innerHTML=`<div class="card-top"><div class="card-route"><span class="route-tag" style="background:${r.color}22;color:${r.color};border:1px solid ${r.color}44">${r.id}</span><span class="card-dir">${r.dir}</span></div><span class="pill ${u.pillCls}">${u.pill}</span></div><div class="times">${chipsHtml}</div><div class="card-foot"><div class="walk-info">🚶 <b>${r.walkMins} min walk</b> · leave <b>${r.walkMins+BUFFER} min</b> before bus</div></div>`;
     container.appendChild(card);
   });
 }
-function toggleMom() {
-  momVisible=!momVisible;
-  document.getElementById('mom-card').classList.toggle('show',momVisible);
-  if(momVisible)fetchMom();
-}
-function renderMom() {
-  const el=document.getElementById('mom-route');
-  if(!Object.keys(momData).length){el.innerHTML='Loading…';return;}
-  let best=null;
-  MOM_ROUTES.forEach(r=>{
-    const next=momData[r.id]?.[0];
-    if(next!=null){const leaveIn=next-r.walkMins-BUFFER;if(!best||leaveIn<best.leaveIn)best={...r,next,leaveIn};}
-  });
-  if(!best){el.innerHTML='No arrivals found.';return;}
-  const ls=best.leaveIn<=0?'<b style="color:var(--danger)">LEAVE NOW</b>':best.leaveIn<=3?`<b style="color:var(--warn)">Leave in ${best.leaveIn} min</b>`:`Leave in <b>${best.leaveIn} min</b>`;
-  el.innerHTML=`${ls}<br>Take the <b style="color:#ff6b35">${best.id}</b> → Gun Hill / Wayne Ave<br>Bus in <b>${best.next} min</b> · Walk <b>${best.walkMins} min</b>`;
-}
-fetchAll();
-setInterval(fetchAll,30000);
 </script>
 </body>
 </html>
