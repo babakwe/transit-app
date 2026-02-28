@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/index.html << 'ENDOFFILE'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,8 +11,7 @@ cat > /mnt/user-data/outputs/index.html << 'ENDOFFILE'
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#08090f; --surface:#0f1120;
-  --glass:rgba(255,255,255,0.05); --glass2:rgba(255,255,255,0.08);
+  --bg:#08090f; --glass:rgba(255,255,255,0.05); --glass2:rgba(255,255,255,0.08);
   --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.15);
   --text:#eeeef8; --text2:rgba(238,238,248,0.5); --text3:rgba(238,238,248,0.25);
   --green:#00f5a0; --yellow:#ffd60a; --orange:#ff8c00; --red:#ff3b5c; --blue:#4da6ff; --purple:#c084fc;
@@ -34,30 +32,47 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .hdr{padding:48px 20px 16px;display:flex;justify-content:space-between;align-items:flex-end;}
 .brand{font-size:24px;font-weight:900;letter-spacing:-0.3px;}
 .brand span{color:var(--green);}
-.brand-sub{font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:0.04em;}
+.brand-sub{font-size:10px;color:var(--text3);margin-top:3px;}
 .clock{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);text-align:right;line-height:1.7;}
 
-/* GPS BAR */
-.gps-bar{margin:0 16px 16px;display:flex;gap:10px;}
-.gps-btn{flex:1;padding:13px 16px;background:var(--glass2);border:1px solid var(--border2);border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--text2);transition:all 0.2s;}
-.gps-btn:active{background:rgba(0,245,160,0.08);}
-.gps-btn.active{color:var(--green);border-color:rgba(0,245,160,0.3);background:rgba(0,245,160,0.05);}
-.gps-icon{font-size:18px;}
-.gps-sub{font-size:10px;color:var(--text3);font-weight:400;display:block;margin-top:1px;}
-.ref-btn{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--text3);transition:transform 0.3s,color 0.2s;}
-.ref-btn:active{transform:rotate(180deg);color:var(--green);}
+/* SEARCH */
+.search{margin:0 16px 16px;background:var(--glass2);border:1px solid var(--border2);border-radius:20px;padding:16px;}
+.field{margin-bottom:10px;}
+.field:last-child{margin-bottom:0;}
+.field-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;}
+.dot-from{background:var(--green);box-shadow:0 0 8px var(--green);}
+.dot-to{background:var(--blue);box-shadow:0 0 8px var(--blue);}
+.field-row{display:flex;gap:8px;}
+.field-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:var(--text);outline:none;transition:border-color 0.2s;}
+.field-input::placeholder{color:var(--text3);font-weight:400;}
+.field-input:focus{border-color:var(--border2);background:rgba(255,255,255,0.07);}
+.gps-btn{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:rgba(0,245,160,0.1);border:1px solid rgba(0,245,160,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all 0.2s;}
+.gps-btn.locating{animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.divider-row{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.divider-line{flex:1;height:1px;background:var(--border);}
+.swap-btn{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3);transition:transform 0.3s;}
+.swap-btn:active{transform:rotate(180deg);}
+.go-btn{width:100%;margin-top:12px;background:linear-gradient(135deg,#0039A6,#0060ff);border:none;border-radius:14px;padding:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(0,57,166,0.4);transition:opacity 0.2s,transform 0.1s;}
+.go-btn:active{opacity:0.85;transform:scale(0.98);}
+.go-btn:disabled{opacity:0.4;cursor:not-allowed;}
 
-/* WINNER HERO */
-.winner{margin:0 16px 14px;border-radius:20px;padding:20px;position:relative;overflow:hidden;transition:all 0.5s;}
+/* STATUS */
+.status-line{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:16px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.live-pip{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* WINNER */
+.winner{margin:0 16px 14px;border-radius:20px;padding:20px;transition:all 0.5s;}
 .winner.w-empty{background:var(--glass);border:1.5px solid var(--border);text-align:center;padding:32px 20px;}
 .winner.w-loading{background:var(--glass);border:1.5px solid var(--border);}
-.winner.w-go{background:linear-gradient(135deg,rgba(0,245,160,0.1),rgba(0,245,160,0.03));border:1.5px solid rgba(0,245,160,0.3);box-shadow:0 0 40px rgba(0,245,160,0.07);}
-.winner.w-hurry{background:linear-gradient(135deg,rgba(255,140,0,0.1),rgba(255,140,0,0.03));border:1.5px solid rgba(255,140,0,0.35);box-shadow:0 0 40px rgba(255,140,0,0.08);}
+.winner.w-go{background:linear-gradient(135deg,rgba(0,245,160,0.1),rgba(0,245,160,0.03));border:1.5px solid rgba(0,245,160,0.3);}
+.winner.w-hurry{background:linear-gradient(135deg,rgba(255,140,0,0.1),rgba(255,140,0,0.03));border:1.5px solid rgba(255,140,0,0.35);}
 .winner.w-now{background:linear-gradient(135deg,rgba(255,59,92,0.13),rgba(255,59,92,0.04));border:1.5px solid rgba(255,59,92,0.4);animation:nowP 1.5s ease-in-out infinite;}
 @keyframes nowP{0%,100%{box-shadow:0 0 40px rgba(255,59,92,0.1)}50%{box-shadow:0 0 60px rgba(255,59,92,0.25)}}
-
 .w-label{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
-.w-action{font-size:34px;font-weight:900;line-height:1;margin-bottom:6px;}
+.w-action{font-size:32px;font-weight:900;line-height:1;margin-bottom:6px;}
 .w-go .w-action{color:var(--green);}
 .w-hurry .w-action{color:var(--orange);}
 .w-now .w-action{color:var(--red);}
@@ -72,21 +87,30 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .w-now .w-countdown{color:var(--red);}
 .w-countdown-lbl{font-size:9px;color:var(--text3);text-align:right;font-weight:600;letter-spacing:0.08em;display:block;margin-top:2px;}
 
+/* GOOGLE ROUTES */
+.groutes{margin:0 16px 16px;}
+.groute-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s;}
+.groute-card:active{background:var(--glass2);}
+.groute-card.selected{border-color:rgba(0,245,160,0.3);background:rgba(0,245,160,0.03);}
+.groute-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.groute-duration{font-size:20px;font-weight:800;}
+.groute-badge{font-size:10px;padding:4px 10px;border-radius:20px;font-weight:700;}
+.groute-steps{font-size:11px;color:var(--text2);line-height:1.8;}
+.groute-steps b{color:var(--text);font-weight:600;}
+.groute-depart{font-size:10px;color:var(--text3);margin-top:6px;}
+
 /* TIP */
 .tip{margin:0 16px 14px;background:rgba(192,132,252,0.06);border:1px solid rgba(192,132,252,0.15);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:1.7;display:none;}
 .tip.show{display:block;}
 .tip-title{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);margin-bottom:5px;}
 
-/* SEC LABEL */
 .sec{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0 20px;margin-bottom:12px;}
 
 /* BUBBLES */
 .bubble-arena{padding:0 16px;margin-bottom:20px;}
 .bubble-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
-
 .bwrap{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;animation:bIn 0.55s cubic-bezier(0.34,1.4,0.64,1) both;}
 @keyframes bIn{from{transform:scale(0) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-
 .bubble{border-radius:50%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform 0.2s;
   background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.06) 45%,transparent 65%),
              radial-gradient(circle at 70% 75%,rgba(255,255,255,0.15) 0%,transparent 40%);
@@ -97,9 +121,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 @keyframes iri{to{transform:rotate(360deg)}}
 .bubble::after{content:'';position:absolute;top:7%;left:14%;width:32%;height:22%;background:radial-gradient(ellipse,rgba(255,255,255,0.55) 0%,transparent 70%);border-radius:50%;transform:rotate(-25deg);}
 .bubble:active{transform:scale(0.82);}
-
 .sz1{width:86px;height:86px;} .sz2{width:72px;height:72px;} .sz3{width:60px;height:60px;} .sz4{width:50px;height:50px;}
-
 .b-green{border:1.5px solid rgba(0,245,160,0.55);box-shadow:0 0 22px rgba(0,245,160,0.22),inset 0 0 18px rgba(0,245,160,0.06);}
 .b-yellow{border:1.5px solid rgba(255,214,10,0.55);box-shadow:0 0 22px rgba(255,214,10,0.2),inset 0 0 18px rgba(255,214,10,0.06);}
 .b-orange{border:1.5px solid rgba(255,140,0,0.6);box-shadow:0 0 22px rgba(255,140,0,0.25),inset 0 0 18px rgba(255,140,0,0.08);animation:wob 2.5s ease-in-out infinite;}
@@ -107,16 +129,14 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .b-gone{border:1px solid rgba(255,255,255,0.07);opacity:0.25;}
 @keyframes wob{0%,100%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.04) rotate(1.5deg)}75%{transform:scale(0.96) rotate(-1.5deg)}}
 @keyframes rp{0%,100%{box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1)}50%{box-shadow:0 0 45px rgba(255,59,92,0.6),inset 0 0 28px rgba(255,59,92,0.18)}}
-
 .b-route{font-size:13px;font-weight:800;z-index:2;line-height:1;color:white;text-shadow:0 1px 6px rgba(0,0,0,0.6);}
 .sz1 .b-route{font-size:15px;} .sz4 .b-route{font-size:11px;}
 .b-time{font-size:10px;font-weight:700;z-index:2;margin-top:2px;text-shadow:0 1px 4px rgba(0,0,0,0.6);}
-.sz4 .b-time{font-size:8px;}
 .b-label{font-size:8px;color:var(--text3);text-align:center;max-width:66px;font-weight:500;line-height:1.3;}
 
 /* STOP CARDS */
 .stop-cards{padding:0 16px;}
-.sc{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;transition:border-color 0.3s;}
+.sc{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;}
 .sc.best{border-color:rgba(0,245,160,0.22);background:rgba(0,245,160,0.03);}
 .sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .sc-stop{font-size:13px;font-weight:700;margin-bottom:2px;}
@@ -147,33 +167,58 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
   <div class="hdr">
     <div>
       <div class="brand">Town<span>Trip</span></div>
-      <div class="brand-sub">Co-op City → Q50 at Bruckner</div>
+      <div class="brand-sub">NYC Transit · Last Mile Intelligence</div>
     </div>
     <div class="clock" id="clk"></div>
   </div>
 
-  <div class="gps-bar">
-    <div class="gps-btn" id="gps-btn" onclick="startApp()">
-      <span class="gps-icon">📍</span>
-      <div style="flex:1">
-        <span id="gps-label" style="display:block">Use my location</span>
-        <span class="gps-sub" id="gps-sub">Tap to find nearest stop & next bus</span>
+  <!-- SEARCH -->
+  <div class="search">
+    <div class="field">
+      <div class="field-label"><div class="dot dot-from"></div>From</div>
+      <div class="field-row">
+        <input class="field-input" id="from-input" placeholder="Where are you now?" autocomplete="off">
+        <div class="gps-btn" id="gps-btn" onclick="getGPS()">📍</div>
       </div>
     </div>
-    <div class="ref-btn" onclick="refresh()">↻</div>
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <div class="swap-btn" onclick="swap()">⇅</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="field">
+      <div class="field-label"><div class="dot dot-to"></div>To</div>
+      <input class="field-input" id="to-input" placeholder="Where are you going?" autocomplete="off">
+    </div>
+    <button class="go-btn" id="go-btn" onclick="findRoute()">Find my ride →</button>
   </div>
 
+  <div class="status-line">
+    <div class="live-pip"></div>
+    <span id="status-msg">Enter your trip above</span>
+  </div>
+
+  <!-- WINNER -->
   <div class="winner w-empty" id="winner">
     <div style="font-size:36px;margin-bottom:12px">🫧</div>
-    <div style="font-size:15px;font-weight:700;color:var(--text2)">Tap your location to start</div>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">TownTrip checks Edson, Bartow &amp; Aldrich<br>and tells you exactly where to walk</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text2)">Enter origin &amp; destination</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">TownTrip finds your route and tells you<br>exactly when to leave your door</div>
   </div>
 
+  <!-- TIP -->
   <div class="tip" id="tip"><div class="tip-title">💡 TownTrip knows</div><div id="tip-text"></div></div>
 
-  <div class="sec" id="bsec" style="display:none">All options near you</div>
+  <!-- GOOGLE ROUTE OPTIONS -->
+  <div id="groutes-sec" style="display:none">
+    <div class="sec">Google route options</div>
+    <div class="groutes" id="groutes"></div>
+  </div>
+
+  <!-- BUBBLES -->
+  <div class="sec" id="bsec" style="display:none">Live arrivals near you</div>
   <div class="bubble-arena" id="barena" style="display:none"><div class="bubble-row" id="brow"></div></div>
 
+  <!-- STOP CARDS -->
   <div class="sec" id="ssec" style="display:none">Stop by stop</div>
   <div class="stop-cards" id="scards"></div>
 
@@ -185,8 +230,11 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 function tick(){const n=new Date();document.getElementById('clk').innerHTML=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})+'<br>'+n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
 setInterval(tick,1000);tick();
 
-// stops config
-const STOPS=[
+// state
+let userLat=null,userLng=null,arrivals={},activeStops=[],refreshTimer=null;
+
+// Co-op City stops (used when origin is Co-op City)
+const COOP_STOPS=[
   {id:'edson',name:'Edson Ave',fullName:'Edson Ave / Co-op City Blvd',walkMins:8,routes:[
     {id:'BX23',color:'#c084fc',stopId:'200761',dir:'→ Bruckner'},
     {id:'BX5', color:'#00f5a0',stopId:'200300',dir:'→ Bruckner/Q44'},
@@ -198,39 +246,159 @@ const STOPS=[
     {id:'BX23',color:'#c084fc',stopId:'200762',dir:'→ Bruckner'},
   ]},
 ];
-const BUFFER=2;
-let arrivals={},userLat=null,userLng=null;
-
-// local knowledge tips
-function getTip(winner){
-  if(!winner)return null;
-  const wait=winner.busIn-winner.stop.walkMins;
-  const hr=new Date().getHours();
-  if(winner.stop.id==='bartow'&&wait>15)return'BX12-SBS wait is long. Consider the Bartow Ave sidewalk walk to Bay Plaza — it takes ~22 min on foot but skips the wait entirely.';
-  if(winner.route.id==='BX23'&&hr>=22)return'Late night: BX12-SBS enforcement is minimal after 10pm. If BX23 has a long wait, Bartow Ave BX12 is often faster.';
-  if(winner.leaveIn<=1&&winner.leaveIn>0)return'This is very tight. If you miss it, the next Q50 from Bruckner/Wilkinson is ~30 min away. Check bustime.mta.info before committing.';
-  if(winner.stop.id==='aldrich'&&winner.leaveIn>10)return'Aldrich is your furthest stop (14 min walk). If Edson or Bartow have a bus coming, they\'re usually better unless this one is significantly sooner.';
-  return null;
-}
 
 // GPS
-function startApp(){
-  document.getElementById('gps-label').textContent='Getting location…';
-  document.getElementById('gps-sub').textContent='One moment';
-  document.getElementById('gps-btn').classList.add('active');
-  if(!navigator.geolocation){useDefault();}
-  else{
-    navigator.geolocation.getCurrentPosition(
-      pos=>{userLat=pos.coords.latitude;userLng=pos.coords.longitude;document.getElementById('gps-label').textContent='Location found ✓';document.getElementById('gps-sub').textContent='Checking all stops…';loadData();},
-      ()=>useDefault(),
-      {enableHighAccuracy:true,timeout:7000}
-    );
-  }
+function getGPS(){
+  const btn=document.getElementById('gps-btn');
+  const input=document.getElementById('from-input');
+  btn.classList.add('locating');btn.textContent='⟳';
+  if(!navigator.geolocation){setFrom('140 Alcott Pl, Bronx, NY',40.8735,-73.8290);return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      userLat=pos.coords.latitude;userLng=pos.coords.longitude;
+      btn.classList.remove('locating');btn.textContent='✓';
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
+        .then(r=>r.json()).then(d=>{
+          const a=d.address;
+          input.value=(a.road?`${a.house_number?a.house_number+' ':''}${a.road}, ${a.suburb||a.city||''}`:
+            `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`).trim().replace(/,\s*$/,'');
+        }).catch(()=>{input.value=`${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;});
+    },
+    ()=>{btn.classList.remove('locating');btn.textContent='📍';setFrom('140 Alcott Pl, Bronx, NY',40.8735,-73.8290);},
+    {enableHighAccuracy:true,timeout:7000}
+  );
 }
-function useDefault(){userLat=40.8735;userLng=-73.8290;document.getElementById('gps-label').textContent='Using Co-op City ✓';document.getElementById('gps-sub').textContent='GPS unavailable — using default';loadData();}
-function refresh(){if(userLat)loadData();else startApp();}
+function setFrom(addr,lat,lng){
+  document.getElementById('from-input').value=addr;
+  userLat=lat;userLng=lng;
+  document.getElementById('gps-btn').textContent='✓';
+}
+function swap(){
+  const f=document.getElementById('from-input'),t=document.getElementById('to-input');
+  [f.value,t.value]=[t.value,f.value];
+}
 
-// fetch
+// FIND ROUTE
+async function findRoute(){
+  const from=document.getElementById('from-input').value.trim();
+  const to=document.getElementById('to-input').value.trim();
+  if(!from||!to){document.getElementById('status-msg').textContent='Enter both origin and destination';return;}
+
+  document.getElementById('status-msg').textContent='Getting routes…';
+  document.getElementById('go-btn').disabled=true;
+  showWinnerLoading();
+
+  // detect if Co-op City origin
+  const isCoopCity=from.toLowerCase().match(/co.op|alcott|dreiser|carver|bellamy|bartow|baychester|einstein|140 alcott/);
+
+  if(isCoopCity){
+    // Use our hardcoded Co-op City stops + enrich with MTA live data
+    activeStops=COOP_STOPS;
+    await loadMTAData();
+    document.getElementById('go-btn').disabled=false;
+  } else {
+    // Call Google Directions API via our backend
+    try{
+      const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
+      const data=await res.json();
+      if(data.routes?.length){
+        renderGoogleRoutes(data.routes,to);
+      } else {
+        document.getElementById('status-msg').textContent='No routes found — try a different address';
+        showWinnerEmpty();
+      }
+    } catch(e){
+      document.getElementById('status-msg').textContent='Could not get routes — check connection';
+      showWinnerEmpty();
+    }
+    document.getElementById('go-btn').disabled=false;
+  }
+
+  clearInterval(refreshTimer);
+  refreshTimer=setInterval(()=>{if(activeStops.length)loadMTAData();},30000);
+}
+
+document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoute();});
+document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('to-input').focus();});
+
+// GOOGLE ROUTES RENDER
+function renderGoogleRoutes(routes,destination){
+  document.getElementById('groutes-sec').style.display='';
+  const container=document.getElementById('groutes');
+  container.innerHTML='';
+  document.getElementById('status-msg').textContent=`${routes.length} route${routes.length>1?'s':''} found`;
+
+  routes.slice(0,3).forEach((route,i)=>{
+    const leg=route.legs[0];
+    const duration=leg.duration.text;
+    const departure=leg.departure_time?.text||'Now';
+    const steps=leg.steps.filter(s=>s.travel_mode==='TRANSIT').map(s=>{
+      const t=s.transit_details;
+      return`<b>${t?.line?.short_name||t?.line?.name||'Transit'}</b> → ${t?.arrival_stop?.name||'destination'}`;
+    }).join(' · ')||'Walking route';
+
+    const card=document.createElement('div');
+    card.className='groute-card'+(i===0?' selected':'');
+    card.innerHTML=`
+      <div class="groute-top">
+        <span class="groute-duration">${duration}</span>
+        <span class="groute-badge" style="background:rgba(77,166,255,0.1);color:var(--blue);border:1px solid rgba(77,166,255,0.2)">${i===0?'Fastest':'Option '+(i+1)}</span>
+      </div>
+      <div class="groute-steps">${steps}</div>
+      <div class="groute-depart">Departs: ${departure} · Arrives: ${leg.arrival_time?.text||'—'}</div>`;
+    card.onclick=()=>{
+      document.querySelectorAll('.groute-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      // Show TownTrip intelligence for this route
+      showRouteTip(route,destination);
+    };
+    container.appendChild(card);
+  });
+
+  // Show TownTrip intelligence for first route
+  showRouteTip(routes[0],destination);
+  showWinnerFromGoogle(routes[0]);
+}
+
+function showRouteTip(route,destination){
+  const leg=route.legs[0];
+  const duration=leg.duration.text;
+  // Check for Co-op City last mile tips
+  const dest=destination.toLowerCase();
+  let tip=null;
+  if(dest.includes('jamaica')||dest.includes('ahlaw')||dest.includes('ah law')){
+    tip='Your Q50 at Bruckner/Wilkinson connects directly to Jamaica. Check Edson, Bartow and Aldrich for the fastest first bus.';
+  } else if(dest.includes('bruckner')||dest.includes('wilkinson')){
+    tip='Walk time from 140 Alcott: Edson Ave 8 min, Bartow Ave 12 min, Aldrich St 14 min. TownTrip picks the one with the least wait.';
+  }
+  if(tip){document.getElementById('tip-text').textContent=tip;document.getElementById('tip').classList.add('show');}
+  else{document.getElementById('tip').classList.remove('show');}
+}
+
+function showWinnerFromGoogle(route){
+  const leg=route.legs[0];
+  const duration=leg.duration.value/60; // minutes
+  const el=document.getElementById('winner');
+  const leaveIn=Math.max(0,Math.round((leg.departure_time?.value*1000-Date.now())/60000));
+  let wcls,action,detail;
+  if(leaveIn<=0){wcls='w-now';action='LEAVE NOW';detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
+  else if(leaveIn<=5){wcls='w-hurry';action=`LEAVE IN ${leaveIn} MIN`;detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
+  else{wcls='w-go';action=`Leave in ${leaveIn} min`;detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
+  el.className='winner '+wcls;
+  el.innerHTML=`
+    <div class="w-label">Best option now</div>
+    <div class="w-action">${action}</div>
+    <div class="w-detail">${detail}</div>
+    <div class="w-bottom">
+      <span class="w-badge" style="background:rgba(77,166,255,0.15);color:var(--blue);border:1px solid rgba(77,166,255,0.25)">Google Transit</span>
+      <div style="margin-left:auto;text-align:right">
+        <span class="w-countdown">${Math.round(duration)}</span>
+        <span class="w-countdown-lbl">MIN TRIP</span>
+      </div>
+    </div>`;
+}
+
+// MTA LIVE DATA (Co-op City)
 async function fetchBus(stopId,routeId){
   try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}
   catch{return null;}
@@ -238,40 +406,37 @@ async function fetchBus(stopId,routeId){
 function sim(stopId,routeId){
   const seed=(stopId+routeId).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
   const off=(Date.now()/60000)%25;
-  const base=(seed%15)+3;
-  const first=((base-off+25)%23)+1;
+  const first=((seed%15+3-off+25)%23)+1;
   return[Math.round(first),Math.round(first+9),Math.round(first+20)];
 }
 
-async function loadData(){
-  showLoading();
+async function loadMTAData(){
+  showWinnerLoading();
   const tasks=[];
-  STOPS.forEach(stop=>stop.routes.forEach(route=>{
+  activeStops.forEach(stop=>stop.routes.forEach(route=>{
     tasks.push(fetchBus(route.stopId,route.id).then(data=>{arrivals[stop.id+'_'+route.id]=data?.length?data:sim(route.stopId,route.id);}));
   }));
   await Promise.all(tasks);
   document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  render();
+  document.getElementById('status-msg').textContent='Live MTA · updates every 30s';
+  renderAll();
 }
 
-// urgency
 function urg(leaveIn){
-  if(leaveIn<=0) return{state:'gone', bcls:'b-gone',  wcls:'w-now',   bdg:'GONE',      bdgCls:'bg-now', rcc:'rc-r'};
-  if(leaveIn<=2) return{state:'now',  bcls:'b-red',   wcls:'w-now',   bdg:'LEAVE NOW', bdgCls:'bg-now', rcc:'rc-r'};
-  if(leaveIn<=6) return{state:'hurry',bcls:'b-orange',wcls:'w-hurry', bdg:`LEAVE IN ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-o'};
-  if(leaveIn<=13)return{state:'soon', bcls:'b-yellow',wcls:'w-hurry', bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-y'};
-  return              {state:'go',   bcls:'b-green', wcls:'w-go',    bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-go',  rcc:'rc-g'};
+  if(leaveIn<=0) return{state:'gone',bcls:'b-gone',wcls:'w-now',  bdg:'GONE',         bdgCls:'bg-now', rcc:'rc-r'};
+  if(leaveIn<=2) return{state:'now', bcls:'b-red',  wcls:'w-now',  bdg:'LEAVE NOW',    bdgCls:'bg-now', rcc:'rc-r'};
+  if(leaveIn<=6) return{state:'hurry',bcls:'b-orange',wcls:'w-hurry',bdg:`LEAVE IN ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-o'};
+  if(leaveIn<=13)return{state:'soon',bcls:'b-yellow',wcls:'w-hurry',bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-y'};
+  return              {state:'go',  bcls:'b-green', wcls:'w-go',   bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-go', rcc:'rc-g'};
 }
 
-function computeOptions(){
+function computeOpts(){
   const opts=[];
-  STOPS.forEach(stop=>stop.routes.forEach(route=>{
+  activeStops.forEach(stop=>stop.routes.forEach(route=>{
     const key=stop.id+'_'+route.id;
     const mins=arrivals[key];
     if(!mins?.length)return;
-    const busIn=mins[0];
-    const leaveIn=busIn-stop.walkMins;
-    opts.push({stop,route,busIn,leaveIn,mins,key});
+    opts.push({stop,route,busIn:mins[0],leaveIn:mins[0]-stop.walkMins,mins,key});
   }));
   opts.sort((a,b)=>{
     if(a.leaveIn<=0&&b.leaveIn>0)return 1;
@@ -281,17 +446,15 @@ function computeOptions(){
   return opts;
 }
 
-function render(){
-  const opts=computeOptions();
-  if(!opts.length){showEmpty();return;}
+function renderAll(){
+  const opts=computeOpts();
+  if(!opts.length){showWinnerEmpty();return;}
   const winner=opts.find(o=>o.leaveIn>0)||opts[0];
   renderWinner(winner);
   renderTip(winner);
   renderBubbles(opts);
   renderStops();
-  document.getElementById('bsec').style.display='';
-  document.getElementById('barena').style.display='';
-  document.getElementById('ssec').style.display='';
+  ['bsec','barena','ssec'].forEach(id=>document.getElementById(id).style.display='');
 }
 
 function renderWinner(w){
@@ -300,7 +463,7 @@ function renderWinner(w){
   el.className='winner '+u.wcls;
   let action,detail;
   if(w.leaveIn<=0){action='MISSED IT';detail=`<b>${w.route.id}</b> already gone — check next arrival below`;}
-  else if(w.leaveIn<=2){action='LEAVE NOW';detail=`Run to <b>${w.stop.name}</b> — <b>${w.route.id}</b> arrives in <b>${w.busIn} min</b>`;}
+  else if(w.leaveIn<=2){action='LEAVE NOW';detail=`Run to <b>${w.stop.name}</b> — <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
   else if(w.leaveIn<=6){action=`LEAVE IN ${w.leaveIn} MIN`;detail=`Walk to <b>${w.stop.name}</b> — <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
   else{action=`Leave in ${w.leaveIn} min`;detail=`Walk to <b>${w.stop.name}</b> (${w.stop.walkMins} min) → <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
   el.innerHTML=`
@@ -318,53 +481,54 @@ function renderWinner(w){
 }
 
 function renderTip(w){
-  const tip=getTip(w);
+  const tips={
+    bartow_long:'BX12-SBS wait is long. The Bartow Ave sidewalk goes all the way to Bay Plaza — ~22 min walk but skips the wait.',
+    bx23_latenight:'Late night tip: BX12-SBS enforcement is minimal after 10pm. Bartow Ave BX12 often faster than waiting for BX23.',
+    tight:'Very tight connection. If you miss it, next Q50 from Bruckner is ~30 min. Check bustime.mta.info first.',
+    aldrich:'Aldrich is your furthest stop. Only worth it if the bus is significantly sooner than Edson or Bartow.',
+  };
+  const hr=new Date().getHours();
+  let tip=null;
+  if(w.stop.id==='bartow'&&(w.busIn-w.stop.walkMins)>15)tip=tips.bartow_long;
+  else if(w.route.id==='BX23'&&hr>=22)tip=tips.bx23_latenight;
+  else if(w.leaveIn<=1&&w.leaveIn>0)tip=tips.tight;
+  else if(w.stop.id==='aldrich'&&w.leaveIn>10)tip=tips.aldrich;
   const el=document.getElementById('tip');
   if(tip){document.getElementById('tip-text').textContent=tip;el.classList.add('show');}
-  else{el.classList.remove('show');}
+  else el.classList.remove('show');
 }
 
 function renderBubbles(opts){
-  const row=document.getElementById('brow');
-  row.innerHTML='';
+  const row=document.getElementById('brow');row.innerHTML='';
   const sizes=['sz1','sz2','sz2','sz3','sz3','sz4','sz4'];
   opts.forEach((o,i)=>{
     const u=urg(o.leaveIn);
-    const sz=sizes[i]||'sz4';
     const tc=u.state==='go'?'#00f5a0':u.state==='soon'?'#ffd60a':u.state==='hurry'?'#ff8c00':'#ff3b5c';
     const wrap=document.createElement('div');
     wrap.className='bwrap';wrap.style.animationDelay=`${i*0.07}s`;
     wrap.onclick=()=>document.getElementById('sc-'+o.stop.id)?.scrollIntoView({behavior:'smooth',block:'center'});
-    wrap.innerHTML=`<div class="bubble ${sz} ${u.bcls}"><span class="b-route" style="color:white">${o.route.id}</span><span class="b-time" style="color:${tc}">${o.busIn}m</span></div><div class="b-label">${o.stop.name}</div>`;
+    wrap.innerHTML=`<div class="bubble ${sizes[i]||'sz4'} ${u.bcls}"><span class="b-route" style="color:white">${o.route.id}</span><span class="b-time" style="color:${tc}">${o.busIn}m</span></div><div class="b-label">${o.stop.name}</div>`;
     row.appendChild(wrap);
   });
 }
 
 function renderStops(){
-  const container=document.getElementById('scards');
-  container.innerHTML='';
-  // Group by stop
-  const bestKey=computeOptions().find(o=>o.leaveIn>0)?.key;
-  STOPS.forEach(stop=>{
-    const stopOpts=computeOptions().filter(o=>o.stop.id===stop.id);
+  const container=document.getElementById('scards');container.innerHTML='';
+  const bestKey=computeOpts().find(o=>o.leaveIn>0)?.key;
+  activeStops.forEach(stop=>{
+    const stopOpts=computeOpts().filter(o=>o.stop.id===stop.id);
     if(!stopOpts.length)return;
-    const bestOpt=stopOpts[0];
-    const u=urg(bestOpt.leaveIn);
+    const u=urg(stopOpts[0].leaveIn);
     const isBest=stopOpts.some(o=>o.key===bestKey);
     const card=document.createElement('div');
-    card.className='sc'+(isBest?' best':'');
-    card.id='sc-'+stop.id;
-    const routesHtml=stopOpts.map(o=>{
-      const ru=urg(o.leaveIn);
-      const chips=o.mins.map((m,i)=>{
-        const lu=urg(m-stop.walkMins);
-        return`<div class="rchip ${i===0?lu.rcc:''}"><span class="rn" style="color:${o.route.color}">${o.route.id}</span><span class="rt">${m}m</span><span class="rl">${i===0?'NEXT':i===1?'THEN':'AFTER'}</span></div>`;
-      }).join('');
-      return chips;
-    }).join('');
+    card.className='sc'+(isBest?' best':'');card.id='sc-'+stop.id;
+    const routesHtml=stopOpts.map(o=>o.mins.map((m,i)=>{
+      const lu=urg(m-stop.walkMins);
+      return`<div class="rchip ${i===0?lu.rcc:''}"><span class="rn" style="color:${o.route.color}">${o.route.id}</span><span class="rt">${m}m</span><span class="rl">${i===0?'NEXT':i===1?'THEN':'AFTER'}</span></div>`;
+    }).join('')).join('');
     card.innerHTML=`
       <div class="sc-top">
-        <div><div class="sc-stop">${isBest?'⭐ ':''}${stop.fullName}</div><div class="sc-walk">🚶 <b>${stop.walkMins} min walk</b> from Co-op City</div></div>
+        <div><div class="sc-stop">${isBest?'⭐ ':''}${stop.fullName}</div><div class="sc-walk">🚶 <b>${stop.walkMins} min walk</b></div></div>
         <span class="badge ${u.bdgCls}">${u.bdg}</span>
       </div>
       <div class="sc-routes">${routesHtml}</div>`;
@@ -372,13 +536,14 @@ function renderStops(){
   });
 }
 
-function showLoading(){
+function showWinnerLoading(){
   document.getElementById('winner').className='winner w-loading';
-  document.getElementById('winner').innerHTML='<div style="display:flex;gap:8px;justify-content:center;padding:16px 0"><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.2s infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.4s infinite"></div></div><style>@keyframes ldot{0%,80%,100%{transform:scale(0.6);opacity:0.3}40%{transform:scale(1);opacity:1}}</style><div style="text-align:center;font-size:12px;color:var(--text3);padding-bottom:8px">Checking Edson, Bartow &amp; Aldrich…</div>';}
-function showEmpty(){document.getElementById('winner').className='winner w-empty';document.getElementById('winner').innerHTML='<div style="font-size:11px;color:var(--text3)">No arrivals found. Try refreshing.</div>';}
-
-// auto-refresh every 30s
-setInterval(()=>{if(userLat)loadData();},30000);
+  document.getElementById('winner').innerHTML='<div style="display:flex;gap:8px;justify-content:center;padding:16px 0"><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.2s infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.4s infinite"></div></div><style>@keyframes ldot{0%,80%,100%{transform:scale(0.6);opacity:0.3}40%{transform:scale(1);opacity:1}}</style><div style="text-align:center;font-size:12px;color:var(--text3);padding-bottom:8px">Finding your best route…</div>';
+}
+function showWinnerEmpty(){
+  document.getElementById('winner').className='winner w-empty';
+  document.getElementById('winner').innerHTML='<div style="font-size:36px;margin-bottom:12px">🫧</div><div style="font-size:14px;font-weight:700;color:var(--text2)">No routes found</div><div style="font-size:11px;color:var(--text3);margin-top:6px">Try refreshing or check your addresses</div>';
+}
 </script>
 </body>
 </html>
