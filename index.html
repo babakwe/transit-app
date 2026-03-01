@@ -12,8 +12,8 @@
 <style>
 :root {
   --bg:#08090f; --glass:rgba(255,255,255,0.05); --glass2:rgba(255,255,255,0.08);
-  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.15);
-  --text:#eeeef8; --text2:rgba(238,238,248,0.5); --text3:rgba(238,238,248,0.25);
+  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.16);
+  --text:#eeeef8; --text2:rgba(238,238,248,0.5); --text3:rgba(238,238,248,0.26);
   --green:#00f5a0; --yellow:#ffd60a; --orange:#ff8c00; --red:#ff3b5c; --blue:#4da6ff; --purple:#c084fc;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -21,141 +21,144 @@ html,body{height:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
 
 .amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-.amb-o{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.1;animation:of 14s ease-in-out infinite;}
+.amb-o{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.08;animation:of 16s ease-in-out infinite;}
 .o1{width:500px;height:500px;background:#0039A6;top:-150px;left:-150px;}
 .o2{width:350px;height:350px;background:#00f5a0;bottom:-80px;right:-80px;animation-delay:-5s;}
-.o3{width:250px;height:250px;background:#c084fc;top:35%;left:55%;animation-delay:-9s;}
-@keyframes of{0%,100%{transform:translate(0,0)}33%{transform:translate(25px,-15px)}66%{transform:translate(-15px,25px)}}
+.o3{width:250px;height:250px;background:#c084fc;top:40%;left:50%;animation-delay:-10s;}
+@keyframes of{0%,100%{transform:translate(0,0)}33%{transform:translate(20px,-15px)}66%{transform:translate(-15px,20px)}}
 
-.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding-bottom:60px;}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding-bottom:70px;}
 
-.hdr{padding:48px 20px 16px;display:flex;justify-content:space-between;align-items:flex-end;}
-.brand{font-size:24px;font-weight:900;letter-spacing:-0.3px;}
+/* HEADER */
+.hdr{padding:48px 20px 20px;display:flex;justify-content:space-between;align-items:flex-end;}
+.brand{font-size:26px;font-weight:900;letter-spacing:-0.5px;}
 .brand span{color:var(--green);}
 .brand-sub{font-size:10px;color:var(--text3);margin-top:3px;}
-.clock{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);text-align:right;line-height:1.7;}
+.clock{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);text-align:right;line-height:1.8;}
 
 /* SEARCH */
-.search{margin:0 16px 16px;background:var(--glass2);border:1px solid var(--border2);border-radius:20px;padding:16px;}
-.field{margin-bottom:10px;}
-.field:last-child{margin-bottom:0;}
-.field-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.dot{width:6px;height:6px;border-radius:50%;}
-.dot-from{background:var(--green);box-shadow:0 0 8px var(--green);}
-.dot-to{background:var(--blue);box-shadow:0 0 8px var(--blue);}
-.field-row{display:flex;gap:8px;}
-.field-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:var(--text);outline:none;transition:border-color 0.2s;}
-.field-input::placeholder{color:var(--text3);font-weight:400;}
-.field-input:focus{border-color:var(--border2);background:rgba(255,255,255,0.07);}
-.gps-btn{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:rgba(0,245,160,0.1);border:1px solid rgba(0,245,160,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all 0.2s;}
-.gps-btn.locating{animation:pulse 1s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.divider-row{display:flex;align-items:center;gap:10px;margin:4px 0;}
-.divider-line{flex:1;height:1px;background:var(--border);}
-.swap-btn{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3);transition:transform 0.3s;}
-.swap-btn:active{transform:rotate(180deg);}
-.go-btn{width:100%;margin-top:12px;background:linear-gradient(135deg,#0039A6,#0060ff);border:none;border-radius:14px;padding:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(0,57,166,0.4);transition:opacity 0.2s,transform 0.1s;}
-.go-btn:active{opacity:0.85;transform:scale(0.98);}
-.go-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.search{margin:0 16px 14px;background:var(--glass2);border:1px solid var(--border2);border-radius:20px;padding:16px;}
+.flabel{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.df{background:var(--green);box-shadow:0 0 8px var(--green);}
+.dt{background:var(--blue);box-shadow:0 0 8px var(--blue);}
+.frow{display:flex;gap:8px;margin-bottom:10px;}
+.finput{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:var(--text);outline:none;transition:border-color 0.2s;}
+.finput::placeholder{color:var(--text3);font-weight:400;}
+.finput:focus{border-color:rgba(0,245,160,0.3);}
+.gpsbtn{width:44px;height:44px;border-radius:11px;flex-shrink:0;background:rgba(0,245,160,0.1);border:1px solid rgba(0,245,160,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
+.gpsbtn.spin{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divrow{display:flex;align-items:center;gap:10px;margin:0 0 10px;}
+.divline{flex:1;height:1px;background:var(--border);}
+.swapbtn{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text3);transition:transform 0.3s;}
+.swapbtn:active{transform:rotate(180deg);}
+.gobtn{width:100%;margin-top:12px;background:linear-gradient(135deg,#003db5,#0060ff);border:none;border-radius:14px;padding:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 24px rgba(0,57,166,0.4);transition:opacity 0.2s;}
+.gobtn:active{opacity:0.8;}
+.gobtn:disabled{opacity:0.35;cursor:not-allowed;}
 
 /* STATUS */
-.status-line{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:16px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
-.live-pip{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.statusbar{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:14px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
 
-/* WINNER */
-.winner{margin:0 16px 14px;border-radius:20px;padding:20px;transition:all 0.5s;}
-.winner.w-empty{background:var(--glass);border:1.5px solid var(--border);text-align:center;padding:32px 20px;}
-.winner.w-loading{background:var(--glass);border:1.5px solid var(--border);}
-.winner.w-go{background:linear-gradient(135deg,rgba(0,245,160,0.1),rgba(0,245,160,0.03));border:1.5px solid rgba(0,245,160,0.3);}
-.winner.w-hurry{background:linear-gradient(135deg,rgba(255,140,0,0.1),rgba(255,140,0,0.03));border:1.5px solid rgba(255,140,0,0.35);}
-.winner.w-now{background:linear-gradient(135deg,rgba(255,59,92,0.13),rgba(255,59,92,0.04));border:1.5px solid rgba(255,59,92,0.4);animation:nowP 1.5s ease-in-out infinite;}
-@keyframes nowP{0%,100%{box-shadow:0 0 40px rgba(255,59,92,0.1)}50%{box-shadow:0 0 60px rgba(255,59,92,0.25)}}
-.w-label{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
-.w-action{font-size:32px;font-weight:900;line-height:1;margin-bottom:6px;}
-.w-go .w-action{color:var(--green);}
-.w-hurry .w-action{color:var(--orange);}
-.w-now .w-action{color:var(--red);}
-.w-detail{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px;}
-.w-detail b{color:var(--text);font-weight:600;}
-.w-bottom{display:flex;align-items:center;gap:12px;}
-.w-badge{padding:6px 14px;border-radius:20px;font-size:14px;font-weight:900;}
-.w-stop-name{font-size:11px;color:var(--text2);}
-.w-countdown{margin-left:auto;font-size:40px;font-weight:900;font-family:'DM Mono',monospace;line-height:1;}
-.w-go .w-countdown{color:var(--green);}
-.w-hurry .w-countdown{color:var(--orange);}
-.w-now .w-countdown{color:var(--red);}
-.w-countdown-lbl{font-size:9px;color:var(--text3);text-align:right;font-weight:600;letter-spacing:0.08em;display:block;margin-top:2px;}
+/* SECTION LABEL */
+.sec{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0 20px;margin-bottom:12px;}
 
-/* GOOGLE ROUTES */
-.groutes{margin:0 16px 16px;}
-.groute-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s;}
-.groute-card:active{background:var(--glass2);}
-.groute-card.selected{border-color:rgba(0,245,160,0.3);background:rgba(0,245,160,0.03);}
-.groute-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.groute-duration{font-size:20px;font-weight:800;}
-.groute-badge{font-size:10px;padding:4px 10px;border-radius:20px;font-weight:700;}
-.groute-steps{font-size:11px;color:var(--text2);line-height:1.8;}
-.groute-steps b{color:var(--text);font-weight:600;}
-.groute-depart{font-size:10px;color:var(--text3);margin-top:6px;}
+/* ═══ WORM ROUTE CARD ═══ */
+.worm-card {
+  margin:0 16px 14px;
+  background:var(--glass);
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  padding:18px;
+  cursor:pointer;
+  transition:border-color 0.3s, background 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.worm-card.selected {
+  border-color:rgba(0,245,160,0.35);
+  background:rgba(0,245,160,0.03);
+}
+.worm-card:active{transform:scale(0.985);}
 
-/* TIP */
-.tip{margin:0 16px 14px;background:rgba(192,132,252,0.06);border:1px solid rgba(192,132,252,0.15);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:1.7;display:none;}
+/* urgency accent bar */
+.worm-card::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px;
+  background:var(--green); transition:background 0.3s;
+}
+.worm-card.urg-orange::before{background:var(--orange);}
+.worm-card.urg-red::before{background:var(--red);}
+.worm-card.urg-yellow::before{background:var(--yellow);}
+
+/* top row */
+.wc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.wc-action{font-size:24px;font-weight:900;line-height:1;}
+.wc-action.ca-green{color:var(--green);}
+.wc-action.ca-yellow{color:var(--yellow);}
+.wc-action.ca-orange{color:var(--orange);}
+.wc-action.ca-red{color:var(--red);}
+.wc-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.wc-pill{font-size:10px;padding:5px 12px;border-radius:20px;font-weight:700;white-space:nowrap;}
+.pill-best{background:rgba(0,245,160,0.12);color:var(--green);border:1px solid rgba(0,245,160,0.25);}
+.pill-alt{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);}
+.pill-avoid{background:rgba(255,59,92,0.1);color:var(--red);border:1px solid rgba(255,59,92,0.2);}
+
+/* ── THE WORM ── */
+.worm-container{margin-bottom:14px;overflow:hidden;}
+.worm-svg{width:100%;display:block;}
+
+/* timing chips */
+.wc-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:7px 12px;}
+.chip-val{font-size:18px;font-weight:900;display:block;line-height:1.1;}
+.chip-lbl{font-size:8px;color:var(--text3);font-weight:600;letter-spacing:0.06em;margin-top:1px;}
+.cv-green{color:var(--green);} .cv-yellow{color:var(--yellow);} .cv-orange{color:var(--orange);} .cv-red{color:var(--red);}
+
+/* tip */
+.tip{margin:0 16px 14px;background:rgba(192,132,252,0.06);border:1px solid rgba(192,132,252,0.2);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:1.7;display:none;}
 .tip.show{display:block;}
 .tip-title{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);margin-bottom:5px;}
 
-.sec{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0 20px;margin-bottom:12px;}
-
-/* BUBBLES */
-.bubble-arena{padding:0 16px;margin-bottom:20px;}
-.bubble-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
-.bwrap{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;animation:bIn 0.55s cubic-bezier(0.34,1.4,0.64,1) both;}
-@keyframes bIn{from{transform:scale(0) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-.bubble{border-radius:50%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform 0.2s;
-  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.06) 45%,transparent 65%),
-             radial-gradient(circle at 70% 75%,rgba(255,255,255,0.15) 0%,transparent 40%);
-  backdrop-filter:blur(10px);}
+/* ── BUBBLES ── */
+.bubble-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:0 16px;margin-bottom:20px;}
+.bwrap{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;animation:bIn 0.5s cubic-bezier(0.34,1.4,0.64,1) both;}
+@keyframes bIn{from{transform:scale(0) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.bubble{border-radius:50%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.38) 0%,rgba(255,255,255,0.04) 50%,transparent 65%),
+             radial-gradient(circle at 70% 75%,rgba(255,255,255,0.13) 0%,transparent 40%);
+  backdrop-filter:blur(10px);transition:transform 0.15s;}
 .bubble::before{content:'';position:absolute;inset:0;border-radius:50%;
-  background:conic-gradient(from 0deg,rgba(0,245,160,0) 0deg,rgba(0,180,255,0.08) 72deg,rgba(192,132,252,0.1) 144deg,rgba(255,107,53,0.06) 216deg,rgba(0,245,160,0.08) 288deg,rgba(0,245,160,0) 360deg);
+  background:conic-gradient(from 0deg,rgba(0,245,160,0) 0deg,rgba(77,166,255,0.09) 72deg,rgba(192,132,252,0.11) 144deg,rgba(255,107,53,0.06) 216deg,rgba(0,245,160,0.09) 288deg,rgba(0,245,160,0) 360deg);
   animation:iri 8s linear infinite;}
 @keyframes iri{to{transform:rotate(360deg)}}
 .bubble::after{content:'';position:absolute;top:7%;left:14%;width:32%;height:22%;background:radial-gradient(ellipse,rgba(255,255,255,0.55) 0%,transparent 70%);border-radius:50%;transform:rotate(-25deg);}
 .bubble:active{transform:scale(0.82);}
-.sz1{width:86px;height:86px;} .sz2{width:72px;height:72px;} .sz3{width:60px;height:60px;} .sz4{width:50px;height:50px;}
-.b-green{border:1.5px solid rgba(0,245,160,0.55);box-shadow:0 0 22px rgba(0,245,160,0.22),inset 0 0 18px rgba(0,245,160,0.06);}
-.b-yellow{border:1.5px solid rgba(255,214,10,0.55);box-shadow:0 0 22px rgba(255,214,10,0.2),inset 0 0 18px rgba(255,214,10,0.06);}
-.b-orange{border:1.5px solid rgba(255,140,0,0.6);box-shadow:0 0 22px rgba(255,140,0,0.25),inset 0 0 18px rgba(255,140,0,0.08);animation:wob 2.5s ease-in-out infinite;}
+.sz1{width:88px;height:88px;} .sz2{width:74px;height:74px;} .sz3{width:62px;height:62px;} .sz4{width:50px;height:50px;}
+.b-green{border:1.5px solid rgba(0,245,160,0.55);box-shadow:0 0 24px rgba(0,245,160,0.22),inset 0 0 18px rgba(0,245,160,0.06);}
+.b-yellow{border:1.5px solid rgba(255,214,10,0.55);box-shadow:0 0 24px rgba(255,214,10,0.2),inset 0 0 18px rgba(255,214,10,0.06);}
+.b-orange{border:1.5px solid rgba(255,140,0,0.6);box-shadow:0 0 24px rgba(255,140,0,0.25),inset 0 0 18px rgba(255,140,0,0.08);animation:wob 2.5s ease-in-out infinite;}
 .b-red{border:1.5px solid rgba(255,59,92,0.65);box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1);animation:rp 1s ease-in-out infinite;opacity:0.65;}
-.b-gone{border:1px solid rgba(255,255,255,0.07);opacity:0.25;}
-@keyframes wob{0%,100%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.04) rotate(1.5deg)}75%{transform:scale(0.96) rotate(-1.5deg)}}
-@keyframes rp{0%,100%{box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1)}50%{box-shadow:0 0 45px rgba(255,59,92,0.6),inset 0 0 28px rgba(255,59,92,0.18)}}
-.b-route{font-size:13px;font-weight:800;z-index:2;line-height:1;color:white;text-shadow:0 1px 6px rgba(0,0,0,0.6);}
-.sz1 .b-route{font-size:15px;} .sz4 .b-route{font-size:11px;}
-.b-time{font-size:10px;font-weight:700;z-index:2;margin-top:2px;text-shadow:0 1px 4px rgba(0,0,0,0.6);}
-.b-label{font-size:8px;color:var(--text3);text-align:center;max-width:66px;font-weight:500;line-height:1.3;}
+.b-gone{border:1px solid rgba(255,255,255,0.07);opacity:0.22;}
+@keyframes wob{0%,100%{transform:scale(1)}25%{transform:scale(1.05) rotate(1.5deg)}75%{transform:scale(0.95) rotate(-1.5deg)}}
+@keyframes rp{0%,100%{box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1)}50%{box-shadow:0 0 48px rgba(255,59,92,0.6),inset 0 0 30px rgba(255,59,92,0.18)}}
+.b-name{font-size:13px;font-weight:800;z-index:2;color:white;text-shadow:0 1px 6px rgba(0,0,0,0.6);line-height:1;}
+.sz1 .b-name{font-size:15px;} .sz4 .b-name{font-size:11px;}
+.b-mins{font-size:10px;font-weight:700;z-index:2;margin-top:2px;text-shadow:0 1px 4px rgba(0,0,0,0.6);}
+.b-label{font-size:8px;color:var(--text3);text-align:center;max-width:70px;font-weight:500;line-height:1.3;}
 
-/* STOP CARDS */
-.stop-cards{padding:0 16px;}
-.sc{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;}
-.sc.best{border-color:rgba(0,245,160,0.22);background:rgba(0,245,160,0.03);}
-.sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.sc-stop{font-size:13px;font-weight:700;margin-bottom:2px;}
-.sc-walk{font-size:10px;color:var(--text3);}
-.sc-walk b{color:var(--text2);font-weight:500;}
-.badge{font-size:10px;padding:4px 10px;border-radius:20px;font-weight:700;white-space:nowrap;}
-.bg-go{background:rgba(0,245,160,0.1);color:var(--green);border:1px solid rgba(0,245,160,0.2);}
-.bg-soon{background:rgba(255,214,10,0.1);color:var(--yellow);border:1px solid rgba(255,214,10,0.2);}
-.bg-now{background:rgba(255,59,92,0.1);color:var(--red);border:1px solid rgba(255,59,92,0.2);animation:pb 1s infinite;}
-.bg-wait{background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--border);}
-@keyframes pb{0%,100%{opacity:1}50%{opacity:0.4}}
-.sc-routes{display:flex;gap:6px;flex-wrap:wrap;}
-.rchip{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:7px 11px;}
-.rchip .rn{font-size:11px;font-weight:800;display:block;line-height:1;}
-.rchip .rt{font-size:19px;font-weight:900;display:block;line-height:1.2;}
-.rchip .rl{font-size:8px;color:var(--text3);font-weight:600;letter-spacing:0.05em;}
-.rc-g .rt{color:var(--green);} .rc-y .rt{color:var(--yellow);} .rc-o .rt{color:var(--orange);} .rc-r .rt{color:var(--red);}
+/* idle hero */
+.hero{margin:0 16px 16px;border-radius:20px;padding:28px 20px;background:var(--glass);border:1.5px solid var(--border);text-align:center;}
+.hero-icon{font-size:38px;margin-bottom:12px;}
+.hero-title{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+.hero-sub{font-size:11px;color:var(--text3);line-height:1.7;}
+.ldots{display:flex;gap:8px;justify-content:center;padding:20px 0;}
+.ld{width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out infinite;}
+.ld:nth-child(2){animation-delay:0.2s} .ld:nth-child(3){animation-delay:0.4s}
+@keyframes ldot{0%,80%,100%{transform:scale(0.5);opacity:0.2}40%{transform:scale(1);opacity:1}}
 
-.foot{padding:16px 20px;display:flex;justify-content:space-between;}
+.foot{padding:16px 20px 32px;display:flex;justify-content:space-between;}
 .foot-brand{font-size:9px;font-weight:700;letter-spacing:0.15em;color:var(--text3);}
 .foot-ts{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
 </style>
@@ -165,385 +168,433 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 <div class="app">
 
   <div class="hdr">
-    <div>
-      <div class="brand">Town<span>Trip</span></div>
-      <div class="brand-sub">NYC Transit · Last Mile Intelligence</div>
-    </div>
+    <div><div class="brand">Town<span>Trip</span></div><div class="brand-sub">NYC · Last Mile Intelligence</div></div>
     <div class="clock" id="clk"></div>
   </div>
 
-  <!-- SEARCH -->
   <div class="search">
-    <div class="field">
-      <div class="field-label"><div class="dot dot-from"></div>From</div>
-      <div class="field-row">
-        <input class="field-input" id="from-input" placeholder="Where are you now?" autocomplete="off">
-        <div class="gps-btn" id="gps-btn" onclick="getGPS()">📍</div>
-      </div>
+    <div class="flabel"><div class="dot df"></div>From</div>
+    <div class="frow">
+      <input class="finput" id="from-input" placeholder="Where are you now?" autocomplete="off">
+      <div class="gpsbtn" id="gps-btn" onclick="getGPS()">📍</div>
     </div>
-    <div class="divider-row">
-      <div class="divider-line"></div>
-      <div class="swap-btn" onclick="swap()">⇅</div>
-      <div class="divider-line"></div>
+    <div class="divrow"><div class="divline"></div><div class="swapbtn" onclick="doSwap()">⇅</div><div class="divline"></div></div>
+    <div class="flabel"><div class="dot dt"></div>To</div>
+    <input class="finput" id="to-input" placeholder="Where are you going?" autocomplete="off" style="width:100%;margin-bottom:0">
+    <button class="gobtn" id="go-btn" onclick="findRoute()">Find my ride →</button>
+  </div>
+
+  <div class="statusbar"><div class="pip"></div><span id="status-msg">Enter your trip above</span></div>
+
+  <div id="content">
+    <div class="hero">
+      <div class="hero-icon">🫧</div>
+      <div class="hero-title">Enter origin &amp; destination</div>
+      <div class="hero-sub">TownTrip shows only the buses that<br>actually make sense for your trip.</div>
     </div>
-    <div class="field">
-      <div class="field-label"><div class="dot dot-to"></div>To</div>
-      <input class="field-input" id="to-input" placeholder="Where are you going?" autocomplete="off">
-    </div>
-    <button class="go-btn" id="go-btn" onclick="findRoute()">Find my ride →</button>
   </div>
-
-  <div class="status-line">
-    <div class="live-pip"></div>
-    <span id="status-msg">Enter your trip above</span>
-  </div>
-
-  <!-- WINNER -->
-  <div class="winner w-empty" id="winner">
-    <div style="font-size:36px;margin-bottom:12px">🫧</div>
-    <div style="font-size:15px;font-weight:700;color:var(--text2)">Enter origin &amp; destination</div>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">TownTrip finds your route and tells you<br>exactly when to leave your door</div>
-  </div>
-
-  <!-- TIP -->
-  <div class="tip" id="tip"><div class="tip-title">💡 TownTrip knows</div><div id="tip-text"></div></div>
-
-  <!-- GOOGLE ROUTE OPTIONS -->
-  <div id="groutes-sec" style="display:none">
-    <div class="sec">Google route options</div>
-    <div class="groutes" id="groutes"></div>
-  </div>
-
-  <!-- BUBBLES -->
-  <div class="sec" id="bsec" style="display:none">Live arrivals near you</div>
-  <div class="bubble-arena" id="barena" style="display:none"><div class="bubble-row" id="brow"></div></div>
-
-  <!-- STOP CARDS -->
-  <div class="sec" id="ssec" style="display:none">Stop by stop</div>
-  <div class="stop-cards" id="scards"></div>
 
   <div class="foot"><span class="foot-brand">TOWNTRIP</span><span class="foot-ts" id="ts"></span></div>
 </div>
 
 <script>
-// clock
+// ── CLOCK ──
 function tick(){const n=new Date();document.getElementById('clk').innerHTML=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})+'<br>'+n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
 setInterval(tick,1000);tick();
 
-// state
-let userLat=null,userLng=null,arrivals={},activeStops=[],refreshTimer=null;
-
-// Co-op City stops (used when origin is Co-op City)
-const COOP_STOPS=[
-  {id:'edson',name:'Edson Ave',fullName:'Edson Ave / Co-op City Blvd',walkMins:8,routes:[
-    {id:'BX23',color:'#c084fc',stopId:'200761',dir:'→ Bruckner'},
-    {id:'BX5', color:'#00f5a0',stopId:'200300',dir:'→ Bruckner/Q44'},
-  ]},
-  {id:'bartow',name:'Bartow Ave',fullName:'Bartow Ave / Co-op City Blvd',walkMins:12,routes:[
-    {id:'BX12+',color:'#c084fc',stopId:'200760',dir:'→ Bruckner SBS'},
-  ]},
-  {id:'aldrich',name:'Aldrich St',fullName:'Baychester Ave / Aldrich St',walkMins:14,routes:[
-    {id:'BX23',color:'#c084fc',stopId:'200762',dir:'→ Bruckner'},
-  ]},
+// ═══════════════════════════════════════
+//  TOWNTRIP CORRIDOR KNOWLEDGE
+//  This is the brain. Each corridor knows
+//  exactly which buses serve the trip.
+// ═══════════════════════════════════════
+const CORRIDORS = [
+  {
+    name: 'Co-op City → Fordham / Tiebout',
+    fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','bartow ave','baychester','einstein'],
+    toKeys:['tiebout','fordham','2390','jerome ave','university av'],
+    // ONLY these buses matter for this trip
+    options:[
+      {
+        id:'bx12sbs',
+        label:'BX12-SBS direct',
+        busName:'BX12+',
+        busColor:'#a78bfa',  // purple
+        stopId:'200760',
+        boardStop:'Bartow Ave / Co-op City Blvd',
+        alightStop:'Fordham Rd / Tiebout Ave',
+        direction:'westbound → Inwood',
+        walkToStop:12,   // mins from 140 Alcott
+        rideTime:22,     // approx mins on bus
+        walkFromStop:4,  // mins to destination
+        primary:true,
+        note:'Direct. One bus, no transfers. BX12-SBS every 6-8 min peak, 10-12 min off-peak.',
+      },
+      {
+        id:'bx26',
+        label:'BX26 alt',
+        busName:'BX26',
+        busColor:'#34d399',  // teal
+        stopId:'200758',
+        boardStop:'Co-op City Blvd / Bartow Ave',
+        alightStop:'Fordham Rd area',
+        direction:'westbound',
+        walkToStop:10,
+        rideTime:28,
+        walkFromStop:6,
+        primary:false,
+        note:'Use if BX12-SBS is packed or running late.',
+      },
+      {
+        id:'bx28',
+        label:'BX28 alt',
+        busName:'BX28',
+        busColor:'#60a5fa',  // blue
+        stopId:'200759',
+        boardStop:'Alcott Pl / Asch Loop',
+        alightStop:'Fordham Rd area',
+        direction:'westbound',
+        walkToStop:5,   // closer stop!
+        rideTime:32,
+        walkFromStop:7,
+        primary:false,
+        note:'Closest stop to your door (5 min walk). Slower ride but good if BX12-SBS has a long wait.',
+      },
+    ]
+  },
+  // Add more corridors here as Kwasi adds trips
 ];
 
-// GPS
+let arrivals={}, refreshTimer=null, activeCorridor=null;
+
+// ── GPS ──
 function getGPS(){
-  const btn=document.getElementById('gps-btn');
-  const input=document.getElementById('from-input');
-  btn.classList.add('locating');btn.textContent='⟳';
-  if(!navigator.geolocation){setFrom('140 Alcott Pl, Bronx, NY',40.8735,-73.8290);return;}
+  const btn=document.getElementById('gps-btn'), inp=document.getElementById('from-input');
+  btn.classList.add('spin'); btn.textContent='⟳';
+  if(!navigator.geolocation){setDefaultLoc();return;}
   navigator.geolocation.getCurrentPosition(
     pos=>{
-      userLat=pos.coords.latitude;userLng=pos.coords.longitude;
-      btn.classList.remove('locating');btn.textContent='✓';
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
+      btn.classList.remove('spin'); btn.textContent='✓';
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
         .then(r=>r.json()).then(d=>{
           const a=d.address;
-          input.value=(a.road?`${a.house_number?a.house_number+' ':''}${a.road}, ${a.suburb||a.city||''}`:
-            `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`).trim().replace(/,\s*$/,'');
-        }).catch(()=>{input.value=`${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;});
+          inp.value=(`${a.house_number?a.house_number+' ':''}${a.road||''}${a.suburb?', '+a.suburb:''}`).trim()||`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+        }).catch(()=>{inp.value=`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;});
     },
-    ()=>{btn.classList.remove('locating');btn.textContent='📍';setFrom('140 Alcott Pl, Bronx, NY',40.8735,-73.8290);},
-    {enableHighAccuracy:true,timeout:7000}
+    ()=>setDefaultLoc(), {enableHighAccuracy:true,timeout:7000}
   );
 }
-function setFrom(addr,lat,lng){
-  document.getElementById('from-input').value=addr;
-  userLat=lat;userLng=lng;
-  document.getElementById('gps-btn').textContent='✓';
-}
-function swap(){
-  const f=document.getElementById('from-input'),t=document.getElementById('to-input');
-  [f.value,t.value]=[t.value,f.value];
-}
+function setDefaultLoc(){document.getElementById('gps-btn').classList.remove('spin');document.getElementById('gps-btn').textContent='📍';document.getElementById('from-input').value='140 Alcott Pl, Co-op City, Bronx';}
+function doSwap(){const f=document.getElementById('from-input'),t=document.getElementById('to-input');[f.value,t.value]=[t.value,f.value];}
 
-// FIND ROUTE
-async function findRoute(){
-  const from=document.getElementById('from-input').value.trim();
-  const to=document.getElementById('to-input').value.trim();
+// ── FIND ROUTE ──
+function findRoute(){
+  const from=document.getElementById('from-input').value.trim().toLowerCase();
+  const to=document.getElementById('to-input').value.trim().toLowerCase();
   if(!from||!to){document.getElementById('status-msg').textContent='Enter both origin and destination';return;}
-
-  document.getElementById('status-msg').textContent='Getting routes…';
   document.getElementById('go-btn').disabled=true;
-  showWinnerLoading();
+  document.getElementById('status-msg').textContent='Finding best routes…';
+  showLoading();
 
-  // detect if Co-op City origin
-  const isCoopCity=from.toLowerCase().match(/co.op|alcott|dreiser|carver|bellamy|bartow|baychester|einstein|140 alcott/);
+  activeCorridor=CORRIDORS.find(c=>c.fromKeys.some(k=>from.includes(k))&&c.toKeys.some(k=>to.includes(k)));
 
-  if(isCoopCity){
-    // Use our hardcoded Co-op City stops + enrich with MTA live data
-    activeStops=COOP_STOPS;
-    await loadMTAData();
-    document.getElementById('go-btn').disabled=false;
+  if(activeCorridor){
+    loadMTAAndRender();
   } else {
-    // Call Google Directions API via our backend
-    try{
-      const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
-      const data=await res.json();
-      if(data.routes?.length){
-        renderGoogleRoutes(data.routes,to);
-      } else {
-        document.getElementById('status-msg').textContent='No routes found — try a different address';
-        showWinnerEmpty();
-      }
-    } catch(e){
-      document.getElementById('status-msg').textContent='Could not get routes — check connection';
-      showWinnerEmpty();
-    }
-    document.getElementById('go-btn').disabled=false;
+    callGoogle(document.getElementById('from-input').value.trim(), document.getElementById('to-input').value.trim());
   }
-
   clearInterval(refreshTimer);
-  refreshTimer=setInterval(()=>{if(activeStops.length)loadMTAData();},30000);
+  refreshTimer=setInterval(()=>{if(activeCorridor)loadMTAAndRender(true);},30000);
 }
-
 document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoute();});
 document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('to-input').focus();});
 
-// GOOGLE ROUTES RENDER
-function renderGoogleRoutes(routes,destination){
-  document.getElementById('groutes-sec').style.display='';
-  const container=document.getElementById('groutes');
-  container.innerHTML='';
-  document.getElementById('status-msg').textContent=`${routes.length} route${routes.length>1?'s':''} found`;
-
-  routes.slice(0,3).forEach((route,i)=>{
-    const leg=route.legs[0];
-    const duration=leg.duration.text;
-    const departure=leg.departure_time?.text||'Now';
-    const steps=leg.steps.filter(s=>s.travel_mode==='TRANSIT').map(s=>{
-      const t=s.transit_details;
-      return`<b>${t?.line?.short_name||t?.line?.name||'Transit'}</b> → ${t?.arrival_stop?.name||'destination'}`;
-    }).join(' · ')||'Walking route';
-
-    const card=document.createElement('div');
-    card.className='groute-card'+(i===0?' selected':'');
-    card.innerHTML=`
-      <div class="groute-top">
-        <span class="groute-duration">${duration}</span>
-        <span class="groute-badge" style="background:rgba(77,166,255,0.1);color:var(--blue);border:1px solid rgba(77,166,255,0.2)">${i===0?'Fastest':'Option '+(i+1)}</span>
-      </div>
-      <div class="groute-steps">${steps}</div>
-      <div class="groute-depart">Departs: ${departure} · Arrives: ${leg.arrival_time?.text||'—'}</div>`;
-    card.onclick=()=>{
-      document.querySelectorAll('.groute-card').forEach(c=>c.classList.remove('selected'));
-      card.classList.add('selected');
-      // Show TownTrip intelligence for this route
-      showRouteTip(route,destination);
-    };
-    container.appendChild(card);
-  });
-
-  // Show TownTrip intelligence for first route
-  showRouteTip(routes[0],destination);
-  showWinnerFromGoogle(routes[0]);
-}
-
-function showRouteTip(route,destination){
-  const leg=route.legs[0];
-  const duration=leg.duration.text;
-  // Check for Co-op City last mile tips
-  const dest=destination.toLowerCase();
-  let tip=null;
-  if(dest.includes('jamaica')||dest.includes('ahlaw')||dest.includes('ah law')){
-    tip='Your Q50 at Bruckner/Wilkinson connects directly to Jamaica. Check Edson, Bartow and Aldrich for the fastest first bus.';
-  } else if(dest.includes('bruckner')||dest.includes('wilkinson')){
-    tip='Walk time from 140 Alcott: Edson Ave 8 min, Bartow Ave 12 min, Aldrich St 14 min. TownTrip picks the one with the least wait.';
-  }
-  if(tip){document.getElementById('tip-text').textContent=tip;document.getElementById('tip').classList.add('show');}
-  else{document.getElementById('tip').classList.remove('show');}
-}
-
-function showWinnerFromGoogle(route){
-  const leg=route.legs[0];
-  const duration=leg.duration.value/60; // minutes
-  const el=document.getElementById('winner');
-  const leaveIn=Math.max(0,Math.round((leg.departure_time?.value*1000-Date.now())/60000));
-  let wcls,action,detail;
-  if(leaveIn<=0){wcls='w-now';action='LEAVE NOW';detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
-  else if(leaveIn<=5){wcls='w-hurry';action=`LEAVE IN ${leaveIn} MIN`;detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
-  else{wcls='w-go';action=`Leave in ${leaveIn} min`;detail=`Trip takes <b>${leg.duration.text}</b> · arrives <b>${leg.arrival_time?.text||'—'}</b>`;}
-  el.className='winner '+wcls;
-  el.innerHTML=`
-    <div class="w-label">Best option now</div>
-    <div class="w-action">${action}</div>
-    <div class="w-detail">${detail}</div>
-    <div class="w-bottom">
-      <span class="w-badge" style="background:rgba(77,166,255,0.15);color:var(--blue);border:1px solid rgba(77,166,255,0.25)">Google Transit</span>
-      <div style="margin-left:auto;text-align:right">
-        <span class="w-countdown">${Math.round(duration)}</span>
-        <span class="w-countdown-lbl">MIN TRIP</span>
-      </div>
-    </div>`;
-}
-
-// MTA LIVE DATA (Co-op City)
+// ── FETCH MTA ──
 async function fetchBus(stopId,routeId){
-  try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}
-  catch{return null;}
+  try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}catch{return null;}
 }
 function sim(stopId,routeId){
   const seed=(stopId+routeId).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
   const off=(Date.now()/60000)%25;
-  const first=((seed%15+3-off+25)%23)+1;
+  const first=((seed%14)+3-off+25)%23+1;
   return[Math.round(first),Math.round(first+9),Math.round(first+20)];
 }
-
-async function loadMTAData(){
-  showWinnerLoading();
-  const tasks=[];
-  activeStops.forEach(stop=>stop.routes.forEach(route=>{
-    tasks.push(fetchBus(route.stopId,route.id).then(data=>{arrivals[stop.id+'_'+route.id]=data?.length?data:sim(route.stopId,route.id);}));
-  }));
+async function loadMTAAndRender(silent=false){
+  if(!silent)showLoading();
+  const tasks=activeCorridor.options.map(opt=>
+    fetchBus(opt.stopId,opt.busName).then(data=>{arrivals[opt.id]=data?.length?data:sim(opt.stopId,opt.busName);})
+  );
   await Promise.all(tasks);
   document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  document.getElementById('status-msg').textContent='Live MTA · updates every 30s';
-  renderAll();
+  document.getElementById('go-btn').disabled=false;
+  document.getElementById('status-msg').textContent='Live MTA · auto-refreshes every 30s';
+  renderCorridor();
 }
 
+// ── URGENCY ──
 function urg(leaveIn){
-  if(leaveIn<=0) return{state:'gone',bcls:'b-gone',wcls:'w-now',  bdg:'GONE',         bdgCls:'bg-now', rcc:'rc-r'};
-  if(leaveIn<=2) return{state:'now', bcls:'b-red',  wcls:'w-now',  bdg:'LEAVE NOW',    bdgCls:'bg-now', rcc:'rc-r'};
-  if(leaveIn<=6) return{state:'hurry',bcls:'b-orange',wcls:'w-hurry',bdg:`LEAVE IN ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-o'};
-  if(leaveIn<=13)return{state:'soon',bcls:'b-yellow',wcls:'w-hurry',bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-soon',rcc:'rc-y'};
-  return              {state:'go',  bcls:'b-green', wcls:'w-go',   bdg:`Leave in ${leaveIn}m`,bdgCls:'bg-go', rcc:'rc-g'};
+  if(leaveIn<=0) return{state:'gone',  bcls:'b-gone',   ac:'ca-red',    urgCls:'urg-red',    tvCls:'cv-red'};
+  if(leaveIn<=2) return{state:'now',   bcls:'b-red',    ac:'ca-red',    urgCls:'urg-red',    tvCls:'cv-red'};
+  if(leaveIn<=6) return{state:'hurry', bcls:'b-orange', ac:'ca-orange', urgCls:'urg-orange', tvCls:'cv-orange'};
+  if(leaveIn<=13)return{state:'soon',  bcls:'b-yellow', ac:'ca-yellow', urgCls:'urg-yellow', tvCls:'cv-yellow'};
+  return              {state:'go',    bcls:'b-green',  ac:'ca-green',  urgCls:'',           tvCls:'cv-green'};
+}
+function actionText(leaveIn){
+  if(leaveIn<=0) return'MISSED IT';
+  if(leaveIn<=2) return'LEAVE NOW';
+  if(leaveIn<=5) return`LEAVE IN ${leaveIn} MIN`;
+  return`Leave in ${leaveIn} min`;
 }
 
-function computeOpts(){
-  const opts=[];
-  activeStops.forEach(stop=>stop.routes.forEach(route=>{
-    const key=stop.id+'_'+route.id;
-    const mins=arrivals[key];
-    if(!mins?.length)return;
-    opts.push({stop,route,busIn:mins[0],leaveIn:mins[0]-stop.walkMins,mins,key});
-  }));
-  opts.sort((a,b)=>{
-    if(a.leaveIn<=0&&b.leaveIn>0)return 1;
-    if(b.leaveIn<=0&&a.leaveIn>0)return -1;
-    return a.leaveIn-b.leaveIn;
+// ═══════════════════════
+//  THE WORM SVG RENDERER
+// ═══════════════════════
+function buildWormSVG(opt, busIn){
+  // Worm segments represent journey legs
+  // Walk leg = thin dashed squiggly in light grey
+  // Bus leg = thick colorful flowing worm
+  // Width of each segment proportional to time
+
+  const W = 340; // SVG width (fits in card)
+  const H = 52;
+  const totalMins = opt.walkToStop + (busIn||opt.rideTime) + opt.walkFromStop;
+
+  // Proportional widths
+  const walkW1 = Math.max(28, (opt.walkToStop / totalMins) * W * 0.88);
+  const busW   = Math.max(60, ((busIn||opt.rideTime) / totalMins) * W * 0.88);
+  const walkW2 = Math.max(20, (opt.walkFromStop / totalMins) * W * 0.88);
+  const gap = 8;
+  const totalW = walkW1 + gap + busW + gap + walkW2;
+  const scale = (W - 10) / totalW;
+  const ww1 = walkW1 * scale;
+  const bw  = busW   * scale;
+  const ww2 = walkW2 * scale;
+
+  const cy = H / 2;
+  const x0 = 5;
+  const x1 = x0 + ww1;
+  const x2 = x1 + gap;
+  const x3 = x2 + bw;
+  const x4 = x3 + gap;
+  const x5 = x4 + ww2;
+
+  // Worm thickness: bus is thick, walk is thin
+  const busThick = 14;
+  const walkThick = 6;
+
+  // Worm: slightly wavy path using quadratic bezier curves
+  function wormPath(x0, x1, y, amplitude, freq){
+    const segs = Math.max(3, Math.round((x1-x0)/30));
+    const segW = (x1-x0)/segs;
+    let d = `M ${x0} ${y}`;
+    for(let i=0;i<segs;i++){
+      const cx1 = x0 + i*segW + segW*0.3;
+      const cy1 = y + (i%2===0?amplitude:-amplitude);
+      const cx2 = x0 + i*segW + segW*0.7;
+      const cy2 = y + (i%2===0?-amplitude:amplitude);
+      const ex  = x0 + (i+1)*segW;
+      d += ` C ${cx1} ${cy1} ${cx2} ${cy2} ${ex} ${y}`;
+    }
+    return d;
+  }
+
+  // Walk paths — subtle zigzag
+  const walkPath1 = wormPath(x0, x1, cy, 5, 3);
+  const busPath   = wormPath(x2, x3, cy, 7, 2);
+  const walkPath2 = wormPath(x4, x5, cy, 5, 3);
+
+  // Bubble at bus head
+  const headX = x3;
+  const headR = 9;
+
+  // Walking figure emoji fallback — text labels
+  const labelY = H - 2;
+
+  const animId = `worm_${opt.id}`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+  <defs>
+    <linearGradient id="bg_${opt.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:${opt.busColor};stop-opacity:0.3"/>
+      <stop offset="50%" style="stop-color:${opt.busColor};stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:${opt.busColor};stop-opacity:0.6"/>
+    </linearGradient>
+    <filter id="glow_${opt.id}">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- animate the worm shimmer -->
+    <linearGradient id="shimmer_${opt.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:${opt.busColor};stop-opacity:0.7">
+        <animate attributeName="offset" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="30%" style="stop-color:white;stop-opacity:0.9">
+        <animate attributeName="offset" values="0.2;1.2;0.2" dur="3s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="60%" style="stop-color:${opt.busColor};stop-opacity:0.7">
+        <animate attributeName="offset" values="0.5;1.5;0.5" dur="3s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Walk to stop: thin dashed squiggle -->
+  <path d="${walkPath1}" fill="none" stroke="rgba(238,238,248,0.2)" stroke-width="${walkThick}"
+    stroke-linecap="round" stroke-dasharray="4 5"/>
+  <!-- Walk label -->
+  <text x="${x0 + ww1/2}" y="${cy - 12}" text-anchor="middle" fill="rgba(238,238,248,0.35)" font-family="Outfit" font-size="8" font-weight="600">🚶 ${opt.walkToStop}m</text>
+
+  <!-- Connector dots -->
+  <circle cx="${x1}" cy="${cy}" r="4" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="${x2}" cy="${cy}" r="4" fill="${opt.busColor}" opacity="0.6"/>
+
+  <!-- BUS WORM: thick, glowing, animated shimmer -->
+  <path d="${busPath}" fill="none" stroke="url(#bg_${opt.id})" stroke-width="${busThick}"
+    stroke-linecap="round" filter="url(#glow_${opt.id})"/>
+  <!-- shimmer overlay -->
+  <path d="${busPath}" fill="none" stroke="url(#shimmer_${opt.id})" stroke-width="${busThick * 0.4}"
+    stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Bus name label on the worm -->
+  <text x="${x2 + bw/2}" y="${cy + 5}" text-anchor="middle" fill="white" font-family="Outfit" font-size="11" font-weight="800"
+    style="text-shadow:0 1px 4px rgba(0,0,0,0.8)">${opt.busName}</text>
+
+  <!-- Bus head bubble -->
+  <circle cx="${headX}" cy="${cy}" r="${headR}" fill="${opt.busColor}" opacity="0.9" filter="url(#glow_${opt.id})"/>
+  <circle cx="${headX - 3}" cy="${cy - 3}" r="3" fill="rgba(255,255,255,0.6)"/>
+
+  <!-- Connector dots after bus -->
+  <circle cx="${x4}" cy="${cy}" r="4" fill="${opt.busColor}" opacity="0.4"/>
+  <circle cx="${x5 - 2}" cy="${cy}" r="4" fill="rgba(238,238,248,0.2)"/>
+
+  <!-- Walk from stop: thin dashed squiggle -->
+  <path d="${walkPath2}" fill="none" stroke="rgba(238,238,248,0.2)" stroke-width="${walkThick}"
+    stroke-linecap="round" stroke-dasharray="4 5"/>
+  <!-- Walk label -->
+  <text x="${x4 + ww2/2}" y="${cy - 12}" text-anchor="middle" fill="rgba(238,238,248,0.35)" font-family="Outfit" font-size="8" font-weight="600">🚶 ${opt.walkFromStop}m</text>
+
+  <!-- Origin dot -->
+  <circle cx="${x0}" cy="${cy}" r="5" fill="rgba(0,245,160,0.9)" filter="url(#glow_${opt.id})"/>
+  <!-- Destination dot -->
+  <circle cx="${x5}" cy="${cy}" r="5" fill="rgba(77,166,255,0.9)" filter="url(#glow_${opt.id})"/>
+</svg>`;
+}
+
+// ── RENDER CORRIDOR ──
+function renderCorridor(){
+  const opts = activeCorridor.options.map(opt=>{
+    const mins = arrivals[opt.id];
+    const busIn = mins?.[0] ?? null;
+    const leaveIn = busIn != null ? busIn - opt.walkToStop : null;
+    const totalTrip = busIn != null ? opt.walkToStop + busIn + opt.walkFromStop : null;
+    return{...opt, busIn, leaveIn, mins, totalTrip};
   });
-  return opts;
-}
 
-function renderAll(){
-  const opts=computeOpts();
-  if(!opts.length){showWinnerEmpty();return;}
-  const winner=opts.find(o=>o.leaveIn>0)||opts[0];
-  renderWinner(winner);
-  renderTip(winner);
-  renderBubbles(opts);
-  renderStops();
-  ['bsec','barena','ssec'].forEach(id=>document.getElementById(id).style.display='');
-}
+  // Sort: primary first, then by leaveIn (gone last)
+  opts.sort((a,b)=>{
+    if(a.primary && !b.primary) return -1;
+    if(b.primary && !a.primary) return 1;
+    if(a.leaveIn<=0 && b.leaveIn>0) return 1;
+    if(b.leaveIn<=0 && a.leaveIn>0) return -1;
+    return (a.leaveIn??99)-(b.leaveIn??99);
+  });
 
-function renderWinner(w){
-  const u=urg(w.leaveIn);
-  const el=document.getElementById('winner');
-  el.className='winner '+u.wcls;
-  let action,detail;
-  if(w.leaveIn<=0){action='MISSED IT';detail=`<b>${w.route.id}</b> already gone — check next arrival below`;}
-  else if(w.leaveIn<=2){action='LEAVE NOW';detail=`Run to <b>${w.stop.name}</b> — <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
-  else if(w.leaveIn<=6){action=`LEAVE IN ${w.leaveIn} MIN`;detail=`Walk to <b>${w.stop.name}</b> — <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
-  else{action=`Leave in ${w.leaveIn} min`;detail=`Walk to <b>${w.stop.name}</b> (${w.stop.walkMins} min) → <b>${w.route.id}</b> in <b>${w.busIn} min</b>`;}
-  el.innerHTML=`
-    <div class="w-label">Best option now</div>
-    <div class="w-action">${action}</div>
-    <div class="w-detail">${detail}</div>
-    <div class="w-bottom">
-      <span class="w-badge" style="background:${w.route.color}22;color:${w.route.color};border:1px solid ${w.route.color}44">${w.route.id}</span>
-      <span class="w-stop-name">${w.stop.fullName}</span>
-      <div style="margin-left:auto;text-align:right">
-        <span class="w-countdown">${w.busIn}</span>
-        <span class="w-countdown-lbl">MIN TO BUS</span>
+  const best = opts.find(o=>o.leaveIn>0)||opts[0];
+  let html = `<div class="sec">Your route options</div>`;
+
+  // WORM CARDS
+  opts.forEach((opt,i)=>{
+    const u = opt.leaveIn!=null ? urg(opt.leaveIn) : urg(99);
+    const action = opt.leaveIn!=null ? actionText(opt.leaveIn) : '—';
+    const isFirst = i===0;
+    const totalStr = opt.totalTrip ? `~${opt.totalTrip} min total` : `~${opt.walkToStop+opt.rideTime+opt.walkFromStop} min total`;
+    const pillCls = isFirst?'pill-best':'pill-alt';
+    const pillTxt = isFirst?'Best now':'Alt';
+
+    html+=`<div class="worm-card ${u.urgCls}${isFirst?' selected':''}" onclick="selectCard(this)">
+      <div class="wc-top">
+        <div>
+          <div class="wc-action ${u.ac}">${action}</div>
+          <div class="wc-sub">${opt.label} · ${totalStr}</div>
+        </div>
+        <span class="wc-pill ${pillCls}">${pillTxt}</span>
+      </div>
+      <div class="worm-container">${buildWormSVG(opt, opt.busIn)}</div>
+      <div class="wc-chips">
+        <div class="chip"><span class="chip-val ${u.tvCls}">${opt.leaveIn!=null&&opt.leaveIn>0?opt.leaveIn+'m':'NOW'}</span><span class="chip-lbl">LEAVE IN</span></div>
+        <div class="chip"><span class="chip-val">${opt.busIn!=null?opt.busIn+'m':'—'}</span><span class="chip-lbl">BUS IN</span></div>
+        <div class="chip"><span class="chip-val">${opt.walkToStop}m</span><span class="chip-lbl">WALK TO STOP</span></div>
+        ${opt.mins?.[1]!=null?`<div class="chip"><span class="chip-val" style="color:var(--text2)">${opt.mins[1]}m</span><span class="chip-lbl">THEN</span></div>`:''}
       </div>
     </div>`;
-}
+  });
 
-function renderTip(w){
-  const tips={
-    bartow_long:'BX12-SBS wait is long. The Bartow Ave sidewalk goes all the way to Bay Plaza — ~22 min walk but skips the wait.',
-    bx23_latenight:'Late night tip: BX12-SBS enforcement is minimal after 10pm. Bartow Ave BX12 often faster than waiting for BX23.',
-    tight:'Very tight connection. If you miss it, next Q50 from Bruckner is ~30 min. Check bustime.mta.info first.',
-    aldrich:'Aldrich is your furthest stop. Only worth it if the bus is significantly sooner than Edson or Bartow.',
-  };
-  const hr=new Date().getHours();
-  let tip=null;
-  if(w.stop.id==='bartow'&&(w.busIn-w.stop.walkMins)>15)tip=tips.bartow_long;
-  else if(w.route.id==='BX23'&&hr>=22)tip=tips.bx23_latenight;
-  else if(w.leaveIn<=1&&w.leaveIn>0)tip=tips.tight;
-  else if(w.stop.id==='aldrich'&&w.leaveIn>10)tip=tips.aldrich;
-  const el=document.getElementById('tip');
-  if(tip){document.getElementById('tip-text').textContent=tip;el.classList.add('show');}
-  else el.classList.remove('show');
-}
+  // TIP
+  if(best?.note){
+    html+=`<div class="tip show"><div class="tip-title">💡 TownTrip knows</div>${best.note}</div>`;
+  }
 
-function renderBubbles(opts){
-  const row=document.getElementById('brow');row.innerHTML='';
-  const sizes=['sz1','sz2','sz2','sz3','sz3','sz4','sz4'];
-  opts.forEach((o,i)=>{
-    const u=urg(o.leaveIn);
+  // BUBBLES — only the buses that serve this trip
+  html+=`<div class="sec">Live arrivals</div><div class="bubble-row">`;
+  const sizes=['sz1','sz2','sz3','sz4'];
+  opts.forEach((opt,i)=>{
+    if(opt.leaveIn==null)return;
+    const u=urg(opt.leaveIn);
     const tc=u.state==='go'?'#00f5a0':u.state==='soon'?'#ffd60a':u.state==='hurry'?'#ff8c00':'#ff3b5c';
-    const wrap=document.createElement('div');
-    wrap.className='bwrap';wrap.style.animationDelay=`${i*0.07}s`;
-    wrap.onclick=()=>document.getElementById('sc-'+o.stop.id)?.scrollIntoView({behavior:'smooth',block:'center'});
-    wrap.innerHTML=`<div class="bubble ${sizes[i]||'sz4'} ${u.bcls}"><span class="b-route" style="color:white">${o.route.id}</span><span class="b-time" style="color:${tc}">${o.busIn}m</span></div><div class="b-label">${o.stop.name}</div>`;
-    row.appendChild(wrap);
-  });
-}
-
-function renderStops(){
-  const container=document.getElementById('scards');container.innerHTML='';
-  const bestKey=computeOpts().find(o=>o.leaveIn>0)?.key;
-  activeStops.forEach(stop=>{
-    const stopOpts=computeOpts().filter(o=>o.stop.id===stop.id);
-    if(!stopOpts.length)return;
-    const u=urg(stopOpts[0].leaveIn);
-    const isBest=stopOpts.some(o=>o.key===bestKey);
-    const card=document.createElement('div');
-    card.className='sc'+(isBest?' best':'');card.id='sc-'+stop.id;
-    const routesHtml=stopOpts.map(o=>o.mins.map((m,i)=>{
-      const lu=urg(m-stop.walkMins);
-      return`<div class="rchip ${i===0?lu.rcc:''}"><span class="rn" style="color:${o.route.color}">${o.route.id}</span><span class="rt">${m}m</span><span class="rl">${i===0?'NEXT':i===1?'THEN':'AFTER'}</span></div>`;
-    }).join('')).join('');
-    card.innerHTML=`
-      <div class="sc-top">
-        <div><div class="sc-stop">${isBest?'⭐ ':''}${stop.fullName}</div><div class="sc-walk">🚶 <b>${stop.walkMins} min walk</b></div></div>
-        <span class="badge ${u.bdgCls}">${u.bdg}</span>
+    html+=`<div class="bwrap" style="animation-delay:${i*0.1}s">
+      <div class="bubble ${sizes[i]||'sz4'} ${u.bcls}">
+        <span class="b-name" style="color:white">${opt.busName}</span>
+        <span class="b-mins" style="color:${tc}">${opt.busIn}m</span>
       </div>
-      <div class="sc-routes">${routesHtml}</div>`;
-    container.appendChild(card);
+      <div class="b-label">${opt.boardStop.split('/')[0].trim()}</div>
+    </div>`;
   });
+  html+=`</div>`;
+
+  document.getElementById('content').innerHTML=html;
 }
 
-function showWinnerLoading(){
-  document.getElementById('winner').className='winner w-loading';
-  document.getElementById('winner').innerHTML='<div style="display:flex;gap:8px;justify-content:center;padding:16px 0"><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.2s infinite"></div><div style="width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out 0.4s infinite"></div></div><style>@keyframes ldot{0%,80%,100%{transform:scale(0.6);opacity:0.3}40%{transform:scale(1);opacity:1}}</style><div style="text-align:center;font-size:12px;color:var(--text3);padding-bottom:8px">Finding your best route…</div>';
+function selectCard(el){document.querySelectorAll('.worm-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}
+
+// ── GOOGLE FALLBACK ──
+async function callGoogle(from,to){
+  try{
+    const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
+    const data=await res.json();
+    document.getElementById('go-btn').disabled=false;
+    if(data.routes?.length){
+      document.getElementById('status-msg').textContent=`${data.routes.length} routes found via Google`;
+      // Simple display for unknown corridors
+      let html=`<div class="sec">Google transit options</div>`;
+      data.routes.slice(0,3).forEach((route,i)=>{
+        const leg=route.legs?.[0];
+        if(!leg)return;
+        const dur=leg.duration?.text||'—';
+        const dep=leg.departure_time?.text||'Now';
+        const arr=leg.arrival_time?.text||'—';
+        const leaveIn=leg.departure_time?.value?Math.round((leg.departure_time.value*1000-Date.now())/60000):null;
+        const u=leaveIn!=null?urg(leaveIn):urg(99);
+        const action=leaveIn!=null?actionText(leaveIn):dur;
+        const steps=leg.steps?.filter(s=>s.travel_mode==='TRANSIT').map(s=>{
+          const t=s.transit_details;const n=t?.line?.short_name||t?.line?.name||'Bus';
+          return`<span style="background:rgba(77,166,255,0.2);color:var(--blue);padding:2px 8px;border-radius:10px;font-weight:800;font-size:11px">${n}</span>`;
+        }).join(' → ')||'🚶 Walk';
+        html+=`<div class="worm-card${i===0?' selected':''}" onclick="selectCard(this)">
+          <div class="wc-top"><div><div class="wc-action ${u.ac}">${action}</div><div class="wc-sub">${dur} total · arrives ${arr}</div></div>
+          <span class="wc-pill ${i===0?'pill-best':'pill-alt'}">${i===0?'Fastest':'Alt'}</span></div>
+          <div style="padding:8px 0;font-size:12px;color:var(--text2)">${steps}</div>
+          <div class="wc-chips">
+            <div class="chip"><span class="chip-val" style="color:var(--blue)">${dep}</span><span class="chip-lbl">DEPARTS</span></div>
+            <div class="chip"><span class="chip-val">${arr}</span><span class="chip-lbl">ARRIVES</span></div>
+          </div>
+        </div>`;
+      });
+      html+=`<div class="tip show"><div class="tip-title">💡 TownTrip tip</div>TownTrip doesn't know this corridor yet — showing Google routes. We'll add local intelligence as you use the app.</div>`;
+      document.getElementById('content').innerHTML=html;
+    }else{showError('No transit routes found.');}
+  }catch{document.getElementById('go-btn').disabled=false;showError('Could not get routes — check your connection.');}
 }
-function showWinnerEmpty(){
-  document.getElementById('winner').className='winner w-empty';
-  document.getElementById('winner').innerHTML='<div style="font-size:36px;margin-bottom:12px">🫧</div><div style="font-size:14px;font-weight:700;color:var(--text2)">No routes found</div><div style="font-size:11px;color:var(--text3);margin-top:6px">Try refreshing or check your addresses</div>';
-}
+
+function showLoading(){document.getElementById('content').innerHTML=`<div class="hero"><div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div><div class="hero-title">Finding your ride…</div><div class="hero-sub">Checking live arrivals</div></div>`;}
+function showError(msg){document.getElementById('content').innerHTML=`<div class="hero"><div class="hero-icon">⚠️</div><div class="hero-title">No routes found</div><div class="hero-sub">${msg}</div></div>`;}
 </script>
 </body>
 </html>
