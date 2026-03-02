@@ -6,305 +6,545 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TownTrip">
-<meta name="theme-color" content="#08090f">
+<meta name="theme-color" content="#ffffff">
 <title>TownTrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#08090f; --glass:rgba(255,255,255,0.05); --glass2:rgba(255,255,255,0.08);
-  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.16);
-  --text:#eeeef8; --text2:rgba(238,238,248,0.5); --text3:rgba(238,238,248,0.26);
-  --green:#00f5a0; --yellow:#ffd60a; --orange:#ff8c00; --red:#ff3b5c; --blue:#4da6ff; --purple:#c084fc;
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; background:#f8f8f8; }
+
+/* MAP fills everything */
+#map { position:fixed; inset:0; z-index:0; }
+
+/* ── TOP SEARCH BAR ── */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  padding: env(safe-area-inset-top, 12px) 16px 12px;
+  padding-top: max(env(safe-area-inset-top), 12px);
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,0,0,0.07);
+  box-shadow:0 2px 24px rgba(0,0,0,0.07);
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow-x:hidden;}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
+.topbar-inner { max-width:480px; margin:0 auto; }
 
-.amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-.amb-o{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.08;animation:of 16s ease-in-out infinite;}
-.o1{width:500px;height:500px;background:#0039A6;top:-150px;left:-150px;}
-.o2{width:350px;height:350px;background:#00f5a0;bottom:-80px;right:-80px;animation-delay:-5s;}
-.o3{width:250px;height:250px;background:#c084fc;top:40%;left:50%;animation-delay:-10s;}
-@keyframes of{0%,100%{transform:translate(0,0)}33%{transform:translate(20px,-15px)}66%{transform:translate(-15px,20px)}}
+.brand-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.brand { font-size:21px; font-weight:900; color:#111; letter-spacing:-0.4px; }
+.brand span { color:#0039A6; }
+.clock { font-family:'DM Mono',monospace; font-size:11px; color:#aaa; }
 
-.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding-bottom:70px;}
-
-/* HEADER */
-.hdr{padding:48px 20px 20px;display:flex;justify-content:space-between;align-items:flex-end;}
-.brand{font-size:26px;font-weight:900;letter-spacing:-0.5px;}
-.brand span{color:var(--green);}
-.brand-sub{font-size:10px;color:var(--text3);margin-top:3px;}
-.clock{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);text-align:right;line-height:1.8;}
-
-/* SEARCH */
-.search{margin:0 16px 14px;background:var(--glass2);border:1px solid var(--border2);border-radius:20px;padding:16px;}
-.flabel{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.df{background:var(--green);box-shadow:0 0 8px var(--green);}
-.dt{background:var(--blue);box-shadow:0 0 8px var(--blue);}
-.frow{display:flex;gap:8px;margin-bottom:10px;}
-.finput{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:var(--text);outline:none;transition:border-color 0.2s;}
-.finput::placeholder{color:var(--text3);font-weight:400;}
-.finput:focus{border-color:rgba(0,245,160,0.3);}
-.gpsbtn{width:44px;height:44px;border-radius:11px;flex-shrink:0;background:rgba(0,245,160,0.1);border:1px solid rgba(0,245,160,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
-.gpsbtn.spin{animation:spin 1s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.divrow{display:flex;align-items:center;gap:10px;margin:0 0 10px;}
-.divline{flex:1;height:1px;background:var(--border);}
-.swapbtn{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text3);transition:transform 0.3s;}
-.swapbtn:active{transform:rotate(180deg);}
-.gobtn{width:100%;margin-top:12px;background:linear-gradient(135deg,#003db5,#0060ff);border:none;border-radius:14px;padding:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 24px rgba(0,57,166,0.4);transition:opacity 0.2s;}
-.gobtn:active{opacity:0.8;}
-.gobtn:disabled{opacity:0.35;cursor:not-allowed;}
-
-/* STATUS */
-.statusbar{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:14px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
-.pip{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
-
-/* SECTION LABEL */
-.sec{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0 20px;margin-bottom:12px;}
-
-/* ═══ WORM ROUTE CARD ═══ */
-.worm-card {
-  margin:0 16px 14px;
-  background:var(--glass);
-  border:1.5px solid var(--border);
-  border-radius:20px;
-  padding:18px;
-  cursor:pointer;
-  transition:border-color 0.3s, background 0.3s;
-  position:relative;
-  overflow:hidden;
+.search-box {
+  display:flex; flex-direction:column; gap:6px;
 }
-.worm-card.selected {
-  border-color:rgba(0,245,160,0.35);
-  background:rgba(0,245,160,0.03);
+.srow { display:flex; align-items:center; gap:8px; }
+.sdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.sdot-from { background:#00A651; box-shadow:0 0 6px rgba(0,166,81,0.6); }
+.sdot-to   { background:#0039A6; box-shadow:0 0 6px rgba(0,57,166,0.5); }
+.sinput {
+  flex:1; background:#f2f2f7; border:1.5px solid transparent;
+  border-radius:12px; padding:10px 13px;
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:500; color:#111;
+  outline:none; transition:all 0.2s;
 }
-.worm-card:active{transform:scale(0.985);}
-
-/* urgency accent bar */
-.worm-card::before{
-  content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px;
-  background:var(--green); transition:background 0.3s;
+.sinput::placeholder { color:#bbb; font-weight:400; }
+.sinput:focus { border-color:#0039A6; background:#fff; box-shadow:0 0 0 3px rgba(0,57,166,0.08); }
+.sibtn {
+  width:40px; height:40px; border-radius:10px; flex-shrink:0;
+  background:#fff; border:1.5px solid #e8e8ec;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:17px; transition:all 0.15s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
 }
-.worm-card.urg-orange::before{background:var(--orange);}
-.worm-card.urg-red::before{background:var(--red);}
-.worm-card.urg-yellow::before{background:var(--yellow);}
+.sibtn:active { transform:scale(0.88); background:#f0f0f8; }
+.gobtn {
+  width:100%; margin-top:6px;
+  background:#0039A6; border:none; border-radius:12px; padding:12px;
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; color:white;
+  cursor:pointer; box-shadow:0 4px 16px rgba(0,57,166,0.35); transition:opacity 0.2s;
+}
+.gobtn:active { opacity:0.82; }
+.gobtn:disabled { opacity:0.38; cursor:not-allowed; }
 
-/* top row */
-.wc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
-.wc-action{font-size:24px;font-weight:900;line-height:1;}
-.wc-action.ca-green{color:var(--green);}
-.wc-action.ca-yellow{color:var(--yellow);}
-.wc-action.ca-orange{color:var(--orange);}
-.wc-action.ca-red{color:var(--red);}
-.wc-sub{font-size:11px;color:var(--text2);margin-top:3px;}
-.wc-pill{font-size:10px;padding:5px 12px;border-radius:20px;font-weight:700;white-space:nowrap;}
-.pill-best{background:rgba(0,245,160,0.12);color:var(--green);border:1px solid rgba(0,245,160,0.25);}
-.pill-alt{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);}
-.pill-avoid{background:rgba(255,59,92,0.1);color:var(--red);border:1px solid rgba(255,59,92,0.2);}
+/* ── FAB BUTTONS (right side) ── */
+.fab {
+  position:fixed; right:16px; z-index:100;
+  width:46px; height:46px; border-radius:14px;
+  background:white; border:1.5px solid #e8e8ec;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:20px;
+  box-shadow:0 2px 14px rgba(0,0,0,0.12);
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.fab:active { transform:scale(0.88); }
+#fab-locate { bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
 
-/* ── THE WORM ── */
-.worm-container{margin-bottom:14px;overflow:hidden;}
-.worm-svg{width:100%;display:block;}
+/* ── STOP POPUP (slides up from bottom) ── */
+.sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:200;
+  background:white; border-radius:24px 24px 0 0;
+  box-shadow:0 -6px 40px rgba(0,0,0,0.14);
+  transform:translateY(110%);
+  transition:transform 0.38s cubic-bezier(0.32,1.1,0.64,1);
+  max-height:78vh; overflow-y:auto;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.sheet.open { transform:translateY(0); }
+.sheet-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 0; }
+.sheet-inner { padding:16px 20px 32px; }
+.sheet-close {
+  position:absolute; top:14px; right:16px;
+  width:30px; height:30px; border-radius:50%;
+  background:#f2f2f7; border:none; cursor:pointer;
+  font-size:14px; display:flex; align-items:center; justify-content:center; color:#888;
+}
 
-/* timing chips */
-.wc-chips{display:flex;gap:6px;flex-wrap:wrap;}
-.chip{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:7px 12px;}
-.chip-val{font-size:18px;font-weight:900;display:block;line-height:1.1;}
-.chip-lbl{font-size:8px;color:var(--text3);font-weight:600;letter-spacing:0.06em;margin-top:1px;}
-.cv-green{color:var(--green);} .cv-yellow{color:var(--yellow);} .cv-orange{color:var(--orange);} .cv-red{color:var(--red);}
+/* stop header */
+.stop-name { font-size:18px; font-weight:800; color:#111; margin-bottom:4px; }
+.stop-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.tag {
+  font-size:10px; font-weight:700; padding:4px 10px; border-radius:8px;
+  background:#f2f2f7; color:#666;
+}
+.tag-elev { background:#eef2ff; color:#3355cc; }
+.tag-walk { background:#efffef; color:#227733; }
 
-/* tip */
-.tip{margin:0 16px 14px;background:rgba(192,132,252,0.06);border:1px solid rgba(192,132,252,0.2);border-left:3px solid var(--purple);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:1.7;display:none;}
-.tip.show{display:block;}
-.tip-title{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);margin-bottom:5px;}
+/* arrivals */
+.arr-title { font-size:9px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#ccc; margin-bottom:10px; }
+.arr-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:14px; margin-bottom:8px; background:#f8f8fa;
+  border:1.5px solid transparent; transition:border-color 0.2s;
+}
+.arr-row.urgnow   { border-color:#FF6319; background:#fff8f4; }
+.arr-row.urgsoon  { border-color:#FFA500; background:#fffbf0; }
+.arr-row.urggo    { border-color:#00A651; background:#f4fff8; }
 
-/* ── BUBBLES ── */
-.bubble-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:0 16px;margin-bottom:20px;}
-.bwrap{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;animation:bIn 0.5s cubic-bezier(0.34,1.4,0.64,1) both;}
-@keyframes bIn{from{transform:scale(0) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-.bubble{border-radius:50%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.38) 0%,rgba(255,255,255,0.04) 50%,transparent 65%),
-             radial-gradient(circle at 70% 75%,rgba(255,255,255,0.13) 0%,transparent 40%);
-  backdrop-filter:blur(10px);transition:transform 0.15s;}
-.bubble::before{content:'';position:absolute;inset:0;border-radius:50%;
-  background:conic-gradient(from 0deg,rgba(0,245,160,0) 0deg,rgba(77,166,255,0.09) 72deg,rgba(192,132,252,0.11) 144deg,rgba(255,107,53,0.06) 216deg,rgba(0,245,160,0.09) 288deg,rgba(0,245,160,0) 360deg);
-  animation:iri 8s linear infinite;}
-@keyframes iri{to{transform:rotate(360deg)}}
-.bubble::after{content:'';position:absolute;top:7%;left:14%;width:32%;height:22%;background:radial-gradient(ellipse,rgba(255,255,255,0.55) 0%,transparent 70%);border-radius:50%;transform:rotate(-25deg);}
-.bubble:active{transform:scale(0.82);}
-.sz1{width:88px;height:88px;} .sz2{width:74px;height:74px;} .sz3{width:62px;height:62px;} .sz4{width:50px;height:50px;}
-.b-green{border:1.5px solid rgba(0,245,160,0.55);box-shadow:0 0 24px rgba(0,245,160,0.22),inset 0 0 18px rgba(0,245,160,0.06);}
-.b-yellow{border:1.5px solid rgba(255,214,10,0.55);box-shadow:0 0 24px rgba(255,214,10,0.2),inset 0 0 18px rgba(255,214,10,0.06);}
-.b-orange{border:1.5px solid rgba(255,140,0,0.6);box-shadow:0 0 24px rgba(255,140,0,0.25),inset 0 0 18px rgba(255,140,0,0.08);animation:wob 2.5s ease-in-out infinite;}
-.b-red{border:1.5px solid rgba(255,59,92,0.65);box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1);animation:rp 1s ease-in-out infinite;opacity:0.65;}
-.b-gone{border:1px solid rgba(255,255,255,0.07);opacity:0.22;}
-@keyframes wob{0%,100%{transform:scale(1)}25%{transform:scale(1.05) rotate(1.5deg)}75%{transform:scale(0.95) rotate(-1.5deg)}}
-@keyframes rp{0%,100%{box-shadow:0 0 28px rgba(255,59,92,0.35),inset 0 0 20px rgba(255,59,92,0.1)}50%{box-shadow:0 0 48px rgba(255,59,92,0.6),inset 0 0 30px rgba(255,59,92,0.18)}}
-.b-name{font-size:13px;font-weight:800;z-index:2;color:white;text-shadow:0 1px 6px rgba(0,0,0,0.6);line-height:1;}
-.sz1 .b-name{font-size:15px;} .sz4 .b-name{font-size:11px;}
-.b-mins{font-size:10px;font-weight:700;z-index:2;margin-top:2px;text-shadow:0 1px 4px rgba(0,0,0,0.6);}
-.b-label{font-size:8px;color:var(--text3);text-align:center;max-width:70px;font-weight:500;line-height:1.3;}
+/* bus icon — shaped + colored like real bus */
+.bus-icon {
+  display:flex; align-items:center; justify-content:center;
+  color:white; font-weight:900; letter-spacing:0.02em;
+  border-radius:8px; padding:7px 10px; font-size:11px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2); flex-shrink:0; position:relative;
+}
+/* SBS articulated: wider pill */
+.bus-sbs { border-radius:7px; padding:7px 16px; font-size:10px; }
+.bus-sbs::after {
+  content:''; position:absolute;
+  right:30%; top:20%; bottom:20%; width:2px;
+  background:rgba(255,255,255,0.35); border-radius:1px;
+}
+.arr-info { flex:1; min-width:0; }
+.arr-route { font-size:12px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.arr-seq   { font-size:10px; color:#bbb; margin-top:1px; }
+.arr-mins {
+  font-family:'DM Mono',monospace; font-size:30px; font-weight:400; color:#111; line-height:1;
+  flex-shrink:0; text-align:right;
+}
+.arr-mins small { font-size:11px; color:#aaa; font-weight:600; }
+.arr-mins.col-now  { color:#FF6319; }
+.arr-mins.col-soon { color:#FFA500; }
+.arr-mins.col-go   { color:#00A651; }
 
-/* idle hero */
-.hero{margin:0 16px 16px;border-radius:20px;padding:28px 20px;background:var(--glass);border:1.5px solid var(--border);text-align:center;}
-.hero-icon{font-size:38px;margin-bottom:12px;}
-.hero-title{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:6px;}
-.hero-sub{font-size:11px;color:var(--text3);line-height:1.7;}
-.ldots{display:flex;gap:8px;justify-content:center;padding:20px 0;}
-.ld{width:9px;height:9px;border-radius:50%;background:var(--text3);animation:ldot 1.2s ease-in-out infinite;}
+/* ── WORM ROUTE PANEL ── */
+.worm-sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:201;
+  background:white; border-radius:24px 24px 0 0;
+  box-shadow:0 -6px 40px rgba(0,0,0,0.16);
+  transform:translateY(110%);
+  transition:transform 0.42s cubic-bezier(0.32,1.1,0.64,1);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.worm-sheet.open { transform:translateY(0); }
+.ws-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 0; }
+.ws-close {
+  position:absolute; top:14px; right:16px;
+  width:30px; height:30px; border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
+}
+.ws-inner { padding:14px 20px 28px; }
+
+/* urgency hero */
+.urg-hero { text-align:center; padding:10px 0 14px; border-bottom:1px solid #f0f0f5; margin-bottom:14px; }
+.urg-action { font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
+.urg-go   { color:#00A651; }
+.urg-soon { color:#FFA500; }
+.urg-now  { color:#FF6319; animation:upulse 1s ease-in-out infinite; }
+.urg-gone { color:#ccc; }
+@keyframes upulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+.urg-sub { font-size:12px; color:#999; }
+
+/* worm SVG strip - scrollable */
+.worm-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:4px 0 8px; }
+.worm-scroll::-webkit-scrollbar { display:none; }
+
+/* stop chips below worm */
+.stop-chips { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:6px 0 2px; }
+.stop-chips::-webkit-scrollbar { display:none; }
+.schip {
+  flex-shrink:0; min-width:80px; background:#f4f4f8; border-radius:14px;
+  padding:10px 12px; cursor:pointer; border:2px solid transparent; text-align:center;
+  transition:all 0.2s;
+}
+.schip.active { border-color:#0039A6; background:#eef2ff; }
+.schip:active { transform:scale(0.93); }
+.schip-route { font-size:10px; font-weight:800; display:block; }
+.schip-stop  { font-size:8px; color:#aaa; display:block; margin-top:1px; line-height:1.3; }
+.schip-mins  { font-size:22px; font-weight:900; font-family:'DM Mono',monospace; display:block; margin-top:3px; }
+.schip-lbl   { font-size:7px; color:#bbb; font-weight:600; letter-spacing:0.06em; }
+
+/* loading */
+.ldots { display:flex; gap:6px; justify-content:center; padding:20px; }
+.ld { width:8px; height:8px; border-radius:50%; background:#ddd; animation:ldot 1.2s ease-in-out infinite; }
 .ld:nth-child(2){animation-delay:0.2s} .ld:nth-child(3){animation-delay:0.4s}
-@keyframes ldot{0%,80%,100%{transform:scale(0.5);opacity:0.2}40%{transform:scale(1);opacity:1}}
+@keyframes ldot{0%,80%,100%{transform:scale(0.5);opacity:0.25}40%{transform:scale(1);opacity:1}}
 
-.foot{padding:16px 20px 32px;display:flex;justify-content:space-between;}
-.foot-brand{font-size:9px;font-weight:700;letter-spacing:0.15em;color:var(--text3);}
-.foot-ts{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
+/* pin mode hint */
+.pin-hint {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.75); color:white; padding:12px 22px;
+  border-radius:16px; font-size:13px; font-weight:600; z-index:300;
+  pointer-events:none; display:none;
+}
+.pin-hint.show { display:block; }
 </style>
 </head>
 <body>
-<div class="amb"><div class="amb-o o1"></div><div class="amb-o o2"></div><div class="amb-o o3"></div></div>
-<div class="app">
 
-  <div class="hdr">
-    <div><div class="brand">Town<span>Trip</span></div><div class="brand-sub">NYC · Last Mile Intelligence</div></div>
-    <div class="clock" id="clk"></div>
-  </div>
+<div id="map"></div>
 
-  <div class="search">
-    <div class="flabel"><div class="dot df"></div>From</div>
-    <div class="frow">
-      <input class="finput" id="from-input" placeholder="Where are you now?" autocomplete="off">
-      <div class="gpsbtn" id="gps-btn" onclick="getGPS()">📍</div>
+<!-- TOP SEARCH BAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-row">
+      <div class="brand">Town<span>Trip</span></div>
+      <div class="clock" id="clk"></div>
     </div>
-    <div class="divrow"><div class="divline"></div><div class="swapbtn" onclick="doSwap()">⇅</div><div class="divline"></div></div>
-    <div class="flabel"><div class="dot dt"></div>To</div>
-    <input class="finput" id="to-input" placeholder="Where are you going?" autocomplete="off" style="width:100%;margin-bottom:0">
-    <button class="gobtn" id="go-btn" onclick="findRoute()">Find my ride →</button>
-  </div>
-
-  <div class="statusbar"><div class="pip"></div><span id="status-msg">Enter your trip above</span></div>
-
-  <div id="content">
-    <div class="hero">
-      <div class="hero-icon">🫧</div>
-      <div class="hero-title">Enter origin &amp; destination</div>
-      <div class="hero-sub">TownTrip shows only the buses that<br>actually make sense for your trip.</div>
+    <div class="search-box">
+      <div class="srow">
+        <div class="sdot sdot-from"></div>
+        <input class="sinput" id="from-input" placeholder="Where are you?" autocomplete="off">
+        <div class="sibtn" onclick="getGPS()" id="gps-btn" title="My location">📍</div>
+        <div class="sibtn" onclick="triggerCamera()" title="Photo landmark">📷</div>
+      </div>
+      <div class="srow">
+        <div class="sdot sdot-to"></div>
+        <input class="sinput" id="to-input" placeholder="Tap map, type, or 📷 destination" autocomplete="off">
+        <div class="sibtn" onclick="enablePinDrop()" title="Pin on map">📌</div>
+      </div>
+      <button class="gobtn" id="go-btn" onclick="findRoute()">Find my ride →</button>
     </div>
   </div>
-
-  <div class="foot"><span class="foot-brand">TOWNTRIP</span><span class="foot-ts" id="ts"></span></div>
 </div>
+
+<!-- LOCATE FAB -->
+<div class="fab" id="fab-locate" onclick="centerOnMe()">🎯</div>
+
+<!-- STOP ARRIVALS SHEET -->
+<div class="sheet" id="stop-sheet">
+  <div class="sheet-handle"></div>
+  <button class="sheet-close" onclick="closeSheet()">✕</button>
+  <div class="sheet-inner" id="sheet-content">
+    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  </div>
+</div>
+
+<!-- WORM ROUTE SHEET -->
+<div class="worm-sheet" id="worm-sheet">
+  <div class="ws-handle"></div>
+  <button class="ws-close" onclick="closeWorm()">✕</button>
+  <div class="ws-inner">
+    <div class="urg-hero" id="urg-hero"></div>
+    <div class="worm-scroll" id="worm-svg-wrap"></div>
+    <div class="stop-chips" id="stop-chips"></div>
+  </div>
+</div>
+
+<!-- PIN MODE HINT -->
+<div class="pin-hint" id="pin-hint">Tap anywhere on the map to set destination</div>
+
+<!-- CAMERA INPUT -->
+<input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
 <script>
 // ── CLOCK ──
-function tick(){const n=new Date();document.getElementById('clk').innerHTML=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})+'<br>'+n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function tick(){const n=new Date();document.getElementById('clk').textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});}
 setInterval(tick,1000);tick();
 
-// ═══════════════════════════════════════
-//  TOWNTRIP CORRIDOR KNOWLEDGE
-//  This is the brain. Each corridor knows
-//  exactly which buses serve the trip.
-// ═══════════════════════════════════════
-const CORRIDORS = [
-  {
-    name: 'Co-op City → Fordham / Tiebout',
-    fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','bartow ave','baychester','einstein'],
-    toKeys:['tiebout','fordham','2390','jerome ave','university av'],
-    // ONLY these buses matter for this trip
-    options:[
-      {
-        id:'bx12sbs',
-        label:'BX12-SBS direct',
-        busName:'BX12+',
-        busColor:'#a78bfa',  // purple
-        stopId:'200760',
-        boardStop:'Bartow Ave / Co-op City Blvd',
-        alightStop:'Fordham Rd / Tiebout Ave',
-        direction:'westbound → Inwood',
-        walkToStop:12,   // mins from 140 Alcott
-        rideTime:22,     // approx mins on bus
-        walkFromStop:4,  // mins to destination
-        primary:true,
-        note:'Direct. One bus, no transfers. BX12-SBS every 6-8 min peak, 10-12 min off-peak.',
-      },
-      {
-        id:'bx26',
-        label:'BX26 alt',
-        busName:'BX26',
-        busColor:'#34d399',  // teal
-        stopId:'200758',
-        boardStop:'Co-op City Blvd / Bartow Ave',
-        alightStop:'Fordham Rd area',
-        direction:'westbound',
-        walkToStop:10,
-        rideTime:28,
-        walkFromStop:6,
-        primary:false,
-        note:'Use if BX12-SBS is packed or running late.',
-      },
-      {
-        id:'bx28',
-        label:'BX28 alt',
-        busName:'BX28',
-        busColor:'#60a5fa',  // blue
-        stopId:'200759',
-        boardStop:'Alcott Pl / Asch Loop',
-        alightStop:'Fordham Rd area',
-        direction:'westbound',
-        walkToStop:5,   // closer stop!
-        rideTime:32,
-        walkFromStop:7,
-        primary:false,
-        note:'Closest stop to your door (5 min walk). Slower ride but good if BX12-SBS has a long wait.',
-      },
-    ]
-  },
-  // Add more corridors here as Kwasi adds trips
-];
+// ── REAL MTA BUS COLORS (from actual bus livery) ──
+const BUS_COLOR = {
+  'BX12+': {bg:'#0039A6', text:'BX12 SBS', type:'sbs'},  // MTA Select Bus blue
+  'BX12':  {bg:'#0039A6', text:'BX12',     type:'local'},
+  'BX26':  {bg:'#6BBE45', text:'BX26',     type:'local'}, // MTA local green
+  'BX28':  {bg:'#FF6319', text:'BX28',     type:'local'}, // MTA orange
+  'BX23':  {bg:'#8C4799', text:'BX23',     type:'local'}, // purple
+  'BX5':   {bg:'#00B2A9', text:'BX5',      type:'local'}, // teal
+  'BX38':  {bg:'#E4002B', text:'BX38',     type:'local'}, // red
+  'Q50':   {bg:'#FCCC0A', text:'Q50',      type:'local'}, // yellow
+  'Q65':   {bg:'#FCCC0A', text:'Q65',      type:'local'},
+};
 
-let arrivals={}, refreshTimer=null, activeCorridor=null;
+// ── CORRIDOR KNOWLEDGE ──
+// Only buses that actually serve each trip
+const CORRIDORS = [{
+  fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','baychester','einstein','140'],
+  toKeys:['tiebout','fordham','2390','jerome'],
+  label:'Co-op City → Fordham / Tiebout Ave',
+  // Ordered stops along the actual route
+  stops:[
+    {id:'home',    name:'140 Alcott Pl',               lat:40.8748, lng:-73.8302, routes:[], walkFromHome:0,  elevation:18, isOrigin:true},
+    {id:'alcott',  name:'Alcott Pl / Asch Loop',       lat:40.8745, lng:-73.8308, routes:['BX28'],       walkFromHome:5,  elevation:18, stopId:{BX28:'200759'}},
+    {id:'bartow',  name:'Bartow Ave / Co-op City Blvd',lat:40.8735, lng:-73.8380, routes:['BX12+','BX26'],walkFromHome:12, elevation:22, stopId:{'BX12+':'200760','BX26':'200758'}},
+    {id:'wp_wpr',  name:'Pelham Pkwy / White Plains Rd',lat:40.8560,lng:-73.8680, routes:['BX12+'],       walkFromHome:null,elevation:35, stopId:{'BX12+':'200770'}},
+    {id:'wp_wbr',  name:'Pelham Pkwy / Williamsbridge', lat:40.8540,lng:-73.8780, routes:['BX12+'],       walkFromHome:null,elevation:30, stopId:{'BX12+':'200771'}},
+    {id:'fordham', name:'Fordham Rd / Tiebout Ave',    lat:40.8631, lng:-73.9020, routes:['BX12+'],       walkFromHome:null,elevation:42, isDestination:true, stopId:{'BX12+':'200790'}},
+  ]
+}];
+
+// ── STATE ──
+let map, userLat=null, userLng=null, userMarker=null, pulseMarker=null;
+let destMarker=null, pinDropMode=false;
+let stopMarkers=[], wormPolylines=[], activeCorridor=null;
+let arrivals={};
+
+// ── MAP INIT ──
+function initMap(){
+  map = new google.maps.Map(document.getElementById('map'),{
+    zoom:11,
+    center:{lat:40.7128,lng:-74.0060}, // NYC center
+    mapTypeId:'roadmap',
+    disableDefaultUI:true,
+    gestureHandling:'greedy',
+    clickableIcons:false,
+    styles:[
+      // Clean white MTA-style map
+      {featureType:'all',elementType:'labels.icon',stylers:[{visibility:'off'}]},
+      {featureType:'poi',stylers:[{visibility:'off'}]},
+      {featureType:'transit',stylers:[{visibility:'off'}]},
+      {featureType:'water',stylers:[{color:'#b8d0e8'}]},
+      {featureType:'landscape',stylers:[{color:'#f9f9f9'}]},
+      {featureType:'landscape.natural',stylers:[{color:'#e8f0e8'}]},
+      {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#dde0e8'}]},
+      {featureType:'road.arterial',elementType:'geometry',stylers:[{color:'#ebebeb'}]},
+      {featureType:'road.local',elementType:'geometry',stylers:[{color:'#f5f5f5'}]},
+      {featureType:'road.arterial',elementType:'labels.text.fill',stylers:[{color:'#999'}]},
+      {featureType:'road.local',elementType:'labels.text.fill',stylers:[{color:'#bbb'}]},
+      {featureType:'administrative.locality',elementType:'labels.text.fill',stylers:[{color:'#444'},{fontWeight:'bold'}]},
+      {featureType:'administrative.neighborhood',elementType:'labels.text.fill',stylers:[{color:'#999'}]},
+    ]
+  });
+
+  map.addListener('click',e=>{
+    if(pinDropMode) dropPin(e.latLng.lat(),e.latLng.lng());
+  });
+
+  // Draw all corridor stops
+  CORRIDORS.forEach(c=>drawCorridorStops(c));
+
+  // Get user location
+  getGPS(true);
+}
 
 // ── GPS ──
-function getGPS(){
-  const btn=document.getElementById('gps-btn'), inp=document.getElementById('from-input');
-  btn.classList.add('spin'); btn.textContent='⟳';
-  if(!navigator.geolocation){setDefaultLoc();return;}
+function getGPS(silent=false){
+  const btn=document.getElementById('gps-btn');
+  if(!silent) btn.textContent='⟳';
+  if(!navigator.geolocation){if(!silent)setDefaultLoc();return;}
   navigator.geolocation.getCurrentPosition(
     pos=>{
-      btn.classList.remove('spin'); btn.textContent='✓';
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
-        .then(r=>r.json()).then(d=>{
-          const a=d.address;
-          inp.value=(`${a.house_number?a.house_number+' ':''}${a.road||''}${a.suburb?', '+a.suburb:''}`).trim()||`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-        }).catch(()=>{inp.value=`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;});
+      userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+      if(!silent){
+        btn.textContent='✓';
+        reverseGeocode(userLat,userLng,'from-input');
+      }
+      placeUserDot(userLat,userLng);
+      // Center map on user
+      map.panTo({lat:userLat,lng:userLng});
+      map.setZoom(13);
     },
-    ()=>setDefaultLoc(), {enableHighAccuracy:true,timeout:7000}
+    ()=>{if(!silent)setDefaultLoc();},
+    {enableHighAccuracy:true,timeout:8000}
   );
 }
-function setDefaultLoc(){document.getElementById('gps-btn').classList.remove('spin');document.getElementById('gps-btn').textContent='📍';document.getElementById('from-input').value='140 Alcott Pl, Co-op City, Bronx';}
-function doSwap(){const f=document.getElementById('from-input'),t=document.getElementById('to-input');[f.value,t.value]=[t.value,f.value];}
+function setDefaultLoc(){
+  userLat=40.8748; userLng=-73.8302;
+  document.getElementById('gps-btn').textContent='📍';
+  document.getElementById('from-input').value='140 Alcott Pl, Co-op City, Bronx';
+  placeUserDot(userLat,userLng);
+  map.panTo({lat:userLat,lng:userLng});
+  map.setZoom(13);
+}
+function centerOnMe(){ if(userLat&&map) map.panTo({lat:userLat,lng:userLng}); }
+
+function placeUserDot(lat,lng){
+  if(!map)return;
+  if(userMarker) userMarker.setMap(null);
+  if(pulseMarker) pulseMarker.setMap(null);
+  const pos={lat,lng};
+  // Pulse ring
+  pulseMarker=new google.maps.Marker({position:pos,map,
+    icon:{path:google.maps.SymbolPath.CIRCLE,scale:20,fillColor:'#0039A6',fillOpacity:0.12,strokeColor:'#0039A6',strokeWeight:1.5},
+    zIndex:998});
+  // Core dot
+  userMarker=new google.maps.Marker({position:pos,map,
+    icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:'#0039A6',fillOpacity:1,strokeColor:'white',strokeWeight:3},
+    title:'You are here',zIndex:1000});
+}
+
+// ── REVERSE GEOCODE ──
+function reverseGeocode(lat,lng,id){
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+    .then(r=>r.json()).then(d=>{
+      const a=d.address;
+      document.getElementById(id).value=(`${a.house_number?a.house_number+' ':''}${a.road||''}${a.suburb?', '+a.suburb:''}`).trim()||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }).catch(()=>{});
+}
+
+// ── DRAW CORRIDOR STOPS AS BUBBLES ──
+function drawCorridorStops(corridor){
+  corridor.stops.forEach(stop=>{
+    if(stop.isOrigin||stop.isDestination) return; // skip endpoints
+    const route=stop.routes[0];
+    if(!route) return;
+    const rc=BUS_COLOR[route]||{bg:'#888',text:route,type:'local'};
+    const isSBS=rc.type==='sbs';
+
+    // Create bubble div
+    const el=document.createElement('div');
+    el.style.cssText=`
+      background:${rc.bg};color:white;font-family:'Outfit',sans-serif;font-weight:900;
+      font-size:${isSBS?'9px':'10px'};white-space:nowrap;
+      padding:${isSBS?'6px 12px':'8px'};
+      border-radius:${isSBS?'8px':'50%'};
+      width:${isSBS?'auto':'32px'};height:${isSBS?'auto':'32px'};
+      display:flex;align-items:center;justify-content:center;
+      border:2.5px solid white;
+      box-shadow:0 2px 10px rgba(0,0,0,0.22);
+      cursor:pointer;transition:transform 0.15s;
+      position:relative;
+    `;
+    el.textContent=rc.text;
+
+    const marker=new google.maps.marker.AdvancedMarkerElement({
+      position:{lat:stop.lat,lng:stop.lng},
+      map, content:el, title:stop.name, zIndex:50,
+    });
+    marker.addListener('click',()=>openStopSheet(stop));
+    el.addEventListener('mouseenter',()=>el.style.transform='scale(1.15)');
+    el.addEventListener('mouseleave',()=>el.style.transform='scale(1)');
+    stopMarkers.push(marker);
+  });
+}
+
+// ── OPEN STOP SHEET ── 
+async function openStopSheet(stop){
+  document.getElementById('stop-sheet').classList.add('open');
+  document.getElementById('sheet-content').innerHTML=`<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+
+  // Fetch arrivals for all routes at this stop
+  const rows=[];
+  for(const route of stop.routes){
+    const stopId=stop.stopId?.[route];
+    const mins=stopId ? await fetchBus(stopId,route) : simMins(stop.id,route);
+    if(mins?.length){
+      mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i}));
+    }
+  }
+  rows.sort((a,b)=>a.mins-b.mins);
+
+  // Tags
+  const tags=[
+    stop.walkFromHome!=null?`<div class="tag tag-walk">🚶 ${stop.walkFromHome} min walk from home</div>`:'',
+    stop.elevation?`<div class="tag tag-elev">⛰ ${stop.elevation} ft elevation</div>`:'',
+  ].join('');
+
+  // Arrival rows
+  const arrHtml=rows.length?rows.map(r=>{
+    const rc=BUS_COLOR[r.route]||{bg:'#888',text:r.route,type:'local'};
+    const isSBS=rc.type==='sbs';
+    const urgRow=r.mins<=2?'urgnow':r.mins<=8?'urgsoon':'urggo';
+    const urgCol=r.mins<=2?'col-now':r.mins<=8?'col-soon':'col-go';
+    const seq=r.seq===0?'Next':r.seq===1?'Then':'After';
+    return`<div class="arr-row ${urgRow}">
+      <div class="bus-icon ${isSBS?'bus-sbs':''}" style="background:${rc.bg}">${rc.text}</div>
+      <div class="arr-info">
+        <div class="arr-route">${r.route} · ${seq}</div>
+        <div class="arr-seq">${stop.name}</div>
+      </div>
+      <div class="arr-mins ${urgCol}">${r.mins}<small>m</small></div>
+    </div>`;
+  }).join(''):`<div style="color:#ccc;font-size:12px;padding:16px;text-align:center">No arrivals found</div>`;
+
+  document.getElementById('sheet-content').innerHTML=`
+    <div class="stop-name">${stop.name}</div>
+    <div class="stop-tags">${tags}</div>
+    <div class="arr-title">Live arrivals</div>
+    ${arrHtml}`;
+}
+
+function closeSheet(){ document.getElementById('stop-sheet').classList.remove('open'); }
+function closeWorm(){
+  document.getElementById('worm-sheet').classList.remove('open');
+  wormPolylines.forEach(p=>p.setMap(null)); wormPolylines=[];
+}
+
+// ── PIN DROP ──
+function enablePinDrop(){
+  pinDropMode=true;
+  document.getElementById('pin-hint').classList.add('show');
+  map.getDiv().style.cursor='crosshair';
+}
+function dropPin(lat,lng){
+  pinDropMode=false;
+  document.getElementById('pin-hint').classList.remove('show');
+  map.getDiv().style.cursor='';
+  if(destMarker) destMarker.setMap(null);
+  destMarker=new google.maps.Marker({
+    position:{lat,lng},map,
+    icon:{path:google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,scale:7,fillColor:'#0039A6',fillOpacity:1,strokeColor:'white',strokeWeight:2.5},
+    title:'Destination',zIndex:100,
+  });
+  reverseGeocode(lat,lng,'to-input');
+}
+
+// ── CAMERA ──
+function triggerCamera(){ document.getElementById('cam-input').click(); }
+async function handlePhoto(e){
+  const file=e.target.files[0]; if(!file)return;
+  document.getElementById('to-input').value='📷 Identifying…';
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:ev.target.result.split(',')[1]})});
+      const d=await res.json();
+      document.getElementById('to-input').value=d.address||d.landmark||'Could not identify — type address';
+    }catch{ document.getElementById('to-input').value='Could not identify — type address'; }
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
 
 // ── FIND ROUTE ──
-function findRoute(){
+async function findRoute(){
   const from=document.getElementById('from-input').value.trim().toLowerCase();
   const to=document.getElementById('to-input').value.trim().toLowerCase();
-  if(!from||!to){document.getElementById('status-msg').textContent='Enter both origin and destination';return;}
+  if(!from||!to){ return; }
   document.getElementById('go-btn').disabled=true;
-  document.getElementById('status-msg').textContent='Finding best routes…';
-  showLoading();
+  document.getElementById('go-btn').textContent='Finding…';
 
-  activeCorridor=CORRIDORS.find(c=>c.fromKeys.some(k=>from.includes(k))&&c.toKeys.some(k=>to.includes(k)));
+  activeCorridor=CORRIDORS.find(c=>
+    c.fromKeys.some(k=>from.includes(k))&&c.toKeys.some(k=>to.includes(k))
+  );
 
   if(activeCorridor){
-    loadMTAAndRender();
+    await loadArrivals(activeCorridor);
+    drawWorm(activeCorridor);
   } else {
-    callGoogle(document.getElementById('from-input').value.trim(), document.getElementById('to-input').value.trim());
+    await googleRoute(document.getElementById('from-input').value.trim(), document.getElementById('to-input').value.trim());
   }
-  clearInterval(refreshTimer);
-  refreshTimer=setInterval(()=>{if(activeCorridor)loadMTAAndRender(true);},30000);
+
+  document.getElementById('go-btn').disabled=false;
+  document.getElementById('go-btn').textContent='Find my ride →';
 }
+
 document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoute();});
 document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('to-input').focus();});
 
@@ -312,289 +552,188 @@ document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key===
 async function fetchBus(stopId,routeId){
   try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}catch{return null;}
 }
-function sim(stopId,routeId){
-  const seed=(stopId+routeId).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+function simMins(sid,rid){
+  const seed=(sid+rid).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
   const off=(Date.now()/60000)%25;
-  const first=((seed%14)+3-off+25)%23+1;
-  return[Math.round(first),Math.round(first+9),Math.round(first+20)];
+  const f=((seed%14)+3-off+25)%23+1;
+  return[Math.round(f),Math.round(f+9),Math.round(f+19)];
 }
-async function loadMTAAndRender(silent=false){
-  if(!silent)showLoading();
-  const tasks=activeCorridor.options.map(opt=>
-    fetchBus(opt.stopId,opt.busName).then(data=>{arrivals[opt.id]=data?.length?data:sim(opt.stopId,opt.busName);})
-  );
+async function loadArrivals(corridor){
+  const tasks=[];
+  corridor.stops.forEach(s=>s.routes.forEach(route=>{
+    const sid=s.stopId?.[route];
+    tasks.push((sid?fetchBus(sid,route):Promise.resolve(null)).then(d=>{
+      arrivals[s.id+'_'+route]=d?.length?d:simMins(s.id,route);
+    }));
+  }));
   await Promise.all(tasks);
-  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  document.getElementById('go-btn').disabled=false;
-  document.getElementById('status-msg').textContent='Live MTA · auto-refreshes every 30s';
-  renderCorridor();
 }
 
-// ── URGENCY ──
-function urg(leaveIn){
-  if(leaveIn<=0) return{state:'gone',  bcls:'b-gone',   ac:'ca-red',    urgCls:'urg-red',    tvCls:'cv-red'};
-  if(leaveIn<=2) return{state:'now',   bcls:'b-red',    ac:'ca-red',    urgCls:'urg-red',    tvCls:'cv-red'};
-  if(leaveIn<=6) return{state:'hurry', bcls:'b-orange', ac:'ca-orange', urgCls:'urg-orange', tvCls:'cv-orange'};
-  if(leaveIn<=13)return{state:'soon',  bcls:'b-yellow', ac:'ca-yellow', urgCls:'urg-yellow', tvCls:'cv-yellow'};
-  return              {state:'go',    bcls:'b-green',  ac:'ca-green',  urgCls:'',           tvCls:'cv-green'};
+// ── DRAW WORM ──
+function drawWorm(corridor){
+  closeSheet();
+  wormPolylines.forEach(p=>p.setMap(null)); wormPolylines=[];
+
+  // Find best departure stop
+  const depOptions=corridor.stops
+    .filter(s=>s.walkFromHome!=null&&s.routes.length>0)
+    .map(s=>{
+      const route=s.routes[0];
+      const busIn=arrivals[s.id+'_'+route]?.[0]??99;
+      const leaveIn=busIn-s.walkFromHome;
+      return{s,route,busIn,leaveIn};
+    }).sort((a,b)=>a.leaveIn-b.leaveIn);
+
+  const best=depOptions.find(d=>d.leaveIn>0)||depOptions[0];
+
+  // Urgency hero
+  const li=best?.leaveIn??99;
+  let action,cls;
+  if(li<=0){action='MISSED IT';cls='urg-gone';}
+  else if(li<=2){action='LEAVE NOW';cls='urg-now';}
+  else if(li<=5){action=`LEAVE IN ${li} MIN`;cls='urg-soon';}
+  else{action=`Leave in ${li} min`;cls='urg-go';}
+  document.getElementById('urg-hero').innerHTML=`
+    <div class="urg-action ${cls}">${action}</div>
+    <div class="urg-sub">Walk ${best?.s.walkFromHome}m to ${best?.s.name.split('/')[0].trim()} · ${best?.route} in ${best?.busIn}m</div>`;
+
+  // Draw polyline worm on map
+  const rc=BUS_COLOR[best?.route]||{bg:'#0039A6'};
+  const path=corridor.stops.filter(s=>!s.isOrigin).map(s=>({lat:s.lat,lng:s.lng}));
+  if(userLat) path.unshift({lat:userLat,lng:userLng});
+
+  const worm=new google.maps.Polyline({
+    path, map,
+    strokeColor:rc.bg, strokeOpacity:0.85, strokeWeight:7,
+    icons:[{icon:{path:google.maps.SymbolPath.FORWARD_OPEN_ARROW,scale:3,strokeColor:'white',strokeOpacity:0.9},repeat:'70px',offset:'0'}],
+    zIndex:10,
+  });
+  wormPolylines.push(worm);
+
+  // Zoom to corridor
+  const bounds=new google.maps.LatLngBounds();
+  if(userLat) bounds.extend({lat:userLat,lng:userLng});
+  corridor.stops.forEach(s=>bounds.extend({lat:s.lat,lng:s.lng}));
+  map.fitBounds(bounds,{top:180,bottom:300,left:40,right:40});
+
+  // Build worm SVG strip
+  buildWormSVG(corridor,best);
+
+  // Build stop chips
+  const chips=corridor.stops.filter(s=>!s.isOrigin).map((s,i)=>{
+    const route=s.routes[0]||best.route;
+    const rc2=BUS_COLOR[route]||{bg:'#888',text:route};
+    const busIn=arrivals[s.id+'_'+route]?.[0];
+    const isActive=s.id===best?.s.id;
+    return`<div class="schip${isActive?' active':''}" onclick="openStopSheet(activeCorridor.stops[${i+1}])">
+      <span class="schip-route" style="color:${rc2.bg}">${route||'—'}</span>
+      <span class="schip-stop">${s.name.split('/')[0].trim()}</span>
+      ${busIn!=null?`<span class="schip-mins">${busIn}m</span><span class="schip-lbl">BUS IN</span>`:
+      `<span class="schip-mins" style="color:#ddd">—</span>`}
+    </div>`;
+  }).join('');
+  document.getElementById('stop-chips').innerHTML=chips;
+
+  document.getElementById('worm-sheet').classList.add('open');
+
+  // Auto-refresh every 30s
+  setTimeout(()=>{ if(activeCorridor){ loadArrivals(activeCorridor).then(()=>drawWorm(activeCorridor)); }},30000);
 }
-function actionText(leaveIn){
-  if(leaveIn<=0) return'MISSED IT';
-  if(leaveIn<=2) return'LEAVE NOW';
-  if(leaveIn<=5) return`LEAVE IN ${leaveIn} MIN`;
-  return`Leave in ${leaveIn} min`;
-}
 
-// ═══════════════════════
-//  THE WORM SVG RENDERER
-// ═══════════════════════
-function buildWormSVG(opt, busIn){
-  // Worm segments represent journey legs
-  // Walk leg = thin dashed squiggly in light grey
-  // Bus leg = thick colorful flowing worm
-  // Width of each segment proportional to time
+// ── WORM SVG (the animated strip) ──
+function buildWormSVG(corridor,best){
+  const stops=corridor.stops.filter(s=>!s.isOrigin);
+  const N=stops.length;
+  const W=Math.max(340,N*75+60);
+  const H=64; const cy=H/2;
+  const rc=BUS_COLOR[best?.route]||{bg:'#0039A6'};
 
-  const W = 340; // SVG width (fits in card)
-  const H = 52;
-  const totalMins = opt.walkToStop + (busIn||opt.rideTime) + opt.walkFromStop;
+  // Points — gently wavy
+  const pts=stops.map((s,i)=>({x:36+i*75, y:cy+(i%2===0?-8:8)}));
 
-  // Proportional widths
-  const walkW1 = Math.max(28, (opt.walkToStop / totalMins) * W * 0.88);
-  const busW   = Math.max(60, ((busIn||opt.rideTime) / totalMins) * W * 0.88);
-  const walkW2 = Math.max(20, (opt.walkFromStop / totalMins) * W * 0.88);
-  const gap = 8;
-  const totalW = walkW1 + gap + busW + gap + walkW2;
-  const scale = (W - 10) / totalW;
-  const ww1 = walkW1 * scale;
-  const bw  = busW   * scale;
-  const ww2 = walkW2 * scale;
-
-  const cy = H / 2;
-  const x0 = 5;
-  const x1 = x0 + ww1;
-  const x2 = x1 + gap;
-  const x3 = x2 + bw;
-  const x4 = x3 + gap;
-  const x5 = x4 + ww2;
-
-  // Worm thickness: bus is thick, walk is thin
-  const busThick = 14;
-  const walkThick = 6;
-
-  // Worm: slightly wavy path using quadratic bezier curves
-  function wormPath(x0, x1, y, amplitude, freq){
-    const segs = Math.max(3, Math.round((x1-x0)/30));
-    const segW = (x1-x0)/segs;
-    let d = `M ${x0} ${y}`;
-    for(let i=0;i<segs;i++){
-      const cx1 = x0 + i*segW + segW*0.3;
-      const cy1 = y + (i%2===0?amplitude:-amplitude);
-      const cx2 = x0 + i*segW + segW*0.7;
-      const cy2 = y + (i%2===0?-amplitude:amplitude);
-      const ex  = x0 + (i+1)*segW;
-      d += ` C ${cx1} ${cy1} ${cx2} ${cy2} ${ex} ${y}`;
-    }
-    return d;
+  // Path
+  let d=`M 12 ${cy}`;
+  // walk segment from head to first stop
+  d+=` Q 24 ${cy} ${pts[0].x} ${pts[0].y}`;
+  for(let i=1;i<pts.length;i++){
+    const cpx=(pts[i-1].x+pts[i].x)/2;
+    const cpy=(pts[i-1].y+pts[i].y)/2;
+    d+=` Q ${cpx} ${cpy} ${pts[i].x} ${pts[i].y}`;
   }
 
-  // Walk paths — subtle zigzag
-  const walkPath1 = wormPath(x0, x1, cy, 5, 3);
-  const busPath   = wormPath(x2, x3, cy, 7, 2);
-  const walkPath2 = wormPath(x4, x5, cy, 5, 3);
+  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+<defs>
+  <linearGradient id="wg${best?.route||'r'}" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="${rc.bg}" stop-opacity="0.3"/>
+    <stop offset="40%" stop-color="${rc.bg}" stop-opacity="1"/>
+    <stop offset="100%" stop-color="${rc.bg}" stop-opacity="0.65"/>
+  </linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
 
-  // Bubble at bus head
-  const headX = x3;
-  const headR = 9;
+<!-- worm body -->
+<path d="${d}" fill="none" stroke="url(#wg${best?.route||'r'})" stroke-width="13" stroke-linecap="round" filter="url(#glow)"/>
 
-  // Walking figure emoji fallback — text labels
-  const labelY = H - 2;
+<!-- shimmer animation -->
+<path d="${d}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="5" stroke-linecap="round" stroke-dasharray="18 36">
+  <animate attributeName="stroke-dashoffset" from="54" to="0" dur="1.8s" repeatCount="indefinite"/>
+</path>`;
 
-  const animId = `worm_${opt.id}`;
+  // Stop nodes
+  pts.forEach((pt,i)=>{
+    const stop=stops[i];
+    const isBoard=stop.id===best?.s.id;
+    const isDest=stop.isDestination;
+    svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="${isBoard||isDest?11:7}"
+      fill="${isBoard?'white':isDest?'#0039A6':rc.bg}"
+      stroke="${isBoard?rc.bg:'white'}" stroke-width="${isBoard?3:2}"
+      filter="url(#glow)"/>`;
+    if(isBoard){svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="${rc.bg}"/>`;}
+    if(isDest){svg+=`<text x="${pt.x}" y="${pt.y+5}" text-anchor="middle" fill="white" font-size="9" font-weight="900">🏁</text>`;}
+  });
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-  <defs>
-    <linearGradient id="bg_${opt.id}" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:${opt.busColor};stop-opacity:0.3"/>
-      <stop offset="50%" style="stop-color:${opt.busColor};stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:${opt.busColor};stop-opacity:0.6"/>
-    </linearGradient>
-    <filter id="glow_${opt.id}">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <!-- animate the worm shimmer -->
-    <linearGradient id="shimmer_${opt.id}" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:${opt.busColor};stop-opacity:0.7">
-        <animate attributeName="offset" values="0;1;0" dur="3s" repeatCount="indefinite"/>
-      </stop>
-      <stop offset="30%" style="stop-color:white;stop-opacity:0.9">
-        <animate attributeName="offset" values="0.2;1.2;0.2" dur="3s" repeatCount="indefinite"/>
-      </stop>
-      <stop offset="60%" style="stop-color:${opt.busColor};stop-opacity:0.7">
-        <animate attributeName="offset" values="0.5;1.5;0.5" dur="3s" repeatCount="indefinite"/>
-      </stop>
-    </linearGradient>
-  </defs>
+  // User head — glowing green dot
+  svg+=`<circle cx="12" cy="${cy}" r="9" fill="#00A651" stroke="white" stroke-width="2.5" filter="url(#glow)">
+    <animate attributeName="r" values="8;11;8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="12" cy="${cy}" r="4" fill="white"/>`;
 
-  <!-- Walk to stop: thin dashed squiggle -->
-  <path d="${walkPath1}" fill="none" stroke="rgba(238,238,248,0.2)" stroke-width="${walkThick}"
-    stroke-linecap="round" stroke-dasharray="4 5"/>
-  <!-- Walk label -->
-  <text x="${x0 + ww1/2}" y="${cy - 12}" text-anchor="middle" fill="rgba(238,238,248,0.35)" font-family="Outfit" font-size="8" font-weight="600">🚶 ${opt.walkToStop}m</text>
-
-  <!-- Connector dots -->
-  <circle cx="${x1}" cy="${cy}" r="4" fill="rgba(255,255,255,0.2)"/>
-  <circle cx="${x2}" cy="${cy}" r="4" fill="${opt.busColor}" opacity="0.6"/>
-
-  <!-- BUS WORM: thick, glowing, animated shimmer -->
-  <path d="${busPath}" fill="none" stroke="url(#bg_${opt.id})" stroke-width="${busThick}"
-    stroke-linecap="round" filter="url(#glow_${opt.id})"/>
-  <!-- shimmer overlay -->
-  <path d="${busPath}" fill="none" stroke="url(#shimmer_${opt.id})" stroke-width="${busThick * 0.4}"
-    stroke-linecap="round" opacity="0.5"/>
-
-  <!-- Bus name label on the worm -->
-  <text x="${x2 + bw/2}" y="${cy + 5}" text-anchor="middle" fill="white" font-family="Outfit" font-size="11" font-weight="800"
-    style="text-shadow:0 1px 4px rgba(0,0,0,0.8)">${opt.busName}</text>
-
-  <!-- Bus head bubble -->
-  <circle cx="${headX}" cy="${cy}" r="${headR}" fill="${opt.busColor}" opacity="0.9" filter="url(#glow_${opt.id})"/>
-  <circle cx="${headX - 3}" cy="${cy - 3}" r="3" fill="rgba(255,255,255,0.6)"/>
-
-  <!-- Connector dots after bus -->
-  <circle cx="${x4}" cy="${cy}" r="4" fill="${opt.busColor}" opacity="0.4"/>
-  <circle cx="${x5 - 2}" cy="${cy}" r="4" fill="rgba(238,238,248,0.2)"/>
-
-  <!-- Walk from stop: thin dashed squiggle -->
-  <path d="${walkPath2}" fill="none" stroke="rgba(238,238,248,0.2)" stroke-width="${walkThick}"
-    stroke-linecap="round" stroke-dasharray="4 5"/>
-  <!-- Walk label -->
-  <text x="${x4 + ww2/2}" y="${cy - 12}" text-anchor="middle" fill="rgba(238,238,248,0.35)" font-family="Outfit" font-size="8" font-weight="600">🚶 ${opt.walkFromStop}m</text>
-
-  <!-- Origin dot -->
-  <circle cx="${x0}" cy="${cy}" r="5" fill="rgba(0,245,160,0.9)" filter="url(#glow_${opt.id})"/>
-  <!-- Destination dot -->
-  <circle cx="${x5}" cy="${cy}" r="5" fill="rgba(77,166,255,0.9)" filter="url(#glow_${opt.id})"/>
-</svg>`;
+  svg+=`</svg>`;
+  document.getElementById('worm-svg-wrap').innerHTML=svg;
 }
-
-// ── RENDER CORRIDOR ──
-function renderCorridor(){
-  const opts = activeCorridor.options.map(opt=>{
-    const mins = arrivals[opt.id];
-    const busIn = mins?.[0] ?? null;
-    const leaveIn = busIn != null ? busIn - opt.walkToStop : null;
-    const totalTrip = busIn != null ? opt.walkToStop + busIn + opt.walkFromStop : null;
-    return{...opt, busIn, leaveIn, mins, totalTrip};
-  });
-
-  // Sort: primary first, then by leaveIn (gone last)
-  opts.sort((a,b)=>{
-    if(a.primary && !b.primary) return -1;
-    if(b.primary && !a.primary) return 1;
-    if(a.leaveIn<=0 && b.leaveIn>0) return 1;
-    if(b.leaveIn<=0 && a.leaveIn>0) return -1;
-    return (a.leaveIn??99)-(b.leaveIn??99);
-  });
-
-  const best = opts.find(o=>o.leaveIn>0)||opts[0];
-  let html = `<div class="sec">Your route options</div>`;
-
-  // WORM CARDS
-  opts.forEach((opt,i)=>{
-    const u = opt.leaveIn!=null ? urg(opt.leaveIn) : urg(99);
-    const action = opt.leaveIn!=null ? actionText(opt.leaveIn) : '—';
-    const isFirst = i===0;
-    const totalStr = opt.totalTrip ? `~${opt.totalTrip} min total` : `~${opt.walkToStop+opt.rideTime+opt.walkFromStop} min total`;
-    const pillCls = isFirst?'pill-best':'pill-alt';
-    const pillTxt = isFirst?'Best now':'Alt';
-
-    html+=`<div class="worm-card ${u.urgCls}${isFirst?' selected':''}" onclick="selectCard(this)">
-      <div class="wc-top">
-        <div>
-          <div class="wc-action ${u.ac}">${action}</div>
-          <div class="wc-sub">${opt.label} · ${totalStr}</div>
-        </div>
-        <span class="wc-pill ${pillCls}">${pillTxt}</span>
-      </div>
-      <div class="worm-container">${buildWormSVG(opt, opt.busIn)}</div>
-      <div class="wc-chips">
-        <div class="chip"><span class="chip-val ${u.tvCls}">${opt.leaveIn!=null&&opt.leaveIn>0?opt.leaveIn+'m':'NOW'}</span><span class="chip-lbl">LEAVE IN</span></div>
-        <div class="chip"><span class="chip-val">${opt.busIn!=null?opt.busIn+'m':'—'}</span><span class="chip-lbl">BUS IN</span></div>
-        <div class="chip"><span class="chip-val">${opt.walkToStop}m</span><span class="chip-lbl">WALK TO STOP</span></div>
-        ${opt.mins?.[1]!=null?`<div class="chip"><span class="chip-val" style="color:var(--text2)">${opt.mins[1]}m</span><span class="chip-lbl">THEN</span></div>`:''}
-      </div>
-    </div>`;
-  });
-
-  // TIP
-  if(best?.note){
-    html+=`<div class="tip show"><div class="tip-title">💡 TownTrip knows</div>${best.note}</div>`;
-  }
-
-  // BUBBLES — only the buses that serve this trip
-  html+=`<div class="sec">Live arrivals</div><div class="bubble-row">`;
-  const sizes=['sz1','sz2','sz3','sz4'];
-  opts.forEach((opt,i)=>{
-    if(opt.leaveIn==null)return;
-    const u=urg(opt.leaveIn);
-    const tc=u.state==='go'?'#00f5a0':u.state==='soon'?'#ffd60a':u.state==='hurry'?'#ff8c00':'#ff3b5c';
-    html+=`<div class="bwrap" style="animation-delay:${i*0.1}s">
-      <div class="bubble ${sizes[i]||'sz4'} ${u.bcls}">
-        <span class="b-name" style="color:white">${opt.busName}</span>
-        <span class="b-mins" style="color:${tc}">${opt.busIn}m</span>
-      </div>
-      <div class="b-label">${opt.boardStop.split('/')[0].trim()}</div>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  document.getElementById('content').innerHTML=html;
-}
-
-function selectCard(el){document.querySelectorAll('.worm-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}
 
 // ── GOOGLE FALLBACK ──
-async function callGoogle(from,to){
+async function googleRoute(from,to){
   try{
-    const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
-    const data=await res.json();
-    document.getElementById('go-btn').disabled=false;
-    if(data.routes?.length){
-      document.getElementById('status-msg').textContent=`${data.routes.length} routes found via Google`;
-      // Simple display for unknown corridors
-      let html=`<div class="sec">Google transit options</div>`;
-      data.routes.slice(0,3).forEach((route,i)=>{
-        const leg=route.legs?.[0];
-        if(!leg)return;
-        const dur=leg.duration?.text||'—';
-        const dep=leg.departure_time?.text||'Now';
-        const arr=leg.arrival_time?.text||'—';
-        const leaveIn=leg.departure_time?.value?Math.round((leg.departure_time.value*1000-Date.now())/60000):null;
-        const u=leaveIn!=null?urg(leaveIn):urg(99);
-        const action=leaveIn!=null?actionText(leaveIn):dur;
-        const steps=leg.steps?.filter(s=>s.travel_mode==='TRANSIT').map(s=>{
-          const t=s.transit_details;const n=t?.line?.short_name||t?.line?.name||'Bus';
-          return`<span style="background:rgba(77,166,255,0.2);color:var(--blue);padding:2px 8px;border-radius:10px;font-weight:800;font-size:11px">${n}</span>`;
-        }).join(' → ')||'🚶 Walk';
-        html+=`<div class="worm-card${i===0?' selected':''}" onclick="selectCard(this)">
-          <div class="wc-top"><div><div class="wc-action ${u.ac}">${action}</div><div class="wc-sub">${dur} total · arrives ${arr}</div></div>
-          <span class="wc-pill ${i===0?'pill-best':'pill-alt'}">${i===0?'Fastest':'Alt'}</span></div>
-          <div style="padding:8px 0;font-size:12px;color:var(--text2)">${steps}</div>
-          <div class="wc-chips">
-            <div class="chip"><span class="chip-val" style="color:var(--blue)">${dep}</span><span class="chip-lbl">DEPARTS</span></div>
-            <div class="chip"><span class="chip-val">${arr}</span><span class="chip-lbl">ARRIVES</span></div>
-          </div>
-        </div>`;
-      });
-      html+=`<div class="tip show"><div class="tip-title">💡 TownTrip tip</div>TownTrip doesn't know this corridor yet — showing Google routes. We'll add local intelligence as you use the app.</div>`;
-      document.getElementById('content').innerHTML=html;
-    }else{showError('No transit routes found.');}
-  }catch{document.getElementById('go-btn').disabled=false;showError('Could not get routes — check your connection.');}
+    const r=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
+    const d=await r.json();
+    if(!d.routes?.length)return;
+    const leg=d.routes[0].legs?.[0];
+    if(!leg)return;
+    const dep=leg.departure_time?.text||'Now';
+    const arr=leg.arrival_time?.text||'—';
+    const dur=leg.duration?.text||'—';
+    document.getElementById('urg-hero').innerHTML=`<div class="urg-action urg-go">${dur}</div><div class="urg-sub">Departs ${dep} · Arrives ${arr}</div>`;
+    document.getElementById('stop-chips').innerHTML=`<div style="font-size:11px;color:#aaa;padding:8px">Google route — tap stops on map for arrivals</div>`;
+    document.getElementById('worm-sheet').classList.add('open');
+  }catch(e){console.error(e);}
 }
+</script>
 
-function showLoading(){document.getElementById('content').innerHTML=`<div class="hero"><div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div><div class="hero-title">Finding your ride…</div><div class="hero-sub">Checking live arrivals</div></div>`;}
-function showError(msg){document.getElementById('content').innerHTML=`<div class="hero"><div class="hero-icon">⚠️</div><div class="hero-title">No routes found</div><div class="hero-sub">${msg}</div></div>`;}
+<script>
+// Load Google Maps securely (key from our backend)
+(async()=>{
+  try{
+    const r=await fetch('/api/mapskey');
+    const d=await r.json();
+    if(d.key){
+      const s=document.createElement('script');
+      s.src=`https://maps.googleapis.com/maps/api/js?key=${d.key}&libraries=marker&callback=initMap&loading=async`;
+      s.async=true; s.defer=true;
+      document.head.appendChild(s);
+    }
+  }catch(e){console.error('Maps load failed',e);}
+})();
 </script>
 </body>
 </html>
