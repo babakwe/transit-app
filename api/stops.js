@@ -31,9 +31,7 @@ module.exports = async function handler(req, res) {
       name:    s.name,
       lat:     s.lat,
       lng:     s.lon,
-      routes:  (s.routes || []).map(r => r.shortName || r.id?.split('_').pop() || ''),
-    }));
-
+      routes: (s.routes||[]).map(r=>(r.shortName||r.id?.split('_').pop()||'').toUpperCase().replace('-SBS','+')).filter(Boolean),
     return res.status(200).json({ stops, count: stops.length });
   } catch (e) {
     console.error('stops-for-location error:', e.message);
