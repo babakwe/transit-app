@@ -1709,33 +1709,75 @@ async function openTransitStepSheet(routeIdx, stepIdx){
   const route=window._googleRoutes?.[routeIdx];
   const transitSteps=(route?.legs?.[0]?.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
   const step=transitSteps[stepIdx];
-  if(!step)return;
+  if(!step) return;
+
   const t=step.transit_details;
   const name=t?.line?.short_name||t?.line?.name||'Bus';
-  const color=t?.line?.color||BUS_COLOR[name]?.bg||'#555';
+  const rawC=t?.line?.color;
+  const color=rawC?('#'+rawC.replace('#','')):BUS_COLOR[name]?.bg||'#555';
+  const textColor=t?.line?.text_color?('#'+t.line.text_color.replace('#','')):'#fff';
   const board=t?.stop_name||'—';
   const alight=t?.arrival_stop?.name||'—';
   const numStops=t?.num_stops||'—';
-  const dep=t?.departure_time?.text||'—';
-  const arr=t?.arrival_time?.text||'—';
+  const depTime=t?.departure_time?.text||'—';
+  const depVal=t?.departure_time?.value;
+  const leaveIn=depVal?Math.round((depVal*1000-Date.now())/60000):null;
+  const stopId=t?.stop?.stopId||null;
 
+  // Mark chip active
+  document.querySelectorAll('.schip').forEach((c,i)=>c.classList.toggle('active',i===stepIdx));
+
+  // Show loading state
   document.getElementById('sheet-content').innerHTML=`
-    <div class="stop-name">${board}</div>
-    <div class="stop-tags">
-      <div class="tag" style="background:${color};color:white">${name}</div>
-      <div class="tag">${numStops} stops</div>
-      <div class="tag">→ ${alight}</div>
-    </div>
-    <div class="arr-title">This bus</div>
-    <div class="arr-row urg-go">
-      <div class="bus-icon" style="background:${color}">${name}</div>
-      <div class="arr-info">
-        <div class="arr-line">Board at ${board}</div>
-        <div class="arr-seq">Exit at ${alight} · ${numStops} stops</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="bus-icon" style="background:${color};color:${textColor}">${name}</div>
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#111">${board}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:2px">toward ${alight} · ${numStops} stops</div>
       </div>
-      <div class="arr-mins col-go">${dep}<small style="font-size:10px;display:block;color:#aaa">dep</small></div>
+    </div>
+    <div id="dep-board-inner">
+      <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
     </div>`;
   document.getElementById('stop-sheet').classList.add('open');
+
+  // Fetch live arrivals for this stop
+  let arrivals=[];
+  if(stopId){
+    const live=await fetchBus(stopId, name);
+    if(live?.length) arrivals=live;
+  }
+
+  // If no live data, build from Google departure time + estimated headway
+  if(!arrivals.length && leaveIn!=null){
+    const headway=leaveIn>15?12:leaveIn>8?8:6;
+    arrivals=[leaveIn, leaveIn+headway, leaveIn+(headway*2)].filter(m=>m>=0);
+  }
+
+  // If still nothing, simulate
+  if(!arrivals.length) arrivals=simMins(board, name);
+
+  const rows=arrivals.slice(0,4).map((mins,i)=>{
+    const urgCol=mins<=2?'#FF3B30':mins<=8?'#FFA500':'#00A651';
+    const label=i===0?'Next bus':i===1?'Then':'After that';
+    const timeStr=depVal&&i===0?depTime:mins<=1?'Due now':`${mins} min`;
+    return`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f8">
+      <div style="min-width:64px;text-align:right">
+        <span style="font-family:'DM Mono',monospace;font-size:26px;font-weight:400;color:${urgCol};line-height:1">${mins<=1?'NOW':mins}</span>
+        <span style="font-size:10px;color:#bbb"> min</span>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:#222">${label}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:1px">${i===0?depTime:timeStr}</div>
+      </div>
+      ${i===0?`<div style="background:${color};color:${textColor};padding:5px 10px;border-radius:8px;font-size:10px;font-weight:800">Board this</div>`:''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('dep-board-inner').innerHTML=
+    rows+`<div style="font-size:9px;color:#ccc;margin-top:10px;text-align:center">
+      ${stopId?'Live MTA data':'Estimated · Live data when available'}
+    </div>`;
 }
 
 function showError(msg){
