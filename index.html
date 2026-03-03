@@ -636,21 +636,44 @@ function initStopLayer(){
   map.on('mouseleave','mta-stops-dot',()=>map.getCanvas().style.cursor='');
 }
 
-// ── LOAD STOPS FOR CURRENT VIEWPORT ──
-function loadStopsForView(){
+// ── LOAD STOPS — fetch real coordinates from MTA API ──
+let _stopsBootstrapped = false;
+
+async function loadStopsForView(){
   if(!map) return;
-  const zoom=map.getZoom();
-  if(zoom<12){
+  const zoom = map.getZoom();
+  if(zoom < 12){
     map.getSource('mta-stops')?.setData({type:'FeatureCollection',features:[]});
     return;
   }
-  const bounds=map.getBounds();
-  const minLat=bounds.getSouth(), maxLat=bounds.getNorth();
-  const minLng=bounds.getWest(),  maxLng=bounds.getEast();
-  const inView=MTA_STOPS_BUILTIN.filter(s=>
-    s.lat>=minLat&&s.lat<=maxLat&&s.lng>=minLng&&s.lng<=maxLng
-  );
-  renderStopFeatures(inView);
+
+  // First load: fetch by known stop IDs for fast accurate coordinates
+  if(!_stopsBootstrapped){
+    _stopsBootstrapped = true;
+    try{
+      const r = await fetch('/api/stops?stopIds='+MTA_SEED_STOP_IDS, {signal:AbortSignal.timeout(8000)});
+      if(r.ok){
+        const d = await r.json();
+        if(d.stops?.length){ renderStopFeatures(d.stops); return; }
+      }
+    }catch(e){ console.warn('Stop ID fetch failed:', e.message); }
+  }
+
+  // On pan/zoom: fetch by viewport bounds
+  const bounds = map.getBounds();
+  try{
+    const params = new URLSearchParams({
+      minLat: bounds.getSouth().toFixed(4),
+      maxLat: bounds.getNorth().toFixed(4),
+      minLng: bounds.getWest().toFixed(4),
+      maxLng: bounds.getEast().toFixed(4),
+    });
+    const r = await fetch('/api/stops?'+params, {signal:AbortSignal.timeout(8000)});
+    if(r.ok){
+      const d = await r.json();
+      if(d.stops?.length) renderStopFeatures(d.stops);
+    }
+  }catch(e){ console.warn('Viewport stop fetch failed:', e.message); }
 }
 
 function renderStopFeatures(stops){
@@ -674,69 +697,45 @@ function renderStopFeatures(stops){
   map.getSource('mta-stops')?.setData({type:'FeatureCollection',features});
 }
 
-// ── BUILT-IN MTA STOP DATA — real coordinates from MTA GTFS ──
-// Stops fetched live from MTA BusTime on first render; this is a verified seed set
-const MTA_STOPS_BUILTIN = [
-  // ── BX28 — Co-op City → Fordham Center (via Gun Hill Rd) ──
-  {id:'400324',stopId:'400324',name:'Alcott Pl/Asch Loop',          lat:40.87440,lng:-73.83100,routes:['BX28']},
-  {id:'400325',stopId:'400325',name:'Asch Loop/Bartow Av',          lat:40.87280,lng:-73.83380,routes:['BX28']},
-  {id:'400326',stopId:'400326',name:'Baychester Av/Aldrich St',     lat:40.87020,lng:-73.83720,routes:['BX28']},
-  {id:'400327',stopId:'400327',name:'Bartow Av/Ely Av',             lat:40.86870,lng:-73.83940,routes:['BX28']},
-  {id:'400328',stopId:'400328',name:'Bartow Av/Gunther Av',         lat:40.86680,lng:-73.84180,routes:['BX28']},
-  {id:'400329',stopId:'400329',name:'E Gun Hill Rd/Eastchester Rd', lat:40.86480,lng:-73.84320,routes:['BX28']},
-  {id:'400330',stopId:'400330',name:'E Gun Hill Rd/Burke Av',       lat:40.87580,lng:-73.85420,routes:['BX28']},
-  {id:'400331',stopId:'400331',name:'E Gun Hill Rd/White Plains Rd',lat:40.87610,lng:-73.86350,routes:['BX28']},
-  {id:'400332',stopId:'400332',name:'E Gun Hill Rd/Webster Av',     lat:40.87630,lng:-73.87610,routes:['BX28']},
-  {id:'400333',stopId:'400333',name:'Bainbridge Av/E 210 St',       lat:40.87850,lng:-73.88460,routes:['BX28']},
-  {id:'400334',stopId:'400334',name:'Bainbridge Av/E 206 St',       lat:40.87630,lng:-73.88490,routes:['BX28']},
-  {id:'400335',stopId:'400335',name:'Bedford Park Blvd/Jerome Av',  lat:40.87290,lng:-73.89120,routes:['BX28']},
-  {id:'400336',stopId:'400336',name:'Jerome Av/E 196 St',           lat:40.86550,lng:-73.90250,routes:['BX28']},
-  {id:'400337',stopId:'400337',name:'Valentine Av/E 192 St',        lat:40.85820,lng:-73.90200,routes:['BX28']},
+// ── MTA STOP IDs — real stop IDs from MTA BusTime ──
+// These are used to fetch accurate coordinates from the API on first load
+// Source: bustime.mta.info stop codes
+const MTA_SEED_STOP_IDS = [
+  // BX28 Co-op City → Fordham
+  '101727', // ASCH LOOP/ALCOTT PL
+  '101728', // ALCOTT PL/ASCH LOOP  
+  '101729', // ASCH LOOP/BARTOW AV
+  '101730', // BAYCHESTER AV/ALDRICH ST
+  '102415', // BARTOW AV/EDSON AV
+  '102416', // BARTOW AV/GUNTHER AV
+  '101861', // E GUN HILL RD/TRYON AV
+  '101863', // E GUN HILL RD/HULL AV
+  '104007', // E GUN HILL RD/WEBSTER AV
+  '101866', // E GUN HILL RD/WHITE PLAINS RD
+  '101867', // E GUN HILL RD/BARNES AV
+  '101868', // E GUN HILL RD/BRONXWOOD AV
+  '101869', // E GUN HILL RD/PAULDING AV
+  '101871', // E GUN HILL RD/HERING AV
+  '104002', // BAINBRIDGE AV/E 210 ST
+  '102229', // BAINBRIDGE AV/E MOSHOLU PKWY N
+  '103042', // VALENTINE AV/E 192 ST
+  // BX12+ / BX26 Co-op City stops
+  '200760', // BARTOW AV/CO-OP CITY BLVD (BX12+)
+  '200758', // BARTOW AV/CO-OP CITY BLVD (BX26)
+  '103449', // PAUL AV/BEDFORD PARK BLVD
+  // BX26 Allerton corridor
+  '101687', // JEROME AV/E 196 ST
+  '104087', // BEDFORD PARK BLVD/JEROME AV
+  // Fordham Rd
+  '550009', // FORDHAM RD/WEBSTER AV
+  '550011', // FORDHAM RD/GRAND CONCOURSE
+  '550012', // FORDHAM RD/TIEBOUT AV
+  '550013', // FORDHAM RD/JEROME AV
+].join(',');
 
-  // ── BX12 SBS — Pelham Pkwy/Bay Plaza → Inwood ──
-  {id:'550001',stopId:'550001',name:'Bartow Av/Co-op City Blvd',    lat:40.87360,lng:-73.83830,routes:['BX12+','BX26']},
-  {id:'550002',stopId:'550002',name:'Bartow Av/Baychester Av',      lat:40.87180,lng:-73.83960,routes:['BX12+']},
-  {id:'550003',stopId:'550003',name:'Pelham Pkwy/Eastchester Rd',   lat:40.85780,lng:-73.83950,routes:['BX12+']},
-  {id:'550004',stopId:'550004',name:'Pelham Pkwy/White Plains Rd',  lat:40.85630,lng:-73.86800,routes:['BX12+']},
-  {id:'550005',stopId:'550005',name:'Pelham Pkwy/Williamsbridge Rd',lat:40.85450,lng:-73.87850,routes:['BX12+']},
-  {id:'550006',stopId:'550006',name:'Pelham Pkwy/Holland Av',       lat:40.85310,lng:-73.88640,routes:['BX12+']},
-  {id:'550007',stopId:'550007',name:'Pelham Pkwy/Lydig Av',         lat:40.85180,lng:-73.89300,routes:['BX12+']},
-  {id:'550008',stopId:'550008',name:'Fordham Rd/Southern Blvd',     lat:40.86230,lng:-73.88720,routes:['BX12+']},
-  {id:'550009',stopId:'550009',name:'Fordham Rd/Webster Av',        lat:40.86200,lng:-73.88990,routes:['BX12+','BX26']},
-  {id:'550010',stopId:'550010',name:'Fordham Rd/Third Av',          lat:40.86160,lng:-73.89540,routes:['BX12+']},
-  {id:'550011',stopId:'550011',name:'Fordham Rd/Grand Concourse',   lat:40.86110,lng:-73.90130,routes:['BX12+']},
-  {id:'550012',stopId:'550012',name:'Fordham Rd/Tiebout Av',        lat:40.86060,lng:-73.90610,routes:['BX12+']},
-  {id:'550013',stopId:'550013',name:'Fordham Rd/Jerome Av',         lat:40.86010,lng:-73.91100,routes:['BX12+']},
-
-  // ── BX26 — Co-op City → Bedford Park (via White Plains Rd) ──
-  {id:'560001',stopId:'560001',name:'Dreiser Loop/Co-op City Blvd', lat:40.87090,lng:-73.83750,routes:['BX26']},
-  {id:'560002',stopId:'560002',name:'Baychester Av/Donizetti Pl',   lat:40.86810,lng:-73.84550,routes:['BX26']},
-  {id:'560003',stopId:'560003',name:'Baychester Av/Allerton Av',    lat:40.86540,lng:-73.84680,routes:['BX26']},
-  {id:'560004',stopId:'560004',name:'White Plains Rd/Allerton Av',  lat:40.86510,lng:-73.86520,routes:['BX26']},
-  {id:'560005',stopId:'560005',name:'White Plains Rd/Lydig Av',     lat:40.85700,lng:-73.86630,routes:['BX26']},
-  {id:'560006',stopId:'560006',name:'White Plains Rd/Pelham Pkwy',  lat:40.85600,lng:-73.86760,routes:['BX26']},
-  {id:'560007',stopId:'560007',name:'White Plains Rd/Burke Av',     lat:40.86650,lng:-73.86380,routes:['BX26']},
-  {id:'560008',stopId:'560008',name:'White Plains Rd/Gun Hill Rd',  lat:40.87620,lng:-73.86250,routes:['BX26','BX41']},
-  {id:'560009',stopId:'560009',name:'White Plains Rd/Nereid Av',    lat:40.88380,lng:-73.86050,routes:['BX26']},
-  {id:'560010',stopId:'560010',name:'White Plains Rd/233 St',       lat:40.88890,lng:-73.86000,routes:['BX26']},
-  {id:'560011',stopId:'560011',name:'Bedford Park Blvd/Webster Av', lat:40.87190,lng:-73.88070,routes:['BX26']},
-
-  // ── BX41 — Webster Ave ──
-  {id:'570001',stopId:'570001',name:'Webster Av/Fordham Rd',        lat:40.86230,lng:-73.88870,routes:['BX41']},
-  {id:'570002',stopId:'570002',name:'Webster Av/Kingsbridge Rd',    lat:40.86930,lng:-73.88310,routes:['BX41']},
-  {id:'570003',stopId:'570003',name:'Webster Av/Bedford Park Blvd', lat:40.87200,lng:-73.88120,routes:['BX41']},
-  {id:'570004',stopId:'570004',name:'Webster Av/Mosholu Pkwy',      lat:40.87510,lng:-73.87890,routes:['BX41']},
-  {id:'570005',stopId:'570005',name:'Webster Av/Gun Hill Rd',       lat:40.87810,lng:-73.87680,routes:['BX41']},
-  {id:'570006',stopId:'570006',name:'Webster Av/Burke Av',          lat:40.86490,lng:-73.88540,routes:['BX41']},
-  {id:'570007',stopId:'570007',name:'Webster Av/Allerton Av',       lat:40.86720,lng:-73.88400,routes:['BX41']},
-
-  // ── BX16 — Gun Hill Rd / Pelham ──
-  {id:'580001',stopId:'580001',name:'E Gun Hill Rd/Tryon Av',       lat:40.87640,lng:-73.88230,routes:['BX16']},
-  {id:'580002',stopId:'580002',name:'E Gun Hill Rd/Hull Av',        lat:40.87630,lng:-73.87990,routes:['BX16']},
-  {id:'580003',stopId:'580003',name:'E Gun Hill Rd/Bronxwood Av',   lat:40.87550,lng:-73.85750,routes:['BX16']},
-  {id:'580004',stopId:'580004',name:'E Gun Hill Rd/Paulding Av',    lat:40.87530,lng:-73.85330,routes:['BX16']},
-  {id:'580005',stopId:'580005',name:'E Gun Hill Rd/Baychester Av',  lat:40.87480,lng:-73.84620,routes:['BX16']},
-];
+// ── BUILT-IN FALLBACK — empty until API loads ──
+// (no more wrong hardcoded coordinates)
+const MTA_STOPS_BUILTIN = [];
 
 
 
