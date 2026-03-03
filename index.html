@@ -171,16 +171,54 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   position:absolute; top:14px; right:16px; width:30px; height:30px;
   border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
 }
-.ws-inner { padding:14px 20px 24px; }
+.ws-inner { padding:10px 16px 18px; }
 
-.urg-hero { text-align:center; padding:10px 0 14px; border-bottom:1px solid #f0f0f5; margin-bottom:14px; }
-.urg-action { font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
+/* Compact urgency bar — bus icon + leave-in inline */
+.urg-bar {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 12px; border-radius:14px; margin-bottom:10px;
+  background:#f7f7fb;
+}
+.urg-bus-pill {
+  display:flex; align-items:center; gap:6px; flex:1; min-width:0;
+}
+.urg-route-badge {
+  flex-shrink:0; padding:4px 9px; border-radius:8px; color:white;
+  font-size:12px; font-weight:900; font-family:'Outfit',sans-serif;
+}
+.urg-stop-label {
+  font-size:11px; font-weight:700; color:#222; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.urg-stop-sub { font-size:9px; color:#aaa; margin-top:1px; }
+.urg-leave {
+  flex-shrink:0; text-align:right;
+}
+.urg-leave-num {
+  font-size:22px; font-weight:900; font-family:'DM Mono',monospace; line-height:1;
+}
+.urg-leave-lbl { font-size:8px; color:#bbb; font-weight:600; letter-spacing:.05em; }
+
+/* Next departures mini row */
+.next-deps {
+  display:flex; gap:6px; margin-bottom:10px; overflow-x:auto;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.next-deps::-webkit-scrollbar { display:none; }
+.ndep {
+  flex-shrink:0; background:#f4f4f8; border-radius:10px;
+  padding:5px 10px; display:flex; align-items:center; gap:5px;
+  font-family:'DM Mono',monospace; font-size:12px; font-weight:700;
+  color:#555; border:1.5px solid transparent;
+}
+.ndep.active-dep { border-color:#0039A6; background:#eef2ff; color:#0039A6; }
+.ndep-mins { font-size:13px; font-weight:900; }
+
 .urg-go   { color:#00A651; }
 .urg-soon { color:#FFA500; }
 .urg-now  { color:#FF3B30; animation:upulse 1s ease-in-out infinite; }
 .urg-gone { color:#ccc; }
 @keyframes upulse { 0%,100%{opacity:1}50%{opacity:0.35} }
-.urg-sub { font-size:12px; color:#999; }
 
 .worm-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:4px 0 10px; }
 .worm-scroll::-webkit-scrollbar { display:none; }
@@ -387,7 +425,22 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   <div class="ws-handle"></div>
   <button class="ws-close" onclick="closeWorm()">✕</button>
   <div class="ws-inner">
-    <div class="urg-hero" id="urg-hero"></div>
+    <!-- Compact urgency bar: bus badge + stop + leave-in -->
+    <div class="urg-bar" id="urg-bar">
+      <div class="urg-bus-pill" id="urg-bus-pill">
+        <div class="urg-route-badge" id="urg-route-badge">—</div>
+        <div>
+          <div class="urg-stop-label" id="urg-stop-label">Loading…</div>
+          <div class="urg-stop-sub" id="urg-stop-sub"></div>
+        </div>
+      </div>
+      <div class="urg-leave">
+        <div class="urg-leave-num" id="urg-leave-num">—</div>
+        <div class="urg-leave-lbl">MIN</div>
+      </div>
+    </div>
+    <!-- Next 3 departures -->
+    <div class="next-deps" id="next-deps"></div>
     <div class="worm-scroll" id="worm-svg-wrap"></div>
     <div class="stop-chips" id="stop-chips"></div>
   </div>
@@ -1398,9 +1451,48 @@ function renderGoogleWorm(route, idx){
   else if(li<=8){action=`Leave in ${li} min`;cls='urg-soon';}
   else{action=`Leave in ${li} min`;cls='urg-go';}
 
-  document.getElementById('urg-hero').innerHTML=`
-    <div class="urg-action ${cls}">${action}</div>
-    <div class="urg-sub">${depTime} → ${arrTime} · ${dur}</div>`;
+  // ── COMPACT URG BAR ──
+  const firstTransit=(leg.steps||[]).find(s=>s.travel_mode==='TRANSIT');
+  const firstBusName=firstTransit?.transit_details?.line?.short_name||
+                     firstTransit?.transit_details?.line?.name||'Bus';
+  const rawBusColor=firstTransit?.transit_details?.line?.color;
+  const busColor=rawBusColor?('#'+rawBusColor.replace('#','')):BUS_COLOR[firstBusName]?.bg||'#555';
+  const boardStop=firstTransit?.transit_details?.stop_name||'—';
+  const firstWalkStep=(leg.steps||[])[0];
+  const walkToMins=firstWalkStep?.travel_mode==='WALKING'?Math.round((firstWalkStep.duration?.value||0)/60):0;
+
+  document.getElementById('urg-route-badge').textContent=firstBusName;
+  document.getElementById('urg-route-badge').style.background=busColor;
+  document.getElementById('urg-stop-label').textContent=boardStop;
+  document.getElementById('urg-stop-sub').textContent=walkToMins>0?`Walk ${walkToMins} min to stop`:`At your stop`;
+
+  const leaveNumEl=document.getElementById('urg-leave-num');
+  const urgClass=li<=2?'urg-now':li<=8?'urg-soon':'urg-go';
+  leaveNumEl.textContent=li<=0?'NOW':li>99?'—':li;
+  leaveNumEl.className=`urg-leave-num ${urgClass}`;
+
+  // ── NEXT 3 DEPARTURES (simulate from departure time + headway) ──
+  const nextDeps=[];
+  if(depVal){
+    // Show this departure + 2 estimated next ones based on typical headway
+    const headway=li>15?12:li>8?8:6; // rough headway estimate
+    for(let d=0;d<3;d++){
+      const mins=li+(d*headway);
+      nextDeps.push(mins);
+    }
+  }
+  document.getElementById('next-deps').innerHTML=nextDeps.length?
+    nextDeps.map((m,i)=>{
+      const uc=m<=2?'urg-now':m<=8?'urg-soon':'urg-go';
+      return`<div class="ndep${i===0?' active-dep':''}">
+        <span class="ndep-mins ${uc}">${m<=0?'NOW':m}</span>
+        <span style="font-size:9px;color:#aaa;font-weight:500">${i===0?'next':`+${i}`}</span>
+      </div>`;
+    }).join('')+
+    `<div class="ndep" style="color:#aaa;font-size:10px;font-weight:600;font-family:Outfit,sans-serif">
+      ${depTime} → ${arrTime}
+    </div>`
+  :'';
 
   // Collect all coordinates
   const coords=[];
