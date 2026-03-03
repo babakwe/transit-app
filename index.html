@@ -575,7 +575,7 @@ function initStopLayer(){
     id:'mta-stops-dot', type:'circle', source:'mta-stops', minzoom:12,
     paint:{
       'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,5,16,8],
-      'circle-color':['case',['>=',['zoom'],14],['get','color'],'#999'],
+      'circle-color':['get','color'],
       'circle-stroke-width':['interpolate',['linear'],['zoom'],12,1,15,2],
       'circle-stroke-color':'white',
       'circle-opacity':['interpolate',['linear'],['zoom'],12,0.5,14,0.9],
@@ -637,37 +637,20 @@ function initStopLayer(){
 }
 
 // ── LOAD STOPS FOR CURRENT VIEWPORT ──
-async function loadStopsForView(){
+function loadStopsForView(){
   if(!map) return;
   const zoom=map.getZoom();
   if(zoom<12){
-    // Clear stops when zoomed out
     map.getSource('mta-stops')?.setData({type:'FeatureCollection',features:[]});
     return;
   }
-
   const bounds=map.getBounds();
   const minLat=bounds.getSouth(), maxLat=bounds.getNorth();
   const minLng=bounds.getWest(),  maxLng=bounds.getEast();
-
-  // Filter built-in stops to viewport first (instant)
   const inView=MTA_STOPS_BUILTIN.filter(s=>
     s.lat>=minLat&&s.lat<=maxLat&&s.lng>=minLng&&s.lng<=maxLng
   );
   renderStopFeatures(inView);
-
-  // Then try API to augment (non-blocking)
-  try{
-    const params=new URLSearchParams({
-      minLat:minLat.toFixed(4), maxLat:maxLat.toFixed(4),
-      minLng:minLng.toFixed(4), maxLng:maxLng.toFixed(4),
-      zoom:Math.floor(zoom),
-    });
-    const r=await fetch(`/api/stops?${params}`,{signal:AbortSignal.timeout(4000)});
-    if(!r.ok) return;
-    const d=await r.json();
-    if(d.stops?.length>inView.length) renderStopFeatures(d.stops);
-  }catch(e){ /* use builtin data */ }
 }
 
 function renderStopFeatures(stops){
