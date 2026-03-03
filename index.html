@@ -250,6 +250,66 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
 .badge-alt  { background:#f0f0f5; color:#999; }
 .badge-walk { background:#efffef; color:#227733; }
 
+/* ── STOP-FIRST FLOW ── */
+.stop-flow-sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:250;
+  background:white; border-radius:24px 24px 0 0;
+  box-shadow:0 -6px 40px rgba(0,0,0,0.15);
+  transform:translateY(110%);
+  transition:transform 0.42s cubic-bezier(0.32,1.1,0.64,1);
+  max-height:82vh; display:flex; flex-direction:column;
+  padding-bottom:max(env(safe-area-inset-bottom),24px);
+}
+.stop-flow-sheet.open { transform:translateY(0); }
+.sf-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 6px; flex-shrink:0; }
+.sf-close {
+  position:absolute; top:14px; right:16px; width:30px; height:30px;
+  border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
+}
+.sf-header { padding:0 20px 12px; flex-shrink:0; border-bottom:1px solid #f0f0f5; }
+.sf-stop-name { font-size:18px; font-weight:900; color:#111; }
+.sf-stop-sub  { font-size:11px; color:#aaa; margin-top:2px; }
+
+/* tabs */
+.sf-tabs { display:flex; gap:0; padding:12px 20px 0; flex-shrink:0; }
+.sf-tab {
+  flex:1; text-align:center; padding:8px 0; font-size:12px; font-weight:700;
+  color:#bbb; border-bottom:2.5px solid transparent; cursor:pointer; transition:all 0.18s;
+}
+.sf-tab.active { color:#0039A6; border-bottom-color:#0039A6; }
+
+.sf-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+/* arrivals in stop-first */
+.sf-arr-row {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 20px; border-bottom:1px solid #f5f5f8; cursor:pointer; transition:background 0.15s;
+}
+.sf-arr-row:active { background:#f5f8ff; }
+.sf-arr-mins { font-family:'DM Mono',monospace; font-size:26px; font-weight:400; line-height:1; min-width:48px; text-align:right; }
+.sf-arr-info { flex:1; min-width:0; }
+.sf-arr-line { font-size:13px; font-weight:700; color:#222; }
+.sf-arr-dest { font-size:10px; color:#aaa; margin-top:1px; }
+.sf-pick-btn {
+  background:#0039A6; color:white; border:none; border-radius:10px;
+  padding:8px 14px; font-size:11px; font-weight:700; cursor:pointer;
+  font-family:'Outfit',sans-serif; white-space:nowrap;
+}
+
+/* route stops list */
+.sf-route-stop {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 20px; border-bottom:1px solid #f5f5f8; cursor:pointer; transition:background 0.15s;
+}
+.sf-route-stop:active { background:#f5f8ff; }
+.sf-route-stop.current { background:#efffef; }
+.sf-stop-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.sf-stop-label { font-size:13px; font-weight:600; color:#222; flex:1; }
+.sf-stop-num { font-size:10px; color:#ccc; }
+
+/* mini map for stop picking */
+#sf-mini-map { width:100%; height:240px; }
+
 /* mapbox overrides */
 .mapboxgl-ctrl-logo { display:none !important; }
 .mapboxgl-ctrl-attrib { display:none !important; }
@@ -311,6 +371,29 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   <div class="os-inner">
     <div class="os-title">Choose your bus</div>
     <div id="options-list"></div>
+  </div>
+</div>
+
+<!-- STOP-FIRST FLOW SHEET -->
+<div class="stop-flow-sheet" id="sf-sheet">
+  <div class="sf-handle"></div>
+  <button class="sf-close" onclick="closeSFSheet()">✕</button>
+  <div class="sf-header">
+    <div class="sf-stop-name" id="sf-stop-name">Stop</div>
+    <div class="sf-stop-sub" id="sf-stop-sub"></div>
+  </div>
+  <!-- shown when picking a bus at a stop -->
+  <div id="sf-arrivals-view">
+    <div class="sf-body" id="sf-arrivals-list"></div>
+  </div>
+  <!-- shown when picking destination stop on a route -->
+  <div id="sf-dest-view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="sf-tabs">
+      <div class="sf-tab active" id="sf-tab-list" onclick="sfSwitchTab('list')">Stop list</div>
+      <div class="sf-tab" id="sf-tab-map" onclick="sfSwitchTab('map')">Map view</div>
+    </div>
+    <div class="sf-body" id="sf-stops-list"></div>
+    <div id="sf-map-view" style="display:none"><div id="sf-mini-map"></div></div>
   </div>
 </div>
 
@@ -482,8 +565,25 @@ function addCorridorLayer(corridor){
 
   map.on('click','stops-layer',e=>{
     const p=e.features[0].properties;
-    const opt=corridor.options[p.optIdx];
-    if(opt) openStopSheet(opt.boardStop, opt.busName);
+    const corr=CORRIDORS[0]; // for now single corridor
+    const opt=corr.options[p.optIdx];
+    if(opt){
+      // Pass full stop object with lat/lng for the stop-first flow
+      const stopObj={
+        id:opt.boardStop.id,
+        name:opt.boardStop.name,
+        lat:opt.boardStop.lat,
+        lng:opt.boardStop.lng,
+        walkFromHome:opt.boardStop.walkFromHome,
+        elevation:opt.boardStop.elevation,
+        stopId:opt.boardStop.stopId,
+        routes:corr.options.filter(o=>
+          Math.abs(o.boardStop.lat-opt.boardStop.lat)<0.0005&&
+          Math.abs(o.boardStop.lng-opt.boardStop.lng)<0.0005
+        ).map(o=>o.busName),
+      };
+      openStopSheet(stopObj, null);
+    }
   });
   map.on('mouseenter','stops-layer',()=>map.getCanvas().style.cursor='pointer');
   map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
@@ -562,47 +662,236 @@ async function handlePhoto(e){
   reader.readAsDataURL(file);e.target.value='';
 }
 
-// ── OPEN STOP SHEET ──
+// ── STOP-FIRST FLOW ──
+// State
+let sfStop=null, sfRoute=null, sfRouteStops=[], miniMap=null;
+
+// Called when user taps a stop bubble on the map
 async function openStopSheet(stop, busName){
-  document.getElementById('stop-sheet').classList.add('open');
+  sfStop=stop;
+  document.getElementById('sf-stop-name').textContent=stop.name;
+  document.getElementById('sf-stop-sub').textContent=
+    [stop.walkFromHome?`🚶 ${stop.walkFromHome} min walk`:null,
+     stop.elevation?`⛰ ${stop.elevation} ft`:null].filter(Boolean).join(' · ')||'Bus stop';
+
+  // Show arrivals view, hide dest view
+  document.getElementById('sf-arrivals-view').style.display='block';
+  document.getElementById('sf-dest-view').style.display='none';
+  document.getElementById('sf-arrivals-list').innerHTML=
+    `<div class="ldots" style="padding:24px"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+  document.getElementById('sf-sheet').classList.add('open');
+
+  // Close other sheets
+  document.getElementById('stop-sheet').classList.remove('open');
   document.getElementById('worm-sheet').classList.remove('open');
   document.getElementById('options-sheet').classList.remove('open');
-  document.getElementById('sheet-content').innerHTML=`<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
 
+  // Load arrivals for all routes at this stop
   const routes=busName?[busName]:(stop.routes||[]);
   const rows=[];
   for(const route of routes){
-    const sid=stop.stopId||(stop.stopId?.[route]);
+    const sid=typeof stop.stopId==='string'?stop.stopId:stop.stopId?.[route];
     const mins=sid?await fetchBus(sid,route):simMins(stop.id||stop.name,route);
-    if(mins?.length) mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i}));
+    if(mins?.length) mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i,sid}));
   }
   rows.sort((a,b)=>a.mins-b.mins);
 
-  const tags=[
-    stop.walkFromHome?`<div class="tag tag-walk">🚶 ${stop.walkFromHome} min walk</div>`:'',
-    stop.elevation?`<div class="tag tag-elev">⛰ ${stop.elevation} ft elevation</div>`:'',
-  ].join('');
+  if(!rows.length){
+    document.getElementById('sf-arrivals-list').innerHTML=
+      `<div style="padding:24px;text-align:center;color:#ccc;font-size:13px">No arrivals right now</div>`;
+    return;
+  }
 
-  const arrHtml=rows.length?rows.map(r=>{
-    const rc=BUS_COLOR[r.route]||{bg:'#888',text:r.route,type:'local'};
-    const urgRow=r.mins<=2?'urg-now':r.mins<=8?'urg-soon':'urg-go';
-    const urgCol=r.mins<=2?'col-now':r.mins<=8?'col-soon':'col-go';
-    const seq=r.seq===0?'Next bus':r.seq===1?'Then':'After that';
-    return`<div class="arr-row ${urgRow}">
+  document.getElementById('sf-arrivals-list').innerHTML=rows.map(r=>{
+    const rc=BUS_COLOR[r.route]||{bg:'#555',text:r.route,type:'local'};
+    const urgCol=r.mins<=2?'#FF6319':r.mins<=8?'#FFA500':'#00A651';
+    const seq=r.seq===0?'Next':r.seq===1?'Then':'After';
+    return`<div class="sf-arr-row" onclick="sfPickBus('${r.route}')">
       <div class="bus-icon ${rc.type==='sbs'?'bus-sbs':''}" style="background:${rc.bg}">${rc.text}</div>
-      <div class="arr-info">
-        <div class="arr-line">${r.route} · ${seq}</div>
-        <div class="arr-seq">${stop.name}</div>
+      <div class="sf-arr-info">
+        <div class="sf-arr-line">${r.route} · ${seq}</div>
+        <div class="sf-arr-dest">Tap to pick destination stop</div>
       </div>
-      <div class="arr-mins ${urgCol}">${r.mins}<small>m</small></div>
+      <div class="sf-arr-mins" style="color:${urgCol}">${r.mins}<small style="font-size:11px;color:#aaa">m</small></div>
+      <button class="sf-pick-btn" onclick="event.stopPropagation();sfPickBus('${r.route}')">Pick →</button>
     </div>`;
-  }).join(''):`<div style="color:#ccc;font-size:12px;padding:16px;text-align:center">No arrivals right now</div>`;
+  }).join('');
+}
 
-  document.getElementById('sheet-content').innerHTML=`
-    <div class="stop-name">${stop.name}</div>
-    <div class="stop-tags">${tags}</div>
-    <div class="arr-title">Live arrivals</div>
-    ${arrHtml}`;
+// User picked a bus at a stop — now show destination stop picker
+async function sfPickBus(routeName){
+  sfRoute=routeName;
+  const rc=BUS_COLOR[routeName]||{bg:'#555',text:routeName};
+
+  document.getElementById('sf-stop-name').textContent=`${routeName} — pick your stop`;
+  document.getElementById('sf-stop-sub').textContent='Where are you getting off?';
+  document.getElementById('sf-arrivals-view').style.display='none';
+  document.getElementById('sf-dest-view').style.display='flex';
+
+  // Load route stops from MTA/Google — fetch shape for this route
+  document.getElementById('sf-stops-list').innerHTML=
+    `<div class="ldots" style="padding:24px"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+
+  // Use Google Directions to get all stops on this route from current stop
+  try{
+    const origin=sfStop?`${sfStop.lat},${sfStop.lng}`:(userLat?`${userLat},${userLng}`:'Co-op City, Bronx NY');
+    // Get a long-distance route to get many stops
+    const r=await fetch(`/api/directions?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent('Fordham Road Bronx NY')}`);
+    const d=await r.json();
+    const leg=d.routes?.[0]?.legs?.[0];
+    const transitStep=leg?.steps?.find(s=>
+      s.travel_mode==='TRANSIT'&&
+      (s.transit_details?.line?.short_name===routeName||s.transit_details?.line?.name===routeName)
+    );
+    if(transitStep?.transit_details?.stops){
+      sfRouteStops=transitStep.transit_details.stops;
+    } else {
+      // Fallback: hardcoded BX28 stops
+      sfRouteStops=SF_FALLBACK_STOPS[routeName]||[];
+    }
+  }catch{
+    sfRouteStops=SF_FALLBACK_STOPS[routeName]||[];
+  }
+
+  renderSFStopList(rc.bg);
+  sfSwitchTab('list');
+}
+
+// Hardcoded fallback stop lists for key routes
+const SF_FALLBACK_STOPS={
+  'BX28':[
+    {name:'Alcott Pl / Asch Loop',lat:40.8745,lng:-73.8308},
+    {name:'Co-op City Blvd / Carver Loop',lat:40.8730,lng:-73.8350},
+    {name:'Boston Rd / Tillotson Ave',lat:40.8695,lng:-73.8410},
+    {name:'Boston Rd / Pelham Pkwy N',lat:40.8660,lng:-73.8470},
+    {name:'White Plains Rd / Pelham Pkwy',lat:40.8568,lng:-73.8658},
+    {name:'White Plains Rd / Lydig Ave',lat:40.8530,lng:-73.8710},
+    {name:'White Plains Rd / Allerton Ave',lat:40.8495,lng:-73.8748},
+    {name:'White Plains Rd / Gun Hill Rd',lat:40.8760,lng:-73.8730},
+    {name:'Fordham Rd / Valentine Ave',lat:40.8620,lng:-73.8990},
+    {name:'Fordham Rd / Grand Concourse',lat:40.8608,lng:-73.9020},
+  ],
+  'BX12+':[
+    {name:'Bartow Ave / Co-op City Blvd',lat:40.8735,lng:-73.8380},
+    {name:'Pelham Pkwy / White Plains Rd',lat:40.8560,lng:-73.8680},
+    {name:'Pelham Pkwy / Williamsbridge Rd',lat:40.8540,lng:-73.8780},
+    {name:'Pelham Pkwy / Holland Ave',lat:40.8525,lng:-73.8860},
+    {name:'Pelham Pkwy / Lydig Ave',lat:40.8512,lng:-73.8930},
+    {name:'Fordham Rd / Tiebout Ave',lat:40.8631,lng:-73.9020},
+    {name:'Fordham Rd / Grand Concourse',lat:40.8608,lng:-73.9050},
+    {name:'Fordham Rd / Jerome Ave',lat:40.8598,lng:-73.9105},
+  ],
+};
+
+function renderSFStopList(routeColor){
+  if(!sfRouteStops.length){
+    document.getElementById('sf-stops-list').innerHTML=
+      `<div style="padding:24px;text-align:center;color:#ccc;font-size:13px">Stop list unavailable — type your destination above</div>`;
+    return;
+  }
+  // Find current stop index
+  const currentIdx=sfStop?sfRouteStops.findIndex(s=>
+    s.name===sfStop.name||
+    (Math.abs(s.lat-sfStop.lat)<0.001&&Math.abs(s.lng-sfStop.lng)<0.001)
+  ):0;
+
+  document.getElementById('sf-stops-list').innerHTML=sfRouteStops.map((s,i)=>{
+    const isCurrent=i===currentIdx;
+    const isPast=i<currentIdx;
+    return`<div class="sf-route-stop${isCurrent?' current':''}" 
+      style="${isPast?'opacity:0.35;pointer-events:none':''}"
+      onclick="sfPickDestStop(${i})">
+      <div class="sf-stop-dot" style="background:${isCurrent?'#00A651':routeColor};${isPast?'opacity:0.3':''}"></div>
+      <div class="sf-stop-label">${s.name}</div>
+      <div class="sf-stop-num">${isCurrent?'📍 You are here':i>currentIdx?`${i-currentIdx} stop${i-currentIdx>1?'s':''} ahead`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+function sfSwitchTab(tab){
+  document.getElementById('sf-tab-list').classList.toggle('active',tab==='list');
+  document.getElementById('sf-tab-map').classList.toggle('active',tab==='map');
+  document.getElementById('sf-stops-list').style.display=tab==='list'?'block':'none';
+  document.getElementById('sf-map-view').style.display=tab==='map'?'block':'none';
+
+  if(tab==='map'&&sfRouteStops.length){
+    // Init mini map if needed
+    if(!miniMap){
+      miniMap=new mapboxgl.Map({
+        container:'sf-mini-map',
+        style:'mapbox://styles/mapbox/light-v11',
+        center:[sfRouteStops[0]?.lng||userLng||-73.87, sfRouteStops[0]?.lat||userLat||40.87],
+        zoom:12,
+      });
+      miniMap.on('load',()=>renderMiniMapStops());
+    } else {
+      renderMiniMapStops();
+    }
+  }
+}
+
+function renderMiniMapStops(){
+  if(!miniMap||!sfRouteStops.length)return;
+  const rc=BUS_COLOR[sfRoute]||{bg:'#0039A6'};
+
+  // Draw route line
+  const coords=sfRouteStops.map(s=>[s.lng,s.lat]);
+  if(miniMap.getSource('mini-route')) miniMap.getSource('mini-route').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords}});
+  else{
+    miniMap.addSource('mini-route',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
+    miniMap.addLayer({id:'mini-route-line',type:'line',source:'mini-route',
+      layout:{'line-join':'round','line-cap':'round'},
+      paint:{'line-color':rc.bg,'line-width':4,'line-opacity':0.8}});
+  }
+
+  // Add stop markers
+  sfRouteStops.forEach((s,i)=>{
+    const el=document.createElement('div');
+    el.style.cssText=`width:14px;height:14px;border-radius:50%;background:${rc.bg};border:2.5px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.2);cursor:pointer`;
+    el.onclick=()=>sfPickDestStop(i);
+    new mapboxgl.Marker({element:el}).setLngLat([s.lng,s.lat]).addTo(miniMap);
+  });
+
+  // Fit to route
+  const bounds=new mapboxgl.LngLatBounds();
+  coords.forEach(c=>bounds.extend(c));
+  miniMap.fitBounds(bounds,{padding:30,maxZoom:14});
+}
+
+// User picks their destination stop
+async function sfPickDestStop(stopIdx){
+  const destStop=sfRouteStops[stopIdx];
+  if(!destStop)return;
+  closeSFSheet();
+
+  // Populate search fields
+  document.getElementById('from-input').value=sfStop?.name||'My location';
+  document.getElementById('to-input').value=destStop.name;
+
+  // Auto-trigger route finding
+  const origin=sfStop?`${sfStop.lat},${sfStop.lng}`:(userLat?`${userLat},${userLng}`:'');
+  const dest=`${destStop.lat},${destStop.lng}`;
+  if(!origin)return;
+
+  document.getElementById('go-btn').disabled=true;
+  document.getElementById('go-btn').textContent='Finding…';
+
+  try{
+    const res=await fetch(`/api/directions?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&alternatives=true`);
+    const data=await res.json();
+    if(data.routes?.length){
+      window._fromVal=document.getElementById('from-input').value;
+      window._toVal=document.getElementById('to-input').value;
+      showAllOptions(data.routes,window._fromVal,window._toVal);
+    }
+  }catch(e){showError('Could not find route.');}
+
+  document.getElementById('go-btn').disabled=false;
+  document.getElementById('go-btn').textContent='Find my ride →';
+}
+
+function closeSFSheet(){
+  document.getElementById('sf-sheet').classList.remove('open');
 }
 
 function closeSheet(){document.getElementById('stop-sheet').classList.remove('open');}
@@ -918,7 +1207,7 @@ function selectGoogleOption(idx){
   renderGoogleWorm(route, idx);
 }
 
-// ── RENDER WORM FROM GOOGLE ROUTE ──
+// ── RENDER WORM FROM GOOGLE ROUTE — map orients to direction of travel ──
 function renderGoogleWorm(route, idx){
   const leg=route.legs?.[0];
   if(!leg)return;
@@ -940,7 +1229,7 @@ function renderGoogleWorm(route, idx){
     <div class="urg-action ${cls}">${action}</div>
     <div class="urg-sub">${depTime} → ${arrTime} · ${dur}</div>`;
 
-  // Draw route on Mapbox using step coordinates
+  // Collect all coordinates
   const coords=[];
   (leg.steps||[]).forEach(step=>{
     if(step.start_location) coords.push([step.start_location.lng,step.start_location.lat]);
@@ -948,10 +1237,10 @@ function renderGoogleWorm(route, idx){
   });
   if(userLat&&coords.length) coords.unshift([userLng,userLat]);
 
-  // Get dominant bus color
   const transitSteps=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
   const firstBus=transitSteps[0]?.transit_details;
-  const wormColor=firstBus?.line?.color||BUS_COLOR[firstBus?.line?.short_name]?.bg||'#0039A6';
+  const rawColor=firstBus?.line?.color;
+  const wormColor=rawColor?('#'+rawColor.replace('#','')):BUS_COLOR[firstBus?.line?.short_name]?.bg||'#0039A6';
 
   if(map.getLayer('worm-line'))map.removeLayer('worm-line');
   if(map.getSource('worm-source'))map.removeSource('worm-source');
@@ -960,23 +1249,37 @@ function renderGoogleWorm(route, idx){
     map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
     map.addLayer({id:'worm-line',type:'line',source:'worm-source',
       layout:{'line-join':'round','line-cap':'round'},
-      paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,4,16,10],'line-opacity':0.85}
+      paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,5,16,11],'line-opacity':0.88}
     },'stops-glow');
 
-    // Zoom to fit
+    // ── ORIENT MAP TO DIRECTION OF TRAVEL ──
+    // Bearing = angle from start to end of transit portion
+    const startCoord=coords[0];
+    const endCoord=coords[coords.length-1];
+    const bearing=getBearing(startCoord[1],startCoord[0],endCoord[1],endCoord[0]);
+
+    // Fit bounds first, then rotate
     const bounds=new mapboxgl.LngLatBounds();
     coords.forEach(c=>bounds.extend(c));
-    map.fitBounds(bounds,{padding:{top:180,bottom:300,left:40,right:40},maxZoom:15,speed:1.2});
+
+    map.fitBounds(bounds,{
+      bearing: bearing,      // rotate to face direction of travel
+      pitch: 20,             // slight tilt like Google
+      padding:{top:200,bottom:320,left:50,right:50},
+      maxZoom:15,
+      duration:1400,
+      essential:true,
+    });
   }
 
-  // Build step chips — each transit step is a node
+  // Step chips
   const chipHtml=transitSteps.map((step,i)=>{
     const t=step.transit_details;
     const name=t?.line?.short_name||t?.line?.name||'Bus';
-    const color=t?.line?.color||BUS_COLOR[name]?.bg||'#555';
+    const rawC=t?.line?.color;
+    const color=rawC?('#'+rawC.replace('#','')):BUS_COLOR[name]?.bg||'#555';
     const board=t?.stop_name||'—';
-    const stops=t?.num_stops||'—';
-    const depMins=t?.departure_stop?Math.round((new Date(t.departure_time?.value*1000)-Date.now())/60000):null;
+    const depMins=t?.departure_time?.value?Math.round((t.departure_time.value*1000-Date.now())/60000):null;
     return`<div class="schip${i===0?' active':''}" onclick="openTransitStepSheet(${idx},${i})">
       <span class="schip-route" style="color:${color}">${name}</span>
       <span class="schip-stop">${board}</span>
@@ -991,11 +1294,19 @@ function renderGoogleWorm(route, idx){
   </div>`;
 
   document.getElementById('stop-chips').innerHTML=chipHtml+changeBtn;
-
-  // Build worm SVG from transit steps
   buildGoogleWormSVG(transitSteps, wormColor);
-
   document.getElementById('worm-sheet').classList.add('open');
+}
+
+// ── BEARING CALCULATION (degrees, 0=north, clockwise) ──
+function getBearing(lat1,lng1,lat2,lng2){
+  const toRad=d=>d*Math.PI/180;
+  const toDeg=r=>r*180/Math.PI;
+  const dLng=toRad(lng2-lng1);
+  const rlat1=toRad(lat1), rlat2=toRad(lat2);
+  const y=Math.sin(dLng)*Math.cos(rlat2);
+  const x=Math.cos(rlat1)*Math.sin(rlat2)-Math.sin(rlat1)*Math.cos(rlat2)*Math.cos(dLng);
+  return(toDeg(Math.atan2(y,x))+360)%360;
 }
 
 // ── WORM SVG from Google transit steps ──
