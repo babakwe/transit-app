@@ -195,6 +195,61 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
 }
 .pin-hint.show { opacity:1; }
 
+/* ── ROUTE OPTIONS SHEET ── */
+.options-sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:202;
+  background:white; border-radius:24px 24px 0 0;
+  box-shadow:0 -6px 40px rgba(0,0,0,0.15);
+  transform:translateY(110%);
+  transition:transform 0.42s cubic-bezier(0.32,1.1,0.64,1);
+  max-height:80vh; overflow-y:auto;
+  padding-bottom:max(env(safe-area-inset-bottom),24px);
+}
+.options-sheet.open { transform:translateY(0); }
+.os-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 0; }
+.os-close {
+  position:absolute; top:14px; right:16px; width:30px; height:30px;
+  border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
+}
+.os-inner { padding:14px 20px 24px; }
+.os-title { font-size:13px; font-weight:700; color:#999; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.08em; }
+
+/* option card */
+.opt-card {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px; border-radius:16px; margin-bottom:10px;
+  border:2px solid #eee; background:#fafafa; cursor:pointer;
+  transition:all 0.18s;
+}
+.opt-card:active { transform:scale(0.97); }
+.opt-card.best { border-color:#0039A6; background:#f0f4ff; }
+.opt-card.alt  { border-color:#e8e8ec; }
+.opt-bus {
+  width:52px; height:52px; border-radius:12px; flex-shrink:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:white; position:relative;
+}
+.opt-bus-name { font-size:12px; font-weight:900; line-height:1; }
+.opt-bus-type { font-size:8px; font-weight:700; opacity:0.8; margin-top:2px; }
+/* SBS articulation mark */
+.opt-bus.sbs::after {
+  content:''; position:absolute; right:10px; top:20%; bottom:20%;
+  width:2px; background:rgba(255,255,255,0.35); border-radius:1px;
+}
+.opt-info { flex:1; min-width:0; }
+.opt-label { font-size:15px; font-weight:800; color:#111; margin-bottom:3px; }
+.opt-detail { font-size:11px; color:#aaa; line-height:1.5; }
+.opt-right { text-align:right; flex-shrink:0; }
+.opt-mins { font-family:'DM Mono',monospace; font-size:28px; font-weight:400; line-height:1; }
+.opt-mins-lbl { font-size:9px; color:#bbb; font-weight:600; letter-spacing:0.06em; margin-top:2px; }
+.opt-badge {
+  display:inline-block; font-size:9px; font-weight:700; padding:3px 8px;
+  border-radius:6px; margin-bottom:6px;
+}
+.badge-best { background:#0039A6; color:white; }
+.badge-alt  { background:#f0f0f5; color:#999; }
+.badge-walk { background:#efffef; color:#227733; }
+
 /* mapbox overrides */
 .mapboxgl-ctrl-logo { display:none !important; }
 .mapboxgl-ctrl-attrib { display:none !important; }
@@ -249,6 +304,16 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   </div>
 </div>
 
+<!-- ROUTE OPTIONS SHEET -->
+<div class="options-sheet" id="options-sheet">
+  <div class="os-handle"></div>
+  <button class="os-close" onclick="closeOptions()">✕</button>
+  <div class="os-inner">
+    <div class="os-title">Choose your bus</div>
+    <div id="options-list"></div>
+  </div>
+</div>
+
 <div class="pin-hint" id="pin-hint">Tap anywhere on the map to set destination</div>
 <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
@@ -272,17 +337,59 @@ const BUS_COLOR = {
 };
 
 // ── CORRIDOR DATA ──
+// Each option = a specific bus + its departure stop
 const CORRIDORS = [{
   fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','baychester','einstein','140'],
   toKeys:['tiebout','fordham','2390','jerome'],
   label:'Co-op City → Fordham / Tiebout',
-  color:'#0039A6',
-  stops:[
-    {id:'alcott',  name:'Alcott Pl / Asch Loop',        lat:40.8745, lng:-73.8308, routes:['BX28'],        walkFromHome:5,  elevation:18, stopId:{BX28:'200759'}},
-    {id:'bartow',  name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, routes:['BX12+','BX26'],walkFromHome:12, elevation:22, stopId:{'BX12+':'200760','BX26':'200758'}},
-    {id:'pelham1', name:'Pelham Pkwy / White Plains Rd', lat:40.8560, lng:-73.8680, routes:['BX12+'],       walkFromHome:null,elevation:35, stopId:{'BX12+':'200770'}},
-    {id:'pelham2', name:'Pelham Pkwy / Williamsbridge',  lat:40.8540, lng:-73.8780, routes:['BX12+'],       walkFromHome:null,elevation:30, stopId:{'BX12+':'200771'}},
-    {id:'fordham', name:'Fordham Rd / Tiebout Ave',      lat:40.8631, lng:-73.9020, routes:['BX12+'],       walkFromHome:null,elevation:42, stopId:{'BX12+':'200790'}, isDestination:true},
+  // All bus options for this trip — user picks one
+  options:[
+    {
+      id:'bx12sbs',
+      busName:'BX12+',
+      busLabel:'BX12 SBS',
+      busColor:'#0039A6',
+      busType:'sbs',
+      boardStop:{id:'bartow', name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, elevation:22, stopId:'200760'},
+      alightStop:'Fordham Rd / Tiebout Ave',
+      rideTime:22,
+      walkFromStop:4,
+      detail:'Direct · No transfers · Every 6-8 min',
+      primary:true,
+    },
+    {
+      id:'bx26',
+      busName:'BX26',
+      busLabel:'BX26',
+      busColor:'#6BBE45',
+      busType:'local',
+      boardStop:{id:'bartow2', name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, elevation:22, stopId:'200758'},
+      alightStop:'Fordham Rd area',
+      rideTime:28,
+      walkFromStop:6,
+      detail:'Alt if BX12 SBS is packed · Every 10 min',
+      primary:false,
+    },
+    {
+      id:'bx28',
+      busName:'BX28',
+      busLabel:'BX28',
+      busColor:'#FF6319',
+      busType:'local',
+      boardStop:{id:'alcott', name:'Alcott Pl / Asch Loop', lat:40.8745, lng:-73.8308, walkFromHome:5, elevation:18, stopId:'200759'},
+      alightStop:'Fordham Rd area',
+      rideTime:32,
+      walkFromStop:7,
+      detail:'Closest stop — 5 min walk · Slower ride',
+      primary:false,
+    },
+  ],
+  // All stops along the main route (for worm drawing)
+  routeStops:[
+    {lat:40.8735, lng:-73.8380},
+    {lat:40.8560, lng:-73.8680},
+    {lat:40.8540, lng:-73.8780},
+    {lat:40.8631, lng:-73.9020},
   ]
 }];
 
@@ -335,89 +442,51 @@ async function initMap(){
 
 // ── ADD STOPS TO MAP ── 
 function addCorridorLayer(corridor){
-  // Build GeoJSON for all stops
-  const features=corridor.stops.map(s=>({
-    type:'Feature',
-    geometry:{type:'Point',coordinates:[s.lng,s.lat]},
-    properties:{
-      id:s.id,
-      name:s.name,
-      route:s.routes[0]||'',
-      color:BUS_COLOR[s.routes[0]]?.bg||'#888',
-      isSBS:BUS_COLOR[s.routes[0]]?.type==='sbs'?1:0,
-      elevation:s.elevation||0,
-      walkFromHome:s.walkFromHome||0,
-      isDestination:s.isDestination?1:0,
-      corridorIdx:CORRIDORS.indexOf(corridor),
-      stopIdx:corridor.stops.indexOf(s),
-    }
-  }));
+  // Build GeoJSON from all unique board stops
+  const seen=new Set();
+  const features=[];
+  corridor.options.forEach((opt,oi)=>{
+    const s=opt.boardStop;
+    if(seen.has(s.id)) return;
+    seen.add(s.id);
+    const rc=BUS_COLOR[opt.busName]||{bg:'#888',text:opt.busName};
+    features.push({
+      type:'Feature',
+      geometry:{type:'Point',coordinates:[s.lng,s.lat]},
+      properties:{
+        id:s.id, name:s.name,
+        route:opt.busName, color:rc.bg,
+        elevation:s.elevation||0,
+        walkFromHome:s.walkFromHome||0,
+        optIdx:oi,
+      }
+    });
+  });
 
-  // Remove existing if any
-  if(map.getSource('stops-source')) {
+  if(map.getSource('stops-source')){
     map.getSource('stops-source').setData({type:'FeatureCollection',features});
     return;
   }
 
-  map.addSource('stops-source',{
-    type:'geojson',
-    data:{type:'FeatureCollection',features}
-  });
-
-  // Outer glow ring
-  map.addLayer({
-    id:'stops-glow',
-    type:'circle',
-    source:'stops-source',
-    paint:{
-      'circle-radius':['interpolate',['linear'],['zoom'],10,10,15,20],
-      'circle-color':['get','color'],
-      'circle-opacity':0.15,
-      'circle-blur':0.5,
-    }
-  });
-
-  // Main stop circle
-  map.addLayer({
-    id:'stops-layer',
-    type:'circle',
-    source:'stops-source',
-    paint:{
-      'circle-radius':['interpolate',['linear'],['zoom'],10,7,14,13,16,18],
-      'circle-color':['get','color'],
-      'circle-stroke-width':2.5,
-      'circle-stroke-color':'white',
-    }
-  });
-
-  // Stop label (route name)
-  map.addLayer({
-    id:'stops-labels',
-    type:'symbol',
-    source:'stops-source',
-    minzoom:12,
-    layout:{
-      'text-field':['get','route'],
-      'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
+  map.addSource('stops-source',{type:'geojson',data:{type:'FeatureCollection',features}});
+  map.addLayer({id:'stops-glow',type:'circle',source:'stops-source',
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,12,15,22],'circle-color':['get','color'],'circle-opacity':0.14,'circle-blur':0.6}});
+  map.addLayer({id:'stops-layer',type:'circle',source:'stops-source',
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,7,14,14,16,19],
+      'circle-color':['get','color'],'circle-stroke-width':2.5,'circle-stroke-color':'white'}});
+  map.addLayer({id:'stops-labels',type:'symbol',source:'stops-source',minzoom:12,
+    layout:{'text-field':['get','route'],'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
       'text-size':['interpolate',['linear'],['zoom'],12,8,16,11],
-      'text-offset':[0,0],
-      'text-anchor':'center',
-      'text-allow-overlap':true,
-    },
-    paint:{
-      'text-color':'white',
-      'text-halo-color':'rgba(0,0,0,0.1)',
-      'text-halo-width':0.5,
-    }
-  });
+      'text-offset':[0,0],'text-anchor':'center','text-allow-overlap':true},
+    paint:{'text-color':'white','text-halo-color':'rgba(0,0,0,0.1)','text-halo-width':0.5}});
 
-  // Click handler
-  map.on('click','stops-layer', e=>{
-    const props=e.features[0].properties;
-    const corridor=CORRIDORS[props.corridorIdx];
-    const stop=corridor.stops[props.stopIdx];
-    openStopSheet(stop);
+  map.on('click','stops-layer',e=>{
+    const p=e.features[0].properties;
+    const opt=corridor.options[p.optIdx];
+    if(opt) openStopSheet(opt.boardStop, opt.busName);
   });
+  map.on('mouseenter','stops-layer',()=>map.getCanvas().style.cursor='pointer');
+  map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
 }
 
 // ── USER LOCATION ──
@@ -494,16 +563,17 @@ async function handlePhoto(e){
 }
 
 // ── OPEN STOP SHEET ──
-async function openStopSheet(stop){
+async function openStopSheet(stop, busName){
   document.getElementById('stop-sheet').classList.add('open');
   document.getElementById('worm-sheet').classList.remove('open');
+  document.getElementById('options-sheet').classList.remove('open');
   document.getElementById('sheet-content').innerHTML=`<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
 
-  // Fetch arrivals
+  const routes=busName?[busName]:(stop.routes||[]);
   const rows=[];
-  for(const route of stop.routes){
-    const sid=stop.stopId?.[route];
-    const mins=sid?await fetchBus(sid,route):simMins(stop.id,route);
+  for(const route of routes){
+    const sid=stop.stopId||(stop.stopId?.[route]);
+    const mins=sid?await fetchBus(sid,route):simMins(stop.id||stop.name,route);
     if(mins?.length) mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i}));
   }
   rows.sort((a,b)=>a.mins-b.mins);
@@ -543,33 +613,292 @@ function closeWorm(){
   if(map.getSource('worm-source'))map.removeSource('worm-source');
 }
 
-// ── FIND ROUTE ──
+// ── FIND ROUTE → Google gives ALL options, user picks ──
 async function findRoute(){
-  const from=document.getElementById('from-input').value.trim().toLowerCase();
-  const to=document.getElementById('to-input').value.trim().toLowerCase();
-  if(!from||!to)return;
+  const fromVal=document.getElementById('from-input').value.trim();
+  const toVal=document.getElementById('to-input').value.trim();
+  if(!fromVal||!toVal)return;
+
   document.getElementById('go-btn').disabled=true;
   document.getElementById('go-btn').textContent='Finding…';
+  closeSheet();
+  document.getElementById('worm-sheet').classList.remove('open');
+  document.getElementById('options-sheet').classList.remove('open');
 
+  // Store for worm drawing later
   activeCorridor=CORRIDORS.find(c=>
-    c.fromKeys.some(k=>from.includes(k))&&c.toKeys.some(k=>to.includes(k))
+    c.fromKeys.some(k=>fromVal.toLowerCase().includes(k))&&
+    c.toKeys.some(k=>toVal.toLowerCase().includes(k))
   );
 
-  if(activeCorridor){
-    await loadArrivals(activeCorridor);
-    renderWorm(activeCorridor);
-  } else {
-    await googleFallback(document.getElementById('from-input').value.trim(),document.getElementById('to-input').value.trim());
+  try{
+    // Ask Google for ALL transit alternatives
+    const res=await fetch(`/api/directions?origin=${encodeURIComponent(fromVal)}&destination=${encodeURIComponent(toVal)}&alternatives=true`);
+    const data=await res.json();
+
+    if(data.routes?.length){
+      showAllOptions(data.routes, fromVal, toVal);
+    } else {
+      showError('No transit routes found. Try different addresses.');
+    }
+  }catch(e){
+    showError('Could not connect. Check your internet.');
   }
 
   document.getElementById('go-btn').disabled=false;
   document.getElementById('go-btn').textContent='Find my ride →';
 }
 
+// ── SHOW ALL GOOGLE OPTIONS ──
+function showAllOptions(routes, from, to){
+  // Sort by total duration
+  routes.sort((a,b)=>(a.legs?.[0]?.duration?.value||0)-(b.legs?.[0]?.duration?.value||0));
+
+  const cards=routes.map((route,i)=>{
+    const leg=route.legs?.[0];
+    if(!leg) return '';
+
+    const dur=leg.duration?.text||'—';
+    const depTime=leg.departure_time?.text||'Now';
+    const arrTime=leg.arrival_time?.text||'—';
+    const depVal=leg.departure_time?.value;
+    const leaveIn=depVal?Math.round((depVal*1000-Date.now())/60000):null;
+
+    // Extract transit steps only
+    const transitSteps=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
+    const walkSteps=(leg.steps||[]).filter(s=>s.travel_mode==='WALKING');
+
+    // Build bus icons for this route
+    const busIcons=transitSteps.map(s=>{
+      const t=s.transit_details;
+      const name=t?.line?.short_name||t?.line?.name||'Bus';
+      const color=t?.line?.color||BUS_COLOR[name]?.bg||'#555';
+      const textColor=t?.line?.text_color||'#fff';
+      const isSBS=name.includes('+');
+      return`<div class="opt-bus${isSBS?' sbs':''}" style="background:${color};color:${textColor};border-radius:${isSBS?'7px':'8px'};padding:${isSBS?'5px 12px':'5px 8px'};font-size:11px;font-weight:900;display:inline-flex;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,0.18);margin-right:4px;position:relative">
+        ${name}${isSBS?'<span style="position:absolute;right:28%;top:20%;bottom:20%;width:2px;background:rgba(255,255,255,0.35);border-radius:1px"></span>':''}
+      </div>`;
+    }).join('<span style="color:#ccc;font-size:14px;margin:0 2px">→</span>');
+
+    // Total walk time
+    const totalWalk=walkSteps.reduce((a,s)=>a+(s.duration?.value||0),0);
+    const walkMins=Math.round(totalWalk/60);
+
+    // Urgency color
+    const urgCol=leaveIn==null?'#aaa':leaveIn<=2?'#FF6319':leaveIn<=6?'#FFA500':'#00A651';
+    const leaveStr=leaveIn==null?depTime:leaveIn<=0?'Leave NOW':leaveIn<=1?'Leave in 1 min':`Leave in ${leaveIn} min`;
+    const isFirst=i===0;
+
+    // Transfers label
+    const transfers=transitSteps.length>1?`${transitSteps.length-1} transfer${transitSteps.length>2?'s':''}`:'Direct';
+
+    return`<div class="opt-card ${isFirst?'best':'alt'}" onclick="selectGoogleOption(${i})">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          ${isFirst?'<span class="opt-badge badge-best">Fastest</span>':''}
+          <span class="opt-badge badge-alt">${transfers}</span>
+          ${walkMins>0?`<span class="opt-badge badge-walk">🚶 ${walkMins}m walk</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+          ${busIcons||'<span style="color:#aaa;font-size:12px">Walking only</span>'}
+        </div>
+        <div style="font-size:11px;color:#aaa">${depTime} → ${arrTime} · ${dur} total</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;padding-left:10px">
+        <div style="font-size:22px;font-weight:900;color:${urgCol};font-family:'DM Mono',monospace;line-height:1">${dur.replace(' mins','').replace(' min','')}</div>
+        <div style="font-size:8px;color:#bbb;font-weight:600;letter-spacing:0.06em;margin-bottom:4px">TOTAL</div>
+        <div style="font-size:10px;font-weight:700;color:${urgCol}">${leaveStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Store routes for when user picks
+  window._googleRoutes=routes;
+  window._fromVal=from;
+  window._toVal=to;
+
+  document.getElementById('options-list').innerHTML=
+    `<div style="font-size:10px;color:#aaa;margin-bottom:12px">Tap a route to see it on the map</div>`+cards;
+  document.getElementById('options-sheet').classList.add('open');
+}
+
+function closeOptions(){ document.getElementById('options-sheet').classList.remove('open'); }
+
+// ── USER PICKS A GOOGLE OPTION ──
+function selectGoogleOption(idx){
+  const route=window._googleRoutes?.[idx];
+  if(!route)return;
+  closeOptions();
+  renderGoogleWorm(route, idx);
+}
+
+// ── RENDER WORM FROM GOOGLE ROUTE ──
+function renderGoogleWorm(route, idx){
+  const leg=route.legs?.[0];
+  if(!leg)return;
+
+  const dur=leg.duration?.text||'—';
+  const depTime=leg.departure_time?.text||'Now';
+  const arrTime=leg.arrival_time?.text||'—';
+  const depVal=leg.departure_time?.value;
+  const leaveIn=depVal?Math.round((depVal*1000-Date.now())/60000):null;
+  const li=leaveIn??99;
+
+  let action,cls;
+  if(li<=0){action='LEAVE NOW';cls='urg-now';}
+  else if(li<=2){action='LEAVE NOW';cls='urg-now';}
+  else if(li<=6){action=`LEAVE IN ${li} MIN`;cls='urg-soon';}
+  else{action=`Leave in ${li} min`;cls='urg-go';}
+
+  document.getElementById('urg-hero').innerHTML=`
+    <div class="urg-action ${cls}">${action}</div>
+    <div class="urg-sub">${depTime} → ${arrTime} · ${dur}</div>`;
+
+  // Draw route on Mapbox using step coordinates
+  const coords=[];
+  (leg.steps||[]).forEach(step=>{
+    if(step.start_location) coords.push([step.start_location.lng,step.start_location.lat]);
+    if(step.end_location)   coords.push([step.end_location.lng,step.end_location.lat]);
+  });
+  if(userLat&&coords.length) coords.unshift([userLng,userLat]);
+
+  // Get dominant bus color
+  const transitSteps=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
+  const firstBus=transitSteps[0]?.transit_details;
+  const wormColor=firstBus?.line?.color||BUS_COLOR[firstBus?.line?.short_name]?.bg||'#0039A6';
+
+  if(map.getLayer('worm-line'))map.removeLayer('worm-line');
+  if(map.getSource('worm-source'))map.removeSource('worm-source');
+
+  if(coords.length>=2){
+    map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
+    map.addLayer({id:'worm-line',type:'line',source:'worm-source',
+      layout:{'line-join':'round','line-cap':'round'},
+      paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,4,16,10],'line-opacity':0.85}
+    },'stops-glow');
+
+    // Zoom to fit
+    const bounds=new mapboxgl.LngLatBounds();
+    coords.forEach(c=>bounds.extend(c));
+    map.fitBounds(bounds,{padding:{top:180,bottom:300,left:40,right:40},maxZoom:15,speed:1.2});
+  }
+
+  // Build step chips — each transit step is a node
+  const chipHtml=transitSteps.map((step,i)=>{
+    const t=step.transit_details;
+    const name=t?.line?.short_name||t?.line?.name||'Bus';
+    const color=t?.line?.color||BUS_COLOR[name]?.bg||'#555';
+    const board=t?.stop_name||'—';
+    const stops=t?.num_stops||'—';
+    const depMins=t?.departure_stop?Math.round((new Date(t.departure_time?.value*1000)-Date.now())/60000):null;
+    return`<div class="schip${i===0?' active':''}" onclick="openTransitStepSheet(${idx},${i})">
+      <span class="schip-route" style="color:${color}">${name}</span>
+      <span class="schip-stop">${board}</span>
+      ${depMins!=null?`<span class="schip-mins">${depMins}m</span><span class="schip-lbl">DEPARTS</span>`:'<span class="schip-mins" style="color:#ddd">—</span>'}
+    </div>`;
+  }).join('');
+
+  const changeBtn=`<div class="schip" style="background:#f0f4ff;border-color:#0039A6;cursor:pointer" onclick="showAllOptions(window._googleRoutes,window._fromVal,window._toVal)">
+    <span class="schip-route" style="color:#0039A6">↩</span>
+    <span class="schip-stop">All options</span>
+    <span class="schip-mins" style="font-size:12px;color:#0039A6">back</span>
+  </div>`;
+
+  document.getElementById('stop-chips').innerHTML=chipHtml+changeBtn;
+
+  // Build worm SVG from transit steps
+  buildGoogleWormSVG(transitSteps, wormColor);
+
+  document.getElementById('worm-sheet').classList.add('open');
+}
+
+// ── WORM SVG from Google transit steps ──
+function buildGoogleWormSVG(steps, color){
+  const N=Math.max(steps.length,2);
+  const W=Math.max(280,N*90+60);
+  const H=60; const cy=H/2;
+  const pts=steps.map((s,i)=>({x:36+i*90, y:cy+(i%2===0?-7:7)}));
+
+  let d=pts.length>0?`M 12 ${cy} Q 24 ${cy} ${pts[0].x} ${pts[0].y}`:`M 12 ${cy} L ${W-20} ${cy}`;
+  for(let i=1;i<pts.length;i++){
+    const cpx=(pts[i-1].x+pts[i].x)/2;
+    d+=` Q ${cpx} ${(pts[i-1].y+pts[i].y)/2} ${pts[i].x} ${pts[i].y}`;
+  }
+
+  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+<defs>
+  <linearGradient id="wg2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+    <stop offset="50%" stop-color="${color}" stop-opacity="1"/>
+    <stop offset="100%" stop-color="${color}" stop-opacity="0.6"/>
+  </linearGradient>
+  <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<path d="${d}" fill="none" stroke="url(#wg2)" stroke-width="12" stroke-linecap="round" filter="url(#glow2)"/>
+<path d="${d}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4" stroke-linecap="round" stroke-dasharray="16 32">
+  <animate attributeName="stroke-dashoffset" from="48" to="0" dur="1.8s" repeatCount="indefinite"/>
+</path>`;
+
+  pts.forEach((pt,i)=>{
+    const t=steps[i]?.transit_details;
+    const name=t?.line?.short_name||'';
+    const c=t?.line?.color||color;
+    const isLast=i===pts.length-1;
+    svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="${isLast?11:9}" fill="${c}" stroke="white" stroke-width="2.5" filter="url(#glow2)"/>`;
+    if(name) svg+=`<text x="${pt.x}" y="${pt.y+4}" text-anchor="middle" fill="white" font-size="7" font-weight="900">${name}</text>`;
+  });
+
+  // User head
+  svg+=`<circle cx="12" cy="${cy}" r="9" fill="#00A651" stroke="white" stroke-width="2.5" filter="url(#glow2)">
+    <animate attributeName="r" values="8;11;8" dur="2s" repeatCount="indefinite"/>
+  </circle><circle cx="12" cy="${cy}" r="4" fill="white"/>`;
+  svg+=`</svg>`;
+  document.getElementById('worm-svg-wrap').innerHTML=svg;
+}
+
+// tap a step chip to see stop details
+async function openTransitStepSheet(routeIdx, stepIdx){
+  const route=window._googleRoutes?.[routeIdx];
+  const transitSteps=(route?.legs?.[0]?.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
+  const step=transitSteps[stepIdx];
+  if(!step)return;
+  const t=step.transit_details;
+  const name=t?.line?.short_name||t?.line?.name||'Bus';
+  const color=t?.line?.color||BUS_COLOR[name]?.bg||'#555';
+  const board=t?.stop_name||'—';
+  const alight=t?.arrival_stop?.name||'—';
+  const numStops=t?.num_stops||'—';
+  const dep=t?.departure_time?.text||'—';
+  const arr=t?.arrival_time?.text||'—';
+
+  document.getElementById('sheet-content').innerHTML=`
+    <div class="stop-name">${board}</div>
+    <div class="stop-tags">
+      <div class="tag" style="background:${color};color:white">${name}</div>
+      <div class="tag">${numStops} stops</div>
+      <div class="tag">→ ${alight}</div>
+    </div>
+    <div class="arr-title">This bus</div>
+    <div class="arr-row urg-go">
+      <div class="bus-icon" style="background:${color}">${name}</div>
+      <div class="arr-info">
+        <div class="arr-line">Board at ${board}</div>
+        <div class="arr-seq">Exit at ${alight} · ${numStops} stops</div>
+      </div>
+      <div class="arr-mins col-go">${dep}<small style="font-size:10px;display:block;color:#aaa">dep</small></div>
+    </div>`;
+  document.getElementById('stop-sheet').classList.add('open');
+}
+
+function showError(msg){
+  document.getElementById('options-list').innerHTML=`<div style="color:#aaa;font-size:13px;padding:20px;text-align:center">${msg}</div>`;
+  document.getElementById('options-sheet').classList.add('open');
+}
+
 document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoute();});
 document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('to-input').focus();});
 
-// ── MTA ARRIVALS ──
+// ── MTA ARRIVALS (for stop bubble taps) ──
 async function fetchBus(stopId,routeId){
   try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}catch{return null;}
 }
@@ -578,138 +907,6 @@ function simMins(sid,rid){
   const off=(Date.now()/60000)%25;
   const f=((seed%14)+3-off+25)%23+1;
   return[Math.round(f),Math.round(f+9),Math.round(f+19)];
-}
-async function loadArrivals(corridor){
-  const tasks=[];
-  corridor.stops.forEach(s=>s.routes.forEach(route=>{
-    const sid=s.stopId?.[route];
-    tasks.push((sid?fetchBus(sid,route):Promise.resolve(null)).then(d=>{
-      arrivals[s.id+'_'+route]=d?.length?d:simMins(s.id,route);
-    }));
-  }));
-  await Promise.all(tasks);
-}
-
-// ── DRAW WORM ──
-function renderWorm(corridor){
-  closeSheet();
-
-  // Best departure
-  const opts=corridor.stops
-    .filter(s=>s.walkFromHome!=null&&s.routes.length)
-    .map(s=>{const route=s.routes[0];const busIn=arrivals[s.id+'_'+route]?.[0]??99;return{s,route,busIn,leaveIn:busIn-s.walkFromHome};})
-    .sort((a,b)=>a.leaveIn-b.leaveIn);
-  const best=opts.find(o=>o.leaveIn>0)||opts[0];
-  const li=best?.leaveIn??99;
-
-  // Urgency
-  let action,cls;
-  if(li<=0){action='MISSED IT';cls='urg-gone';}
-  else if(li<=2){action='LEAVE NOW';cls='urg-now';}
-  else if(li<=5){action=`LEAVE IN ${li} MIN`;cls='urg-soon';}
-  else{action=`Leave in ${li} min`;cls='urg-go';}
-  document.getElementById('urg-hero').innerHTML=`
-    <div class="urg-action ${cls}">${action}</div>
-    <div class="urg-sub">Walk ${best?.s.walkFromHome}m to ${best?.s.name.split('/')[0].trim()} · ${best?.route} in ${best?.busIn}m</div>`;
-
-  // Draw worm line on Mapbox map
-  const coords=[];
-  if(userLat) coords.push([userLng,userLat]);
-  corridor.stops.forEach(s=>coords.push([s.lng,s.lat]));
-
-  if(map.getLayer('worm-line'))map.removeLayer('worm-line');
-  if(map.getSource('worm-source'))map.removeSource('worm-source');
-
-  map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
-  map.addLayer({
-    id:'worm-line',type:'line',source:'worm-source',
-    layout:{'line-join':'round','line-cap':'round'},
-    paint:{
-      'line-color':corridor.color,
-      'line-width':['interpolate',['linear'],['zoom'],10,4,16,10],
-      'line-opacity':0.85,
-    }
-  },'stops-glow'); // insert below stops
-
-  // Zoom to fit corridor + user
-  const bounds=new mapboxgl.LngLatBounds();
-  if(userLat) bounds.extend([userLng,userLat]);
-  corridor.stops.forEach(s=>bounds.extend([s.lng,s.lat]));
-  map.fitBounds(bounds,{padding:{top:180,bottom:280,left:40,right:40},maxZoom:15,speed:1.2});
-
-  // Build worm SVG strip
-  buildWormSVG(corridor,best);
-
-  // Stop chips
-  const chips=corridor.stops.map((s,i)=>{
-    const route=s.routes[0]||best?.route;
-    const rc=BUS_COLOR[route]||{bg:'#888',text:route};
-    const busIn=arrivals[s.id+'_'+route]?.[0];
-    const isActive=s.id===best?.s.id;
-    return`<div class="schip${isActive?' active':''}" onclick="openStopSheet(activeCorridor.stops[${i}])">
-      <span class="schip-route" style="color:${rc.bg}">${route||'—'}</span>
-      <span class="schip-stop">${s.name.split('/')[0].trim()}</span>
-      ${busIn!=null?`<span class="schip-mins">${busIn}m</span><span class="schip-lbl">BUS IN</span>`:`<span class="schip-mins" style="color:#ddd">—</span>`}
-    </div>`;
-  }).join('');
-  document.getElementById('stop-chips').innerHTML=chips;
-
-  document.getElementById('worm-sheet').classList.add('open');
-
-  // Auto-refresh
-  clearInterval(refreshTimer);
-  refreshTimer=setInterval(async()=>{
-    if(activeCorridor){await loadArrivals(activeCorridor);renderWorm(activeCorridor);}
-  },30000);
-}
-
-// ── WORM SVG STRIP ──
-function buildWormSVG(corridor,best){
-  const stops=corridor.stops;
-  const N=stops.length;
-  const W=Math.max(320,N*72+60);
-  const H=60; const cy=H/2;
-  const rc=BUS_COLOR[best?.route]||{bg:'#0039A6'};
-  const pts=stops.map((s,i)=>({x:36+i*72, y:cy+(i%2===0?-7:7)}));
-
-  let d=`M 12 ${cy} Q 24 ${cy} ${pts[0].x} ${pts[0].y}`;
-  for(let i=1;i<pts.length;i++){
-    const cpx=(pts[i-1].x+pts[i].x)/2;
-    d+=` Q ${cpx} ${(pts[i-1].y+pts[i].y)/2} ${pts[i].x} ${pts[i].y}`;
-  }
-
-  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
-<defs>
-  <linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="${rc.bg}" stop-opacity="0.3"/>
-    <stop offset="40%" stop-color="${rc.bg}" stop-opacity="1"/>
-    <stop offset="100%" stop-color="${rc.bg}" stop-opacity="0.6"/>
-  </linearGradient>
-  <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-<path d="${d}" fill="none" stroke="url(#wg)" stroke-width="12" stroke-linecap="round" filter="url(#glow)"/>
-<path d="${d}" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="4" stroke-linecap="round" stroke-dasharray="16 32">
-  <animate attributeName="stroke-dashoffset" from="48" to="0" dur="1.8s" repeatCount="indefinite"/>
-</path>`;
-
-  pts.forEach((pt,i)=>{
-    const s=stops[i];
-    const isBoard=s.id===best?.s.id;
-    const isDest=s.isDestination;
-    svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="${isBoard||isDest?11:7}"
-      fill="${isBoard?'white':isDest?rc.bg:rc.bg}"
-      stroke="${isBoard?rc.bg:'white'}" stroke-width="${isBoard?3:2.5}" filter="url(#glow)"/>`;
-    if(isBoard) svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="${rc.bg}"/>`;
-    if(isDest)  svg+=`<text x="${pt.x}" y="${pt.y+4}" text-anchor="middle" fill="white" font-size="8" font-weight="900">★</text>`;
-  });
-
-  // User head
-  svg+=`<circle cx="12" cy="${cy}" r="9" fill="#00A651" stroke="white" stroke-width="2.5" filter="url(#glow)">
-    <animate attributeName="r" values="8;11;8" dur="2s" repeatCount="indefinite"/>
-  </circle><circle cx="12" cy="${cy}" r="4" fill="white"/>`;
-
-  svg+=`</svg>`;
-  document.getElementById('worm-svg-wrap').innerHTML=svg;
 }
 
 // ── GOOGLE FALLBACK ──
