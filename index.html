@@ -9,37 +9,34 @@
 <meta name="theme-color" content="#ffffff">
 <title>TownTrip</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; background:#f8f8f8; }
+html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
 
-/* MAP fills everything */
 #map { position:fixed; inset:0; z-index:0; }
 
-/* ── TOP SEARCH BAR ── */
+/* ── TOP BAR ── */
 .topbar {
   position:fixed; top:0; left:0; right:0; z-index:100;
-  padding: env(safe-area-inset-top, 12px) 16px 12px;
-  padding-top: max(env(safe-area-inset-top), 12px);
-  background:rgba(255,255,255,0.96);
+  padding: max(env(safe-area-inset-top),12px) 16px 12px;
+  background:rgba(255,255,255,0.95);
   backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(0,0,0,0.07);
-  box-shadow:0 2px 24px rgba(0,0,0,0.07);
+  border-bottom:1px solid rgba(0,0,0,0.06);
+  box-shadow:0 2px 20px rgba(0,0,0,0.07);
 }
 .topbar-inner { max-width:480px; margin:0 auto; }
-
 .brand-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .brand { font-size:21px; font-weight:900; color:#111; letter-spacing:-0.4px; }
 .brand span { color:#0039A6; }
 .clock { font-family:'DM Mono',monospace; font-size:11px; color:#aaa; }
 
-.search-box {
-  display:flex; flex-direction:column; gap:6px;
-}
+.search-box { display:flex; flex-direction:column; gap:6px; }
 .srow { display:flex; align-items:center; gap:8px; }
 .sdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-.sdot-from { background:#00A651; box-shadow:0 0 6px rgba(0,166,81,0.6); }
-.sdot-to   { background:#0039A6; box-shadow:0 0 6px rgba(0,57,166,0.5); }
+.sdot-from { background:#00A651; box-shadow:0 0 6px rgba(0,166,81,0.5); }
+.sdot-to   { background:#0039A6; box-shadow:0 0 6px rgba(0,57,166,0.4); }
 .sinput {
   flex:1; background:#f2f2f7; border:1.5px solid transparent;
   border-radius:12px; padding:10px 13px;
@@ -47,7 +44,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
   outline:none; transition:all 0.2s;
 }
 .sinput::placeholder { color:#bbb; font-weight:400; }
-.sinput:focus { border-color:#0039A6; background:#fff; box-shadow:0 0 0 3px rgba(0,57,166,0.08); }
+.sinput:focus { border-color:#0039A6; background:#fff; box-shadow:0 0 0 3px rgba(0,57,166,0.07); }
 .sibtn {
   width:40px; height:40px; border-radius:10px; flex-shrink:0;
   background:#fff; border:1.5px solid #e8e8ec;
@@ -55,139 +52,131 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
   cursor:pointer; font-size:17px; transition:all 0.15s;
   box-shadow:0 1px 4px rgba(0,0,0,0.06);
 }
-.sibtn:active { transform:scale(0.88); background:#f0f0f8; }
+.sibtn:active { transform:scale(0.88); }
 .gobtn {
-  width:100%; margin-top:6px;
-  background:#0039A6; border:none; border-radius:12px; padding:12px;
+  width:100%; margin-top:6px; background:#0039A6; border:none;
+  border-radius:12px; padding:12px;
   font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; color:white;
-  cursor:pointer; box-shadow:0 4px 16px rgba(0,57,166,0.35); transition:opacity 0.2s;
+  cursor:pointer; box-shadow:0 4px 16px rgba(0,57,166,0.3); transition:opacity 0.2s;
 }
-.gobtn:active { opacity:0.82; }
+.gobtn:active { opacity:0.8; }
 .gobtn:disabled { opacity:0.38; cursor:not-allowed; }
 
-/* ── FAB BUTTONS (right side) ── */
+/* ── FAB ── */
 .fab {
   position:fixed; right:16px; z-index:100;
   width:46px; height:46px; border-radius:14px;
   background:white; border:1.5px solid #e8e8ec;
   display:flex; align-items:center; justify-content:center;
   cursor:pointer; font-size:20px;
-  box-shadow:0 2px 14px rgba(0,0,0,0.12);
-  transition:transform 0.15s, box-shadow 0.15s;
+  box-shadow:0 2px 14px rgba(0,0,0,0.1);
+  transition:transform 0.15s;
 }
 .fab:active { transform:scale(0.88); }
 #fab-locate { bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
 
-/* ── STOP POPUP (slides up from bottom) ── */
+/* ── BOTTOM SHEET ── */
 .sheet {
   position:fixed; left:0; right:0; bottom:0; z-index:200;
   background:white; border-radius:24px 24px 0 0;
-  box-shadow:0 -6px 40px rgba(0,0,0,0.14);
+  box-shadow:0 -6px 40px rgba(0,0,0,0.13);
   transform:translateY(110%);
   transition:transform 0.38s cubic-bezier(0.32,1.1,0.64,1);
-  max-height:78vh; overflow-y:auto;
-  padding-bottom: env(safe-area-inset-bottom, 20px);
+  max-height:75vh; overflow-y:auto;
+  padding-bottom:max(env(safe-area-inset-bottom),24px);
 }
 .sheet.open { transform:translateY(0); }
 .sheet-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 0; }
-.sheet-inner { padding:16px 20px 32px; }
+.sheet-inner { padding:16px 20px 28px; }
 .sheet-close {
-  position:absolute; top:14px; right:16px;
-  width:30px; height:30px; border-radius:50%;
-  background:#f2f2f7; border:none; cursor:pointer;
-  font-size:14px; display:flex; align-items:center; justify-content:center; color:#888;
+  position:absolute; top:14px; right:16px; width:30px; height:30px;
+  border-radius:50%; background:#f2f2f7; border:none; cursor:pointer;
+  font-size:14px; color:#888; display:flex; align-items:center; justify-content:center;
 }
 
-/* stop header */
-.stop-name { font-size:18px; font-weight:800; color:#111; margin-bottom:4px; }
+/* stop popup */
+.stop-name { font-size:18px; font-weight:800; color:#111; margin-bottom:5px; }
 .stop-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
-.tag {
-  font-size:10px; font-weight:700; padding:4px 10px; border-radius:8px;
-  background:#f2f2f7; color:#666;
-}
+.tag { font-size:10px; font-weight:700; padding:4px 10px; border-radius:8px; background:#f2f2f7; color:#666; }
 .tag-elev { background:#eef2ff; color:#3355cc; }
 .tag-walk { background:#efffef; color:#227733; }
 
-/* arrivals */
 .arr-title { font-size:9px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#ccc; margin-bottom:10px; }
 .arr-row {
   display:flex; align-items:center; gap:12px;
-  padding:12px 14px; border-radius:14px; margin-bottom:8px; background:#f8f8fa;
-  border:1.5px solid transparent; transition:border-color 0.2s;
+  padding:12px 14px; border-radius:14px; margin-bottom:8px;
+  background:#f8f8fa; border:1.5px solid transparent; transition:border-color 0.2s;
 }
-.arr-row.urgnow   { border-color:#FF6319; background:#fff8f4; }
-.arr-row.urgsoon  { border-color:#FFA500; background:#fffbf0; }
-.arr-row.urggo    { border-color:#00A651; background:#f4fff8; }
+.arr-row.urg-now  { border-color:#FF6319; background:#fff8f4; }
+.arr-row.urg-soon { border-color:#FFA500; background:#fffbf0; }
+.arr-row.urg-go   { border-color:#00A651; background:#f4fff8; }
 
-/* bus icon — shaped + colored like real bus */
+/* bus icon — real bus colors + shape */
 .bus-icon {
   display:flex; align-items:center; justify-content:center;
-  color:white; font-weight:900; letter-spacing:0.02em;
-  border-radius:8px; padding:7px 10px; font-size:11px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.2); flex-shrink:0; position:relative;
+  color:white; font-weight:900; font-size:11px; letter-spacing:0.02em;
+  border-radius:8px; padding:7px 10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.18); flex-shrink:0; position:relative;
+  min-width:44px;
 }
-/* SBS articulated: wider pill */
 .bus-sbs { border-radius:7px; padding:7px 16px; font-size:10px; }
+/* articulation joint for SBS */
 .bus-sbs::after {
-  content:''; position:absolute;
-  right:30%; top:20%; bottom:20%; width:2px;
-  background:rgba(255,255,255,0.35); border-radius:1px;
+  content:''; position:absolute; right:28%; top:20%; bottom:20%;
+  width:2px; background:rgba(255,255,255,0.3); border-radius:1px;
 }
 .arr-info { flex:1; min-width:0; }
-.arr-route { font-size:12px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.arr-seq   { font-size:10px; color:#bbb; margin-top:1px; }
+.arr-line { font-size:12px; font-weight:700; color:#333; }
+.arr-seq  { font-size:10px; color:#bbb; margin-top:1px; }
 .arr-mins {
-  font-family:'DM Mono',monospace; font-size:30px; font-weight:400; color:#111; line-height:1;
-  flex-shrink:0; text-align:right;
+  font-family:'DM Mono',monospace; font-size:30px; font-weight:400;
+  line-height:1; flex-shrink:0; text-align:right;
 }
 .arr-mins small { font-size:11px; color:#aaa; font-weight:600; }
-.arr-mins.col-now  { color:#FF6319; }
-.arr-mins.col-soon { color:#FFA500; }
-.arr-mins.col-go   { color:#00A651; }
+.col-now  { color:#FF6319; }
+.col-soon { color:#FFA500; }
+.col-go   { color:#00A651; }
 
-/* ── WORM ROUTE PANEL ── */
+/* ── WORM SHEET ── */
 .worm-sheet {
   position:fixed; left:0; right:0; bottom:0; z-index:201;
   background:white; border-radius:24px 24px 0 0;
-  box-shadow:0 -6px 40px rgba(0,0,0,0.16);
+  box-shadow:0 -6px 40px rgba(0,0,0,0.15);
   transform:translateY(110%);
   transition:transform 0.42s cubic-bezier(0.32,1.1,0.64,1);
-  padding-bottom: env(safe-area-inset-bottom, 20px);
+  padding-bottom:max(env(safe-area-inset-bottom),24px);
 }
 .worm-sheet.open { transform:translateY(0); }
 .ws-handle { width:36px; height:4px; background:#e2e2e8; border-radius:2px; margin:14px auto 0; }
 .ws-close {
-  position:absolute; top:14px; right:16px;
-  width:30px; height:30px; border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
+  position:absolute; top:14px; right:16px; width:30px; height:30px;
+  border-radius:50%; background:#f2f2f7; border:none; cursor:pointer; font-size:14px; color:#888;
 }
-.ws-inner { padding:14px 20px 28px; }
+.ws-inner { padding:14px 20px 24px; }
 
-/* urgency hero */
 .urg-hero { text-align:center; padding:10px 0 14px; border-bottom:1px solid #f0f0f5; margin-bottom:14px; }
 .urg-action { font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
 .urg-go   { color:#00A651; }
 .urg-soon { color:#FFA500; }
 .urg-now  { color:#FF6319; animation:upulse 1s ease-in-out infinite; }
 .urg-gone { color:#ccc; }
-@keyframes upulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+@keyframes upulse { 0%,100%{opacity:1}50%{opacity:0.35} }
 .urg-sub { font-size:12px; color:#999; }
 
-/* worm SVG strip - scrollable */
-.worm-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:4px 0 8px; }
+.worm-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:4px 0 10px; }
 .worm-scroll::-webkit-scrollbar { display:none; }
 
-/* stop chips below worm */
 .stop-chips { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:6px 0 2px; }
 .stop-chips::-webkit-scrollbar { display:none; }
 .schip {
-  flex-shrink:0; min-width:80px; background:#f4f4f8; border-radius:14px;
-  padding:10px 12px; cursor:pointer; border:2px solid transparent; text-align:center;
-  transition:all 0.2s;
+  flex-shrink:0; min-width:82px; background:#f4f4f8; border-radius:14px;
+  padding:10px 12px; cursor:pointer; border:2px solid transparent;
+  text-align:center; transition:all 0.2s;
 }
 .schip.active { border-color:#0039A6; background:#eef2ff; }
-.schip:active { transform:scale(0.93); }
+.schip:active { transform:scale(0.92); }
 .schip-route { font-size:10px; font-weight:800; display:block; }
-.schip-stop  { font-size:8px; color:#aaa; display:block; margin-top:1px; line-height:1.3; }
+.schip-stop  { font-size:8px; color:#aaa; display:block; margin-top:1px; line-height:1.3; max-width:78px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .schip-mins  { font-size:22px; font-weight:900; font-family:'DM Mono',monospace; display:block; margin-top:3px; }
 .schip-lbl   { font-size:7px; color:#bbb; font-weight:600; letter-spacing:0.06em; }
 
@@ -195,23 +184,26 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
 .ldots { display:flex; gap:6px; justify-content:center; padding:20px; }
 .ld { width:8px; height:8px; border-radius:50%; background:#ddd; animation:ldot 1.2s ease-in-out infinite; }
 .ld:nth-child(2){animation-delay:0.2s} .ld:nth-child(3){animation-delay:0.4s}
-@keyframes ldot{0%,80%,100%{transform:scale(0.5);opacity:0.25}40%{transform:scale(1);opacity:1}}
+@keyframes ldot{0%,80%,100%{transform:scale(0.4);opacity:0.2}40%{transform:scale(1);opacity:1}}
 
-/* pin mode hint */
+/* pin hint */
 .pin-hint {
   position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.75); color:white; padding:12px 22px;
+  background:rgba(0,0,0,0.72); color:white; padding:12px 22px;
   border-radius:16px; font-size:13px; font-weight:600; z-index:300;
-  pointer-events:none; display:none;
+  pointer-events:none; opacity:0; transition:opacity 0.2s;
 }
-.pin-hint.show { display:block; }
+.pin-hint.show { opacity:1; }
+
+/* mapbox overrides */
+.mapboxgl-ctrl-logo { display:none !important; }
+.mapboxgl-ctrl-attrib { display:none !important; }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<!-- TOP SEARCH BAR -->
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brand-row">
@@ -222,7 +214,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
       <div class="srow">
         <div class="sdot sdot-from"></div>
         <input class="sinput" id="from-input" placeholder="Where are you?" autocomplete="off">
-        <div class="sibtn" onclick="getGPS()" id="gps-btn" title="My location">📍</div>
+        <div class="sibtn" id="gps-btn" onclick="getGPS()" title="My location">📍</div>
         <div class="sibtn" onclick="triggerCamera()" title="Photo landmark">📷</div>
       </div>
       <div class="srow">
@@ -235,10 +227,9 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
   </div>
 </div>
 
-<!-- LOCATE FAB -->
 <div class="fab" id="fab-locate" onclick="centerOnMe()">🎯</div>
 
-<!-- STOP ARRIVALS SHEET -->
+<!-- STOP SHEET -->
 <div class="sheet" id="stop-sheet">
   <div class="sheet-handle"></div>
   <button class="sheet-close" onclick="closeSheet()">✕</button>
@@ -247,7 +238,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
   </div>
 </div>
 
-<!-- WORM ROUTE SHEET -->
+<!-- WORM SHEET -->
 <div class="worm-sheet" id="worm-sheet">
   <div class="ws-handle"></div>
   <button class="ws-close" onclick="closeWorm()">✕</button>
@@ -258,10 +249,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
   </div>
 </div>
 
-<!-- PIN MODE HINT -->
 <div class="pin-hint" id="pin-hint">Tap anywhere on the map to set destination</div>
-
-<!-- CAMERA INPUT -->
 <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
 <script>
@@ -269,209 +257,276 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; back
 function tick(){const n=new Date();document.getElementById('clk').textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});}
 setInterval(tick,1000);tick();
 
-// ── REAL MTA BUS COLORS (from actual bus livery) ──
+// ── BUS COLORS (real MTA livery) ──
 const BUS_COLOR = {
-  'BX12+': {bg:'#0039A6', text:'BX12 SBS', type:'sbs'},  // MTA Select Bus blue
+  'BX12+': {bg:'#0039A6', text:'BX12 SBS', type:'sbs'},
   'BX12':  {bg:'#0039A6', text:'BX12',     type:'local'},
-  'BX26':  {bg:'#6BBE45', text:'BX26',     type:'local'}, // MTA local green
-  'BX28':  {bg:'#FF6319', text:'BX28',     type:'local'}, // MTA orange
-  'BX23':  {bg:'#8C4799', text:'BX23',     type:'local'}, // purple
-  'BX5':   {bg:'#00B2A9', text:'BX5',      type:'local'}, // teal
-  'BX38':  {bg:'#E4002B', text:'BX38',     type:'local'}, // red
-  'Q50':   {bg:'#FCCC0A', text:'Q50',      type:'local'}, // yellow
-  'Q65':   {bg:'#FCCC0A', text:'Q65',      type:'local'},
+  'BX26':  {bg:'#6BBE45', text:'BX26',     type:'local'},
+  'BX28':  {bg:'#FF6319', text:'BX28',     type:'local'},
+  'BX23':  {bg:'#8C4799', text:'BX23',     type:'local'},
+  'BX5':   {bg:'#00B2A9', text:'BX5',      type:'local'},
+  'BX38':  {bg:'#E4002B', text:'BX38',     type:'local'},
+  'M15+':  {bg:'#EE352E', text:'M15 SBS',  type:'sbs'},
+  'M86+':  {bg:'#EE352E', text:'M86 SBS',  type:'sbs'},
+  'B44+':  {bg:'#00933C', text:'B44 SBS',  type:'sbs'},
 };
 
-// ── CORRIDOR KNOWLEDGE ──
-// Only buses that actually serve each trip
+// ── CORRIDOR DATA ──
 const CORRIDORS = [{
   fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','baychester','einstein','140'],
   toKeys:['tiebout','fordham','2390','jerome'],
-  label:'Co-op City → Fordham / Tiebout Ave',
-  // Ordered stops along the actual route
+  label:'Co-op City → Fordham / Tiebout',
+  color:'#0039A6',
   stops:[
-    {id:'home',    name:'140 Alcott Pl',               lat:40.8748, lng:-73.8302, routes:[], walkFromHome:0,  elevation:18, isOrigin:true},
-    {id:'alcott',  name:'Alcott Pl / Asch Loop',       lat:40.8745, lng:-73.8308, routes:['BX28'],       walkFromHome:5,  elevation:18, stopId:{BX28:'200759'}},
-    {id:'bartow',  name:'Bartow Ave / Co-op City Blvd',lat:40.8735, lng:-73.8380, routes:['BX12+','BX26'],walkFromHome:12, elevation:22, stopId:{'BX12+':'200760','BX26':'200758'}},
-    {id:'wp_wpr',  name:'Pelham Pkwy / White Plains Rd',lat:40.8560,lng:-73.8680, routes:['BX12+'],       walkFromHome:null,elevation:35, stopId:{'BX12+':'200770'}},
-    {id:'wp_wbr',  name:'Pelham Pkwy / Williamsbridge', lat:40.8540,lng:-73.8780, routes:['BX12+'],       walkFromHome:null,elevation:30, stopId:{'BX12+':'200771'}},
-    {id:'fordham', name:'Fordham Rd / Tiebout Ave',    lat:40.8631, lng:-73.9020, routes:['BX12+'],       walkFromHome:null,elevation:42, isDestination:true, stopId:{'BX12+':'200790'}},
+    {id:'alcott',  name:'Alcott Pl / Asch Loop',        lat:40.8745, lng:-73.8308, routes:['BX28'],        walkFromHome:5,  elevation:18, stopId:{BX28:'200759'}},
+    {id:'bartow',  name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, routes:['BX12+','BX26'],walkFromHome:12, elevation:22, stopId:{'BX12+':'200760','BX26':'200758'}},
+    {id:'pelham1', name:'Pelham Pkwy / White Plains Rd', lat:40.8560, lng:-73.8680, routes:['BX12+'],       walkFromHome:null,elevation:35, stopId:{'BX12+':'200770'}},
+    {id:'pelham2', name:'Pelham Pkwy / Williamsbridge',  lat:40.8540, lng:-73.8780, routes:['BX12+'],       walkFromHome:null,elevation:30, stopId:{'BX12+':'200771'}},
+    {id:'fordham', name:'Fordham Rd / Tiebout Ave',      lat:40.8631, lng:-73.9020, routes:['BX12+'],       walkFromHome:null,elevation:42, stopId:{'BX12+':'200790'}, isDestination:true},
   ]
 }];
 
 // ── STATE ──
-let map, userLat=null, userLng=null, userMarker=null, pulseMarker=null;
-let destMarker=null, pinDropMode=false;
-let stopMarkers=[], wormPolylines=[], activeCorridor=null;
-let arrivals={};
+let map, userLng=null, userLat=null, activeCorridor=null;
+let arrivals={}, pinDropMode=false, wormLayerAdded=false;
+let refreshTimer=null;
 
-// ── MAP INIT ──
-function initMap(){
-  map = new google.maps.Map(document.getElementById('map'),{
-    zoom:11,
-    center:{lat:40.7128,lng:-74.0060}, // NYC center
-    mapTypeId:'roadmap',
-    disableDefaultUI:true,
-    gestureHandling:'greedy',
-    clickableIcons:false,
-    styles:[
-      // Clean white MTA-style map
-      {featureType:'all',elementType:'labels.icon',stylers:[{visibility:'off'}]},
-      {featureType:'poi',stylers:[{visibility:'off'}]},
-      {featureType:'transit',stylers:[{visibility:'off'}]},
-      {featureType:'water',stylers:[{color:'#b8d0e8'}]},
-      {featureType:'landscape',stylers:[{color:'#f9f9f9'}]},
-      {featureType:'landscape.natural',stylers:[{color:'#e8f0e8'}]},
-      {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#dde0e8'}]},
-      {featureType:'road.arterial',elementType:'geometry',stylers:[{color:'#ebebeb'}]},
-      {featureType:'road.local',elementType:'geometry',stylers:[{color:'#f5f5f5'}]},
-      {featureType:'road.arterial',elementType:'labels.text.fill',stylers:[{color:'#999'}]},
-      {featureType:'road.local',elementType:'labels.text.fill',stylers:[{color:'#bbb'}]},
-      {featureType:'administrative.locality',elementType:'labels.text.fill',stylers:[{color:'#444'},{fontWeight:'bold'}]},
-      {featureType:'administrative.neighborhood',elementType:'labels.text.fill',stylers:[{color:'#999'}]},
-    ]
+// ── INIT MAP ──
+async function initMap(){
+  // Fetch Mapbox token from our secure backend
+  let token;
+  try{
+    const r=await fetch('/api/mapboxtoken');
+    const d=await r.json();
+    token=d.token;
+  }catch(e){console.error('Token fetch failed',e);return;}
+
+  if(!token){console.error('No Mapbox token');return;}
+  mapboxgl.accessToken=token;
+
+  map=new mapboxgl.Map({
+    container:'map',
+    // Clean white style — closest to MTA map look
+    style:'mapbox://styles/mapbox/light-v11',
+    center:[-74.0060, 40.7128], // NYC
+    zoom:10,
+    minZoom:9,
+    maxZoom:18,
   });
 
-  map.addListener('click',e=>{
-    if(pinDropMode) dropPin(e.latLng.lat(),e.latLng.lng());
+  map.on('load',()=>{
+    // Draw all corridor stops as interactive layers
+    CORRIDORS.forEach(c=>addCorridorLayer(c));
+    // Try to get user location
+    locateUser();
   });
 
-  // Draw all corridor stops
-  CORRIDORS.forEach(c=>drawCorridorStops(c));
+  // Click on map for pin drop
+  map.on('click', e=>{
+    if(pinDropMode){
+      dropPin(e.lngLat.lng, e.lngLat.lat);
+    }
+  });
 
-  // Get user location
-  getGPS(true);
+  // Stop clicks handled via layer events (added in addCorridorLayer)
+  map.on('mouseenter','stops-layer',()=>map.getCanvas().style.cursor='pointer');
+  map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
 }
 
-// ── GPS ──
-function getGPS(silent=false){
-  const btn=document.getElementById('gps-btn');
-  if(!silent) btn.textContent='⟳';
-  if(!navigator.geolocation){if(!silent)setDefaultLoc();return;}
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      userLat=pos.coords.latitude; userLng=pos.coords.longitude;
-      if(!silent){
-        btn.textContent='✓';
-        reverseGeocode(userLat,userLng,'from-input');
-      }
-      placeUserDot(userLat,userLng);
-      // Center map on user
-      map.panTo({lat:userLat,lng:userLng});
-      map.setZoom(13);
+// ── ADD STOPS TO MAP ── 
+function addCorridorLayer(corridor){
+  // Build GeoJSON for all stops
+  const features=corridor.stops.map(s=>({
+    type:'Feature',
+    geometry:{type:'Point',coordinates:[s.lng,s.lat]},
+    properties:{
+      id:s.id,
+      name:s.name,
+      route:s.routes[0]||'',
+      color:BUS_COLOR[s.routes[0]]?.bg||'#888',
+      isSBS:BUS_COLOR[s.routes[0]]?.type==='sbs'?1:0,
+      elevation:s.elevation||0,
+      walkFromHome:s.walkFromHome||0,
+      isDestination:s.isDestination?1:0,
+      corridorIdx:CORRIDORS.indexOf(corridor),
+      stopIdx:corridor.stops.indexOf(s),
+    }
+  }));
+
+  // Remove existing if any
+  if(map.getSource('stops-source')) {
+    map.getSource('stops-source').setData({type:'FeatureCollection',features});
+    return;
+  }
+
+  map.addSource('stops-source',{
+    type:'geojson',
+    data:{type:'FeatureCollection',features}
+  });
+
+  // Outer glow ring
+  map.addLayer({
+    id:'stops-glow',
+    type:'circle',
+    source:'stops-source',
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],10,10,15,20],
+      'circle-color':['get','color'],
+      'circle-opacity':0.15,
+      'circle-blur':0.5,
+    }
+  });
+
+  // Main stop circle
+  map.addLayer({
+    id:'stops-layer',
+    type:'circle',
+    source:'stops-source',
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],10,7,14,13,16,18],
+      'circle-color':['get','color'],
+      'circle-stroke-width':2.5,
+      'circle-stroke-color':'white',
+    }
+  });
+
+  // Stop label (route name)
+  map.addLayer({
+    id:'stops-labels',
+    type:'symbol',
+    source:'stops-source',
+    minzoom:12,
+    layout:{
+      'text-field':['get','route'],
+      'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
+      'text-size':['interpolate',['linear'],['zoom'],12,8,16,11],
+      'text-offset':[0,0],
+      'text-anchor':'center',
+      'text-allow-overlap':true,
     },
-    ()=>{if(!silent)setDefaultLoc();},
-    {enableHighAccuracy:true,timeout:8000}
-  );
-}
-function setDefaultLoc(){
-  userLat=40.8748; userLng=-73.8302;
-  document.getElementById('gps-btn').textContent='📍';
-  document.getElementById('from-input').value='140 Alcott Pl, Co-op City, Bronx';
-  placeUserDot(userLat,userLng);
-  map.panTo({lat:userLat,lng:userLng});
-  map.setZoom(13);
-}
-function centerOnMe(){ if(userLat&&map) map.panTo({lat:userLat,lng:userLng}); }
+    paint:{
+      'text-color':'white',
+      'text-halo-color':'rgba(0,0,0,0.1)',
+      'text-halo-width':0.5,
+    }
+  });
 
-function placeUserDot(lat,lng){
-  if(!map)return;
-  if(userMarker) userMarker.setMap(null);
-  if(pulseMarker) pulseMarker.setMap(null);
-  const pos={lat,lng};
-  // Pulse ring
-  pulseMarker=new google.maps.Marker({position:pos,map,
-    icon:{path:google.maps.SymbolPath.CIRCLE,scale:20,fillColor:'#0039A6',fillOpacity:0.12,strokeColor:'#0039A6',strokeWeight:1.5},
-    zIndex:998});
-  // Core dot
-  userMarker=new google.maps.Marker({position:pos,map,
-    icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:'#0039A6',fillOpacity:1,strokeColor:'white',strokeWeight:3},
-    title:'You are here',zIndex:1000});
+  // Click handler
+  map.on('click','stops-layer', e=>{
+    const props=e.features[0].properties;
+    const corridor=CORRIDORS[props.corridorIdx];
+    const stop=corridor.stops[props.stopIdx];
+    openStopSheet(stop);
+  });
 }
 
-// ── REVERSE GEOCODE ──
-function reverseGeocode(lat,lng,id){
+// ── USER LOCATION ──
+function locateUser(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.watchPosition(pos=>{
+    userLat=pos.coords.latitude;
+    userLng=pos.coords.longitude;
+    updateUserDot();
+  },{enableHighAccuracy:true,timeout:8000,maximumAge:10000});
+}
+
+function updateUserDot(){
+  if(!map||userLat==null)return;
+  // Use Mapbox's built-in user location or add our own
+  if(!map.getSource('user-loc')){
+    map.addSource('user-loc',{type:'geojson',data:userGeoJSON()});
+    // Pulse ring
+    map.addLayer({id:'user-pulse',type:'circle',source:'user-loc',
+      paint:{'circle-radius':18,'circle-color':'#0039A6','circle-opacity':0.12}});
+    // Core dot
+    map.addLayer({id:'user-dot',type:'circle',source:'user-loc',
+      paint:{'circle-radius':8,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
+    // Fly to user
+    map.flyTo({center:[userLng,userLat],zoom:13,speed:1.2});
+    document.getElementById('gps-btn').textContent='✓';
+  } else {
+    map.getSource('user-loc').setData(userGeoJSON());
+  }
+}
+function userGeoJSON(){return{type:'Feature',geometry:{type:'Point',coordinates:[userLng,userLat]}};}
+function getGPS(){document.getElementById('gps-btn').textContent='⟳';locateUser();}
+function centerOnMe(){if(map&&userLat)map.flyTo({center:[userLng,userLat],zoom:14,speed:1.4});}
+
+// ── PIN DROP ──
+function enablePinDrop(){
+  pinDropMode=true;
+  document.getElementById('pin-hint').classList.add('show');
+  map.getCanvas().style.cursor='crosshair';
+}
+function dropPin(lng,lat){
+  pinDropMode=false;
+  document.getElementById('pin-hint').classList.remove('show');
+  map.getCanvas().style.cursor='';
+  // Remove existing pin
+  if(map.getSource('dest-pin')){map.getSource('dest-pin').setData({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]}});}
+  else{
+    map.addSource('dest-pin',{type:'geojson',data:{type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]}}});
+    map.addLayer({id:'dest-pin-layer',type:'circle',source:'dest-pin',
+      paint:{'circle-radius':10,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
+  }
+  // Reverse geocode
   fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
     .then(r=>r.json()).then(d=>{
       const a=d.address;
-      document.getElementById(id).value=(`${a.house_number?a.house_number+' ':''}${a.road||''}${a.suburb?', '+a.suburb:''}`).trim()||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    }).catch(()=>{});
+      document.getElementById('to-input').value=(`${a.house_number?a.house_number+' ':''}${a.road||''}${a.suburb?', '+a.suburb:''}`).trim()||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }).catch(()=>{document.getElementById('to-input').value=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;});
 }
 
-// ── DRAW CORRIDOR STOPS AS BUBBLES ──
-function drawCorridorStops(corridor){
-  corridor.stops.forEach(stop=>{
-    if(stop.isOrigin||stop.isDestination) return; // skip endpoints
-    const route=stop.routes[0];
-    if(!route) return;
-    const rc=BUS_COLOR[route]||{bg:'#888',text:route,type:'local'};
-    const isSBS=rc.type==='sbs';
-
-    // Create bubble div
-    const el=document.createElement('div');
-    el.style.cssText=`
-      background:${rc.bg};color:white;font-family:'Outfit',sans-serif;font-weight:900;
-      font-size:${isSBS?'9px':'10px'};white-space:nowrap;
-      padding:${isSBS?'6px 12px':'8px'};
-      border-radius:${isSBS?'8px':'50%'};
-      width:${isSBS?'auto':'32px'};height:${isSBS?'auto':'32px'};
-      display:flex;align-items:center;justify-content:center;
-      border:2.5px solid white;
-      box-shadow:0 2px 10px rgba(0,0,0,0.22);
-      cursor:pointer;transition:transform 0.15s;
-      position:relative;
-    `;
-    el.textContent=rc.text;
-
-    const marker=new google.maps.marker.AdvancedMarkerElement({
-      position:{lat:stop.lat,lng:stop.lng},
-      map, content:el, title:stop.name, zIndex:50,
-    });
-    marker.addListener('click',()=>openStopSheet(stop));
-    el.addEventListener('mouseenter',()=>el.style.transform='scale(1.15)');
-    el.addEventListener('mouseleave',()=>el.style.transform='scale(1)');
-    stopMarkers.push(marker);
-  });
+// ── CAMERA ──
+function triggerCamera(){document.getElementById('cam-input').click();}
+async function handlePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('to-input').value='📷 Identifying landmark…';
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:ev.target.result.split(',')[1]})});
+      const d=await res.json();
+      document.getElementById('to-input').value=d.address||d.landmark||'Could not identify — type address';
+    }catch{document.getElementById('to-input').value='Could not identify — type address';}
+  };
+  reader.readAsDataURL(file);e.target.value='';
 }
 
-// ── OPEN STOP SHEET ── 
+// ── OPEN STOP SHEET ──
 async function openStopSheet(stop){
   document.getElementById('stop-sheet').classList.add('open');
+  document.getElementById('worm-sheet').classList.remove('open');
   document.getElementById('sheet-content').innerHTML=`<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
 
-  // Fetch arrivals for all routes at this stop
+  // Fetch arrivals
   const rows=[];
   for(const route of stop.routes){
-    const stopId=stop.stopId?.[route];
-    const mins=stopId ? await fetchBus(stopId,route) : simMins(stop.id,route);
-    if(mins?.length){
-      mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i}));
-    }
+    const sid=stop.stopId?.[route];
+    const mins=sid?await fetchBus(sid,route):simMins(stop.id,route);
+    if(mins?.length) mins.slice(0,3).forEach((m,i)=>rows.push({route,mins:m,seq:i}));
   }
   rows.sort((a,b)=>a.mins-b.mins);
 
-  // Tags
   const tags=[
-    stop.walkFromHome!=null?`<div class="tag tag-walk">🚶 ${stop.walkFromHome} min walk from home</div>`:'',
+    stop.walkFromHome?`<div class="tag tag-walk">🚶 ${stop.walkFromHome} min walk</div>`:'',
     stop.elevation?`<div class="tag tag-elev">⛰ ${stop.elevation} ft elevation</div>`:'',
   ].join('');
 
-  // Arrival rows
   const arrHtml=rows.length?rows.map(r=>{
     const rc=BUS_COLOR[r.route]||{bg:'#888',text:r.route,type:'local'};
-    const isSBS=rc.type==='sbs';
-    const urgRow=r.mins<=2?'urgnow':r.mins<=8?'urgsoon':'urggo';
+    const urgRow=r.mins<=2?'urg-now':r.mins<=8?'urg-soon':'urg-go';
     const urgCol=r.mins<=2?'col-now':r.mins<=8?'col-soon':'col-go';
-    const seq=r.seq===0?'Next':r.seq===1?'Then':'After';
+    const seq=r.seq===0?'Next bus':r.seq===1?'Then':'After that';
     return`<div class="arr-row ${urgRow}">
-      <div class="bus-icon ${isSBS?'bus-sbs':''}" style="background:${rc.bg}">${rc.text}</div>
+      <div class="bus-icon ${rc.type==='sbs'?'bus-sbs':''}" style="background:${rc.bg}">${rc.text}</div>
       <div class="arr-info">
-        <div class="arr-route">${r.route} · ${seq}</div>
+        <div class="arr-line">${r.route} · ${seq}</div>
         <div class="arr-seq">${stop.name}</div>
       </div>
       <div class="arr-mins ${urgCol}">${r.mins}<small>m</small></div>
     </div>`;
-  }).join(''):`<div style="color:#ccc;font-size:12px;padding:16px;text-align:center">No arrivals found</div>`;
+  }).join(''):`<div style="color:#ccc;font-size:12px;padding:16px;text-align:center">No arrivals right now</div>`;
 
   document.getElementById('sheet-content').innerHTML=`
     <div class="stop-name">${stop.name}</div>
@@ -480,53 +535,19 @@ async function openStopSheet(stop){
     ${arrHtml}`;
 }
 
-function closeSheet(){ document.getElementById('stop-sheet').classList.remove('open'); }
+function closeSheet(){document.getElementById('stop-sheet').classList.remove('open');}
 function closeWorm(){
   document.getElementById('worm-sheet').classList.remove('open');
-  wormPolylines.forEach(p=>p.setMap(null)); wormPolylines=[];
-}
-
-// ── PIN DROP ──
-function enablePinDrop(){
-  pinDropMode=true;
-  document.getElementById('pin-hint').classList.add('show');
-  map.getDiv().style.cursor='crosshair';
-}
-function dropPin(lat,lng){
-  pinDropMode=false;
-  document.getElementById('pin-hint').classList.remove('show');
-  map.getDiv().style.cursor='';
-  if(destMarker) destMarker.setMap(null);
-  destMarker=new google.maps.Marker({
-    position:{lat,lng},map,
-    icon:{path:google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,scale:7,fillColor:'#0039A6',fillOpacity:1,strokeColor:'white',strokeWeight:2.5},
-    title:'Destination',zIndex:100,
-  });
-  reverseGeocode(lat,lng,'to-input');
-}
-
-// ── CAMERA ──
-function triggerCamera(){ document.getElementById('cam-input').click(); }
-async function handlePhoto(e){
-  const file=e.target.files[0]; if(!file)return;
-  document.getElementById('to-input').value='📷 Identifying…';
-  const reader=new FileReader();
-  reader.onload=async ev=>{
-    try{
-      const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:ev.target.result.split(',')[1]})});
-      const d=await res.json();
-      document.getElementById('to-input').value=d.address||d.landmark||'Could not identify — type address';
-    }catch{ document.getElementById('to-input').value='Could not identify — type address'; }
-  };
-  reader.readAsDataURL(file);
-  e.target.value='';
+  clearInterval(refreshTimer);
+  if(map.getLayer('worm-line'))map.removeLayer('worm-line');
+  if(map.getSource('worm-source'))map.removeSource('worm-source');
 }
 
 // ── FIND ROUTE ──
 async function findRoute(){
   const from=document.getElementById('from-input').value.trim().toLowerCase();
   const to=document.getElementById('to-input').value.trim().toLowerCase();
-  if(!from||!to){ return; }
+  if(!from||!to)return;
   document.getElementById('go-btn').disabled=true;
   document.getElementById('go-btn').textContent='Finding…';
 
@@ -536,9 +557,9 @@ async function findRoute(){
 
   if(activeCorridor){
     await loadArrivals(activeCorridor);
-    drawWorm(activeCorridor);
+    renderWorm(activeCorridor);
   } else {
-    await googleRoute(document.getElementById('from-input').value.trim(), document.getElementById('to-input').value.trim());
+    await googleFallback(document.getElementById('from-input').value.trim(),document.getElementById('to-input').value.trim());
   }
 
   document.getElementById('go-btn').disabled=false;
@@ -548,7 +569,7 @@ async function findRoute(){
 document.getElementById('to-input').addEventListener('keydown',e=>{if(e.key==='Enter')findRoute();});
 document.getElementById('from-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('to-input').focus();});
 
-// ── FETCH MTA ──
+// ── MTA ARRIVALS ──
 async function fetchBus(stopId,routeId){
   try{const r=await fetch(`/api/arrivals?stopId=${stopId}&route=${encodeURIComponent(routeId)}`);if(!r.ok)return null;const j=await r.json();return j.arrivals?.map(a=>a.mins)||null;}catch{return null;}
 }
@@ -570,24 +591,18 @@ async function loadArrivals(corridor){
 }
 
 // ── DRAW WORM ──
-function drawWorm(corridor){
+function renderWorm(corridor){
   closeSheet();
-  wormPolylines.forEach(p=>p.setMap(null)); wormPolylines=[];
 
-  // Find best departure stop
-  const depOptions=corridor.stops
-    .filter(s=>s.walkFromHome!=null&&s.routes.length>0)
-    .map(s=>{
-      const route=s.routes[0];
-      const busIn=arrivals[s.id+'_'+route]?.[0]??99;
-      const leaveIn=busIn-s.walkFromHome;
-      return{s,route,busIn,leaveIn};
-    }).sort((a,b)=>a.leaveIn-b.leaveIn);
-
-  const best=depOptions.find(d=>d.leaveIn>0)||depOptions[0];
-
-  // Urgency hero
+  // Best departure
+  const opts=corridor.stops
+    .filter(s=>s.walkFromHome!=null&&s.routes.length)
+    .map(s=>{const route=s.routes[0];const busIn=arrivals[s.id+'_'+route]?.[0]??99;return{s,route,busIn,leaveIn:busIn-s.walkFromHome};})
+    .sort((a,b)=>a.leaveIn-b.leaveIn);
+  const best=opts.find(o=>o.leaveIn>0)||opts[0];
   const li=best?.leaveIn??99;
+
+  // Urgency
   let action,cls;
   if(li<=0){action='MISSED IT';cls='urg-gone';}
   else if(li<=2){action='LEAVE NOW';cls='urg-now';}
@@ -597,143 +612,124 @@ function drawWorm(corridor){
     <div class="urg-action ${cls}">${action}</div>
     <div class="urg-sub">Walk ${best?.s.walkFromHome}m to ${best?.s.name.split('/')[0].trim()} · ${best?.route} in ${best?.busIn}m</div>`;
 
-  // Draw polyline worm on map
-  const rc=BUS_COLOR[best?.route]||{bg:'#0039A6'};
-  const path=corridor.stops.filter(s=>!s.isOrigin).map(s=>({lat:s.lat,lng:s.lng}));
-  if(userLat) path.unshift({lat:userLat,lng:userLng});
+  // Draw worm line on Mapbox map
+  const coords=[];
+  if(userLat) coords.push([userLng,userLat]);
+  corridor.stops.forEach(s=>coords.push([s.lng,s.lat]));
 
-  const worm=new google.maps.Polyline({
-    path, map,
-    strokeColor:rc.bg, strokeOpacity:0.85, strokeWeight:7,
-    icons:[{icon:{path:google.maps.SymbolPath.FORWARD_OPEN_ARROW,scale:3,strokeColor:'white',strokeOpacity:0.9},repeat:'70px',offset:'0'}],
-    zIndex:10,
-  });
-  wormPolylines.push(worm);
+  if(map.getLayer('worm-line'))map.removeLayer('worm-line');
+  if(map.getSource('worm-source'))map.removeSource('worm-source');
 
-  // Zoom to corridor
-  const bounds=new google.maps.LatLngBounds();
-  if(userLat) bounds.extend({lat:userLat,lng:userLng});
-  corridor.stops.forEach(s=>bounds.extend({lat:s.lat,lng:s.lng}));
-  map.fitBounds(bounds,{top:180,bottom:300,left:40,right:40});
+  map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
+  map.addLayer({
+    id:'worm-line',type:'line',source:'worm-source',
+    layout:{'line-join':'round','line-cap':'round'},
+    paint:{
+      'line-color':corridor.color,
+      'line-width':['interpolate',['linear'],['zoom'],10,4,16,10],
+      'line-opacity':0.85,
+    }
+  },'stops-glow'); // insert below stops
+
+  // Zoom to fit corridor + user
+  const bounds=new mapboxgl.LngLatBounds();
+  if(userLat) bounds.extend([userLng,userLat]);
+  corridor.stops.forEach(s=>bounds.extend([s.lng,s.lat]));
+  map.fitBounds(bounds,{padding:{top:180,bottom:280,left:40,right:40},maxZoom:15,speed:1.2});
 
   // Build worm SVG strip
   buildWormSVG(corridor,best);
 
-  // Build stop chips
-  const chips=corridor.stops.filter(s=>!s.isOrigin).map((s,i)=>{
-    const route=s.routes[0]||best.route;
-    const rc2=BUS_COLOR[route]||{bg:'#888',text:route};
+  // Stop chips
+  const chips=corridor.stops.map((s,i)=>{
+    const route=s.routes[0]||best?.route;
+    const rc=BUS_COLOR[route]||{bg:'#888',text:route};
     const busIn=arrivals[s.id+'_'+route]?.[0];
     const isActive=s.id===best?.s.id;
-    return`<div class="schip${isActive?' active':''}" onclick="openStopSheet(activeCorridor.stops[${i+1}])">
-      <span class="schip-route" style="color:${rc2.bg}">${route||'—'}</span>
+    return`<div class="schip${isActive?' active':''}" onclick="openStopSheet(activeCorridor.stops[${i}])">
+      <span class="schip-route" style="color:${rc.bg}">${route||'—'}</span>
       <span class="schip-stop">${s.name.split('/')[0].trim()}</span>
-      ${busIn!=null?`<span class="schip-mins">${busIn}m</span><span class="schip-lbl">BUS IN</span>`:
-      `<span class="schip-mins" style="color:#ddd">—</span>`}
+      ${busIn!=null?`<span class="schip-mins">${busIn}m</span><span class="schip-lbl">BUS IN</span>`:`<span class="schip-mins" style="color:#ddd">—</span>`}
     </div>`;
   }).join('');
   document.getElementById('stop-chips').innerHTML=chips;
 
   document.getElementById('worm-sheet').classList.add('open');
 
-  // Auto-refresh every 30s
-  setTimeout(()=>{ if(activeCorridor){ loadArrivals(activeCorridor).then(()=>drawWorm(activeCorridor)); }},30000);
+  // Auto-refresh
+  clearInterval(refreshTimer);
+  refreshTimer=setInterval(async()=>{
+    if(activeCorridor){await loadArrivals(activeCorridor);renderWorm(activeCorridor);}
+  },30000);
 }
 
-// ── WORM SVG (the animated strip) ──
+// ── WORM SVG STRIP ──
 function buildWormSVG(corridor,best){
-  const stops=corridor.stops.filter(s=>!s.isOrigin);
+  const stops=corridor.stops;
   const N=stops.length;
-  const W=Math.max(340,N*75+60);
-  const H=64; const cy=H/2;
+  const W=Math.max(320,N*72+60);
+  const H=60; const cy=H/2;
   const rc=BUS_COLOR[best?.route]||{bg:'#0039A6'};
+  const pts=stops.map((s,i)=>({x:36+i*72, y:cy+(i%2===0?-7:7)}));
 
-  // Points — gently wavy
-  const pts=stops.map((s,i)=>({x:36+i*75, y:cy+(i%2===0?-8:8)}));
-
-  // Path
-  let d=`M 12 ${cy}`;
-  // walk segment from head to first stop
-  d+=` Q 24 ${cy} ${pts[0].x} ${pts[0].y}`;
+  let d=`M 12 ${cy} Q 24 ${cy} ${pts[0].x} ${pts[0].y}`;
   for(let i=1;i<pts.length;i++){
     const cpx=(pts[i-1].x+pts[i].x)/2;
-    const cpy=(pts[i-1].y+pts[i].y)/2;
-    d+=` Q ${cpx} ${cpy} ${pts[i].x} ${pts[i].y}`;
+    d+=` Q ${cpx} ${(pts[i-1].y+pts[i].y)/2} ${pts[i].x} ${pts[i].y}`;
   }
 
   let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
 <defs>
-  <linearGradient id="wg${best?.route||'r'}" x1="0%" y1="0%" x2="100%" y2="0%">
+  <linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="0%">
     <stop offset="0%" stop-color="${rc.bg}" stop-opacity="0.3"/>
     <stop offset="40%" stop-color="${rc.bg}" stop-opacity="1"/>
-    <stop offset="100%" stop-color="${rc.bg}" stop-opacity="0.65"/>
+    <stop offset="100%" stop-color="${rc.bg}" stop-opacity="0.6"/>
   </linearGradient>
   <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
-
-<!-- worm body -->
-<path d="${d}" fill="none" stroke="url(#wg${best?.route||'r'})" stroke-width="13" stroke-linecap="round" filter="url(#glow)"/>
-
-<!-- shimmer animation -->
-<path d="${d}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="5" stroke-linecap="round" stroke-dasharray="18 36">
-  <animate attributeName="stroke-dashoffset" from="54" to="0" dur="1.8s" repeatCount="indefinite"/>
+<path d="${d}" fill="none" stroke="url(#wg)" stroke-width="12" stroke-linecap="round" filter="url(#glow)"/>
+<path d="${d}" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="4" stroke-linecap="round" stroke-dasharray="16 32">
+  <animate attributeName="stroke-dashoffset" from="48" to="0" dur="1.8s" repeatCount="indefinite"/>
 </path>`;
 
-  // Stop nodes
   pts.forEach((pt,i)=>{
-    const stop=stops[i];
-    const isBoard=stop.id===best?.s.id;
-    const isDest=stop.isDestination;
+    const s=stops[i];
+    const isBoard=s.id===best?.s.id;
+    const isDest=s.isDestination;
     svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="${isBoard||isDest?11:7}"
-      fill="${isBoard?'white':isDest?'#0039A6':rc.bg}"
-      stroke="${isBoard?rc.bg:'white'}" stroke-width="${isBoard?3:2}"
-      filter="url(#glow)"/>`;
-    if(isBoard){svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="${rc.bg}"/>`;}
-    if(isDest){svg+=`<text x="${pt.x}" y="${pt.y+5}" text-anchor="middle" fill="white" font-size="9" font-weight="900">🏁</text>`;}
+      fill="${isBoard?'white':isDest?rc.bg:rc.bg}"
+      stroke="${isBoard?rc.bg:'white'}" stroke-width="${isBoard?3:2.5}" filter="url(#glow)"/>`;
+    if(isBoard) svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="${rc.bg}"/>`;
+    if(isDest)  svg+=`<text x="${pt.x}" y="${pt.y+4}" text-anchor="middle" fill="white" font-size="8" font-weight="900">★</text>`;
   });
 
-  // User head — glowing green dot
+  // User head
   svg+=`<circle cx="12" cy="${cy}" r="9" fill="#00A651" stroke="white" stroke-width="2.5" filter="url(#glow)">
     <animate attributeName="r" values="8;11;8" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="12" cy="${cy}" r="4" fill="white"/>`;
+  </circle><circle cx="12" cy="${cy}" r="4" fill="white"/>`;
 
   svg+=`</svg>`;
   document.getElementById('worm-svg-wrap').innerHTML=svg;
 }
 
 // ── GOOGLE FALLBACK ──
-async function googleRoute(from,to){
+async function googleFallback(from,to){
   try{
     const r=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`);
     const d=await r.json();
     if(!d.routes?.length)return;
     const leg=d.routes[0].legs?.[0];
     if(!leg)return;
-    const dep=leg.departure_time?.text||'Now';
-    const arr=leg.arrival_time?.text||'—';
-    const dur=leg.duration?.text||'—';
-    document.getElementById('urg-hero').innerHTML=`<div class="urg-action urg-go">${dur}</div><div class="urg-sub">Departs ${dep} · Arrives ${arr}</div>`;
-    document.getElementById('stop-chips').innerHTML=`<div style="font-size:11px;color:#aaa;padding:8px">Google route — tap stops on map for arrivals</div>`;
+    document.getElementById('urg-hero').innerHTML=`
+      <div class="urg-action urg-go">${leg.duration?.text||'—'}</div>
+      <div class="urg-sub">Departs ${leg.departure_time?.text||'Now'} · Arrives ${leg.arrival_time?.text||'—'}</div>`;
+    document.getElementById('stop-chips').innerHTML=`<div style="font-size:11px;color:#aaa;padding:8px">Google route · tap stops on map for arrivals</div>`;
     document.getElementById('worm-sheet').classList.add('open');
   }catch(e){console.error(e);}
 }
-</script>
 
-<script>
-// Load Google Maps securely (key from our backend)
-(async()=>{
-  try{
-    const r=await fetch('/api/mapskey');
-    const d=await r.json();
-    if(d.key){
-      const s=document.createElement('script');
-      s.src=`https://maps.googleapis.com/maps/api/js?key=${d.key}&libraries=marker&callback=initMap&loading=async`;
-      s.async=true; s.defer=true;
-      document.head.appendChild(s);
-    }
-  }catch(e){console.error('Maps load failed',e);}
-})();
+// Start
+initMap();
 </script>
 </body>
 </html>
