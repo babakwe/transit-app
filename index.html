@@ -548,41 +548,117 @@ async function initMap(){
   map.on('click',e=>{ if(pinDropMode) dropPin(e.lngLat.lng,e.lngLat.lat); });
 }
 
-// ── TRANSIT STOP LAYER — uses Mapbox native transit data ──
-// Bus stop dots come from Mapbox's built-in vector tiles (OpenStreetMap data)
-// Tapping any stop queries MTA BusTime for live arrivals
+// ── TRANSIT STOP LAYER — real MTA stops, loaded by viewport ──
 function initTransitLayer(){
-  // Style the existing Mapbox transit stops from the light-v11 style
-  // These are already accurate dots on the correct street positions
-  try {
-    // Make transit stops visible and tappable at zoom 13+
-    map.setLayoutProperty('transit-label', 'visibility', 'visible');
-  } catch(e) { /* layer may not exist in this style */ }
-
-  // Add a transparent click-capture layer over the whole map
-  // When user taps near a transit area, we query MTA by location
-  map.on('click', async e => {
-    if(pinDropMode) return;
-    // Check if user clicked on a transit stop feature
-    const features = map.queryRenderedFeatures(e.point, {
-      layers: ['transit-label', 'poi-transit']
-    });
-    if(features.length > 0){
-      const f = features[0];
-      const name = f.properties?.name || f.properties?.ref || 'Bus Stop';
-      const lngLat = e.lngLat;
-      await openStopByLocation(lngLat.lng, lngLat.lat, name);
-      return;
-    }
-
-    // Also allow tapping anywhere to find nearest stop (within ~100m)
-    // This is how Google Maps works - you tap near a stop area
+  // Empty GeoJSON source — filled by loadMTAStops() as user pans
+  map.addSource('bus-stops', {
+    type: 'geojson',
+    data: {type:'FeatureCollection', features:[]},
   });
 
-  map.on('mouseenter', 'transit-label', () => map.getCanvas().style.cursor = 'pointer');
-  map.on('mouseleave', 'transit-label', () => map.getCanvas().style.cursor = '');
-  map.on('mouseenter', 'poi-transit', () => map.getCanvas().style.cursor = 'pointer');
-  map.on('mouseleave', 'poi-transit', () => map.getCanvas().style.cursor = '');
+  // Small grey dot at zoom 13, colored + bigger at zoom 14+
+  map.addLayer({
+    id: 'bus-stops-dot', type: 'circle', source: 'bus-stops', minzoom: 13,
+    paint: {
+      'circle-radius':  ['interpolate',['linear'],['zoom'], 13,4, 15,7, 17,10],
+      'circle-color':   ['get','color'],
+      'circle-opacity': ['interpolate',['linear'],['zoom'], 13,0.45, 14,0.85],
+      'circle-stroke-width': 1.5,
+      'circle-stroke-color': 'white',
+    }
+  });
+
+  // Stop name — only at zoom 16+
+  map.addLayer({
+    id: 'bus-stops-name', type: 'symbol', source: 'bus-stops', minzoom: 16,
+    layout: {
+      'text-field': ['get','name'],
+      'text-font':  ['DIN Pro Regular','Arial Unicode MS Regular'],
+      'text-size':  10,
+      'text-offset': [0, 1.3],
+      'text-anchor': 'top',
+      'text-allow-overlap': false,
+    },
+    paint: {
+      'text-color': '#333',
+      'text-halo-color': 'rgba(255,255,255,0.9)',
+      'text-halo-width': 1.5,
+    }
+  });
+
+  // Click handler
+  map.on('click','bus-stops-dot', e => {
+    e.preventDefault();
+    const p = e.features[0].properties;
+    openStopSheet({
+      id:     p.stopId,
+      name:   p.name,
+      lat:    p.lat,
+      lng:    p.lng,
+      stopId: p.stopId,
+      routes: JSON.parse(p.routes || '[]'),
+    }, null);
+  });
+  map.on('mouseenter','bus-stops-dot', () => map.getCanvas().style.cursor = 'pointer');
+  map.on('mouseleave','bus-stops-dot', () => map.getCanvas().style.cursor = '');
+
+  // Load stops now and on every map move
+  loadMTAStops();
+  map.on('moveend', () => {
+    clearTimeout(_stopsMoveTimer);
+    _stopsMoveTimer = setTimeout(loadMTAStops, 500);
+  });
+}
+
+// ── LOAD REAL MTA STOPS FOR CURRENT VIEWPORT ──
+let _lastStopBounds = null;
+async function loadMTAStops(){
+  if(!map) return;
+  const zoom = map.getZoom();
+  if(zoom < 13){
+    map.getSource('bus-stops')?.setData({type:'FeatureCollection',features:[]});
+    _lastStopBounds = null;
+    return;
+  }
+
+  const b = map.getBounds();
+  const key = [b.getSouth().toFixed(3), b.getNorth().toFixed(3),
+               b.getWest().toFixed(3), b.getEast().toFixed(3)].join(',');
+  if(key === _lastStopBounds) return; // same view, skip
+  _lastStopBounds = key;
+
+  try {
+    const params = new URLSearchParams({
+      minLat: b.getSouth().toFixed(4), maxLat: b.getNorth().toFixed(4),
+      minLng: b.getWest().toFixed(4),  maxLng: b.getEast().toFixed(4),
+    });
+    const r = await fetch('/api/stops?' + params, {signal: AbortSignal.timeout(6000)});
+    if(!r.ok) return;
+    const d = await r.json();
+    if(!d.stops?.length) return;
+
+    const features = d.stops.map(s => {
+      const routes = Array.isArray(s.routes) ? s.routes : [];
+      const primary = routes[0] || '';
+      const color = BUS_COLOR[primary]?.bg || BUS_COLOR[primary.toUpperCase()]?.bg || '#888';
+      return {
+        type: 'Feature',
+        geometry: {type:'Point', coordinates:[s.lng, s.lat]},
+        properties: {
+          stopId: s.stopId || s.id,
+          name:   s.name,
+          lat:    s.lat,
+          lng:    s.lng,
+          routes: JSON.stringify(routes),
+          color,
+        }
+      };
+    });
+
+    map.getSource('bus-stops')?.setData({type:'FeatureCollection', features});
+  } catch(e) {
+    console.warn('MTA stops load failed:', e.message);
+  }
 }
 
 // ── OPEN STOP BY LOCATION — query MTA for nearest stop ──
