@@ -62,6 +62,25 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
 .gobtn:active { opacity:0.8; }
 .gobtn:disabled { opacity:0.38; cursor:not-allowed; }
 
+/* ── AUTOCOMPLETE DROPDOWN ── */
+.ac-wrap { position:relative; flex:1; }
+.ac-drop {
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:500;
+  background:white; border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06);
+  overflow:hidden; max-height:220px; overflow-y:auto;
+}
+.ac-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; cursor:pointer; transition:background 0.12s;
+  border-bottom:1px solid #f5f5f8;
+}
+.ac-item:last-child { border-bottom:none; }
+.ac-item:active, .ac-item:hover { background:#f0f4ff; }
+.ac-icon { font-size:16px; flex-shrink:0; }
+.ac-main { font-size:13px; font-weight:700; color:#111; line-height:1.3; }
+.ac-sub  { font-size:10px; color:#aaa; margin-top:1px; }
+
 /* ── FAB ── */
 .fab {
   position:fixed; right:16px; z-index:100;
@@ -328,13 +347,23 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
     <div class="search-box">
       <div class="srow">
         <div class="sdot sdot-from"></div>
-        <input class="sinput" id="from-input" placeholder="Where are you?" autocomplete="off">
+        <div class="ac-wrap">
+          <input class="sinput" id="from-input" placeholder="Where are you?" autocomplete="off"
+            oninput="acSuggest('from-input','from-drop')"
+            onblur="setTimeout(()=>acHide('from-drop'),180)">
+          <div class="ac-drop" id="from-drop" style="display:none"></div>
+        </div>
         <div class="sibtn" id="gps-btn" onclick="getGPS()" title="My location">📍</div>
         <div class="sibtn" onclick="triggerCamera()" title="Photo landmark">📷</div>
       </div>
       <div class="srow">
         <div class="sdot sdot-to"></div>
-        <input class="sinput" id="to-input" placeholder="Tap map, type, or 📷 destination" autocomplete="off">
+        <div class="ac-wrap">
+          <input class="sinput" id="to-input" placeholder="Where to?" autocomplete="off"
+            oninput="acSuggest('to-input','to-drop')"
+            onblur="setTimeout(()=>acHide('to-drop'),180)">
+          <div class="ac-drop" id="to-drop" style="display:none"></div>
+        </div>
         <div class="sibtn" onclick="enablePinDrop()" title="Pin on map">📌</div>
       </div>
       <button class="gobtn" id="go-btn" onclick="findRoute()">Find my ride →</button>
@@ -589,37 +618,142 @@ function addCorridorLayer(corridor){
   map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
 }
 
-// ── USER LOCATION ──
+// ── USER LOCATION — robust with retry + error feedback ──
+let _watchId=null;
 function locateUser(){
-  if(!navigator.geolocation)return;
-  navigator.geolocation.watchPosition(pos=>{
-    userLat=pos.coords.latitude;
-    userLng=pos.coords.longitude;
-    updateUserDot();
-  },{enableHighAccuracy:true,timeout:8000,maximumAge:10000});
+  if(!navigator.geolocation){
+    document.getElementById('gps-btn').textContent='❌';
+    return;
+  }
+  document.getElementById('gps-btn').textContent='⟳';
+
+  // Clear any existing watch
+  if(_watchId!=null){ navigator.geolocation.clearWatch(_watchId); _watchId=null; }
+
+  // First do a fast one-shot to get initial position quickly
+  navigator.geolocation.getCurrentPosition(
+    pos=>{ onGotPos(pos); startWatch(); },
+    err=>{ handleGpsError(err); },
+    {enableHighAccuracy:false, timeout:6000, maximumAge:30000}
+  );
+}
+
+function startWatch(){
+  if(_watchId!=null) return;
+  _watchId=navigator.geolocation.watchPosition(
+    pos=>onGotPos(pos),
+    err=>handleGpsError(err),
+    {enableHighAccuracy:true, timeout:12000, maximumAge:5000}
+  );
+}
+
+function onGotPos(pos){
+  userLat=pos.coords.latitude;
+  userLng=pos.coords.longitude;
+  updateUserDot();
+  // Auto-fill from-input if empty
+  if(!document.getElementById('from-input').value){
+    reverseGeocode(userLng, userLat).then(addr=>{
+      if(addr) document.getElementById('from-input').value=addr;
+    });
+  }
+}
+
+function handleGpsError(err){
+  console.warn('GPS error',err.code, err.message);
+  const btn=document.getElementById('gps-btn');
+  if(err.code===1){ // PERMISSION_DENIED
+    btn.textContent='🔒';
+    btn.title='Location blocked — allow in browser settings';
+  } else if(err.code===2){ // POSITION_UNAVAILABLE
+    btn.textContent='📍';
+    btn.title='GPS unavailable — retrying…';
+    setTimeout(locateUser, 4000); // retry in 4s
+  } else { // TIMEOUT
+    btn.textContent='📍';
+    startWatch(); // fall back to watch
+  }
+}
+
+async function reverseGeocode(lng, lat){
+  try{
+    const token=mapboxgl.accessToken;
+    if(!token) return null;
+    const r=await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address&access_token=${token}`);
+    const d=await r.json();
+    const f=d.features?.[0];
+    return f?.place_name?.split(',').slice(0,2).join(',').trim()||null;
+  }catch{ return null; }
 }
 
 function updateUserDot(){
   if(!map||userLat==null)return;
-  // Use Mapbox's built-in user location or add our own
   if(!map.getSource('user-loc')){
     map.addSource('user-loc',{type:'geojson',data:userGeoJSON()});
-    // Pulse ring
     map.addLayer({id:'user-pulse',type:'circle',source:'user-loc',
       paint:{'circle-radius':18,'circle-color':'#0039A6','circle-opacity':0.12}});
-    // Core dot
     map.addLayer({id:'user-dot',type:'circle',source:'user-loc',
       paint:{'circle-radius':8,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
-    // Fly to user
-    map.flyTo({center:[userLng,userLat],zoom:13,speed:1.2});
+    map.flyTo({center:[userLng,userLat],zoom:14,speed:1.4});
     document.getElementById('gps-btn').textContent='✓';
   } else {
     map.getSource('user-loc').setData(userGeoJSON());
+    document.getElementById('gps-btn').textContent='✓';
   }
 }
 function userGeoJSON(){return{type:'Feature',geometry:{type:'Point',coordinates:[userLng,userLat]}};}
-function getGPS(){document.getElementById('gps-btn').textContent='⟳';locateUser();}
-function centerOnMe(){if(map&&userLat)map.flyTo({center:[userLng,userLat],zoom:14,speed:1.4});}
+function getGPS(){ locateUser(); }
+function centerOnMe(){if(map&&userLat)map.flyTo({center:[userLng,userLat],zoom:15,speed:1.4});}
+
+// ── ADDRESS AUTOCOMPLETE (Mapbox Geocoding) ──
+let _acTimer={};
+async function acSuggest(inputId, dropId){
+  const input=document.getElementById(inputId);
+  const drop=document.getElementById(dropId);
+  const q=input.value.trim();
+  if(q.length<3){ drop.style.display='none'; return; }
+
+  // Debounce 280ms
+  clearTimeout(_acTimer[inputId]);
+  _acTimer[inputId]=setTimeout(async()=>{
+    try{
+      const token=mapboxgl.accessToken;
+      if(!token) return;
+      // Bias to NYC area
+      const bbox='-74.26,40.49,-73.70,40.92';
+      const r=await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`+
+        `?bbox=${bbox}&types=address,poi,neighborhood,place&limit=6&access_token=${token}&country=US`
+      );
+      const d=await r.json();
+      const features=d.features||[];
+      if(!features.length){ drop.style.display='none'; return; }
+
+      drop.innerHTML=features.map(f=>{
+        const main=f.text||f.place_name.split(',')[0];
+        const sub=f.place_name.split(',').slice(1,3).join(',').trim();
+        const icon=f.place_type?.[0]==='poi'?'📍':'🗺️';
+        return`<div class="ac-item" onmousedown="acPick('${inputId}','${dropId}',${JSON.stringify(f.place_name).replace(/'/g,"&#39;")})">
+          <span class="ac-icon">${icon}</span>
+          <div>
+            <div class="ac-main">${main}</div>
+            ${sub?`<div class="ac-sub">${sub}</div>`:''}
+          </div>
+        </div>`;
+      }).join('');
+      drop.style.display='block';
+    }catch(e){ drop.style.display='none'; }
+  }, 280);
+}
+
+function acPick(inputId, dropId, placeName){
+  document.getElementById(inputId).value=placeName;
+  document.getElementById(dropId).style.display='none';
+}
+function acHide(dropId){
+  const el=document.getElementById(dropId);
+  if(el) el.style.display='none';
+}
 
 // ── PIN DROP ──
 function enablePinDrop(){
