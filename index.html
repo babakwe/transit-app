@@ -898,8 +898,12 @@ function closeSheet(){document.getElementById('stop-sheet').classList.remove('op
 function closeWorm(){
   document.getElementById('worm-sheet').classList.remove('open');
   clearInterval(refreshTimer);
-  if(map.getLayer('worm-line'))map.removeLayer('worm-line');
-  if(map.getSource('worm-source'))map.removeSource('worm-source');
+  ['worm-line','walk-to-stop','walk-from-stop'].forEach(id=>{
+    if(map.getLayer(id))map.removeLayer(id);
+    if(map.getSource(id))map.removeSource(id);
+  });
+  // Reset map to north-up
+  map.easeTo({bearing:0,pitch:0,duration:800});
 }
 
 // ── FIND ROUTE → Google gives ALL options, user picks ──
@@ -958,35 +962,62 @@ function showAllOptions(routes, from, to){
     const allSteps=leg.steps||[];
     const transitSteps=allSteps.filter(s=>s.travel_mode==='TRANSIT');
     const transfers=transitSteps.length>1?`${transitSteps.length-1} transfer${transitSteps.length>2?'s':''}`:'Direct';
-    const totalWalk=allSteps.filter(s=>s.travel_mode==='WALKING').reduce((a,s)=>a+(s.duration?.value||0),0);
-    const walkMins=Math.round(totalWalk/60);
 
-    // Build worm SVG for this route
+    // ── First walk: to the boarding stop ──
+    const firstWalk=allSteps[0]?.travel_mode==='WALKING'?allSteps[0]:null;
+    const firstTransit=transitSteps[0];
+    const boardStopName=firstTransit?.transit_details?.stop_name||null;
+    const walkToStopMins=firstWalk?Math.round((firstWalk.duration?.value||0)/60):0;
+    const busArrivesIn=depVal?Math.round((depVal*1000-Date.now())/60000):null;
+    // Wait time = how long you stand at the stop after arriving
+    const waitMins=busArrivesIn!=null&&walkToStopMins!=null?Math.max(0,busArrivesIn-walkToStopMins):null;
+
+    // Last walk: from alighting stop to destination
+    const lastWalk=allSteps[allSteps.length-1]?.travel_mode==='WALKING'?allSteps[allSteps.length-1]:null;
+    const walkFromStopMins=lastWalk?Math.round((lastWalk.duration?.value||0)/60):0;
+    const alightStopName=transitSteps[transitSteps.length-1]?.transit_details?.arrival_stop?.name||null;
+
+    const fare=computeFare(allSteps);
+
+    // Build worm SVG
     const wormSVG=buildOptionWorm(allSteps, leg.duration?.value||0);
 
-    // Fare
-    const fare=computeFare(allSteps);
+    // Walk + wait summary line — the key info that's been missing
+    const walkSummary=boardStopName?`
+      <div style="display:flex;align-items:flex-start;gap:10px;background:#f7f7fb;border-radius:12px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-size:18px;line-height:1;padding-top:1px">🚶</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:800;color:#222">${walkToStopMins>0?`Walk ${walkToStopMins} min to`:'Head to'} <span style="color:${urgCol}">${boardStopName}</span></div>
+          ${waitMins!=null?`<div style="font-size:10px;color:#aaa;margin-top:2px">Wait <strong style="color:#333">${waitMins} min</strong> for the bus · arrives ${depTime}</div>`:''}
+          ${alightStopName?`<div style="font-size:10px;color:#aaa;margin-top:1px">Get off at <strong style="color:#333">${alightStopName}</strong>${walkFromStopMins>0?` · walk ${walkFromStopMins} min to destination`:''}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:900;color:${urgCol};font-family:'DM Mono',monospace;line-height:1">${dur.replace(' mins','').replace(' min','')}</div>
+          <div style="font-size:8px;color:#bbb;font-weight:600;letter-spacing:.05em">MIN TOTAL</div>
+          <div style="font-size:10px;font-weight:800;color:${urgCol};margin-top:3px">${leaveStr}</div>
+        </div>
+      </div>`:
+      `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${isFirst?'<span class="opt-badge badge-best">Fastest</span>':''}<span class="opt-badge badge-alt">${transfers}</span></div>
+        <div style="font-size:20px;font-weight:900;color:${urgCol};font-family:'DM Mono',monospace">${dur.replace(' mins','').replace(' min','')}<span style="font-size:10px;color:#bbb;font-weight:400"> min</span></div>
+      </div>`;
 
     return`<div class="opt-card ${isFirst?'best':'alt'}" onclick="selectGoogleOption(${i})">
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-            ${isFirst?'<span class="opt-badge badge-best">Fastest</span>':''}
-            <span class="opt-badge badge-alt">${transfers}</span>
-            ${walkMins>0?`<span class="opt-badge badge-walk">🚶 ${walkMins}m walk</span>`:''}
-            ${fare?`<span class="opt-badge" style="background:#fff8e6;color:#b8860b">💰 ${fare.text}</span>`:''}
-          </div>
-          <div style="text-align:right;flex-shrink:0;padding-left:8px">
-            <div style="font-size:20px;font-weight:900;color:${urgCol};font-family:'DM Mono',monospace;line-height:1">${dur.replace(' mins','').replace(' min','')}<span style="font-size:10px;color:#bbb;font-weight:400"> min</span></div>
-            <div style="font-size:10px;font-weight:700;color:${urgCol};margin-top:2px">${leaveStr}</div>
-          </div>
+        ${walkSummary}
+        <!-- badges row -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          ${isFirst?'<span class="opt-badge badge-best">Fastest</span>':''}
+          <span class="opt-badge badge-alt">${transfers}</span>
+          ${walkToStopMins>0?`<span class="opt-badge badge-walk">🚶 ${walkToStopMins}m to stop</span>`:''}
+          ${waitMins!=null?`<span class="opt-badge" style="background:#fff0f0;color:#cc4400">⏱ ${waitMins}m wait</span>`:''}
+          ${fare?`<span class="opt-badge" style="background:#fff8e6;color:#b8860b">💰 ${fare.text}</span>`:''}
         </div>
         <!-- THE WORM -->
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 4px;margin:0 -2px">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 4px">
           ${wormSVG}
         </div>
         ${fare?`<div style="font-size:9px;color:#bbb;margin-top:3px">💡 ${fare.note}</div>`:''}
-        <div style="font-size:10px;color:#bbb;margin-top:3px">${depTime} → ${arrTime}</div>
       </div>
     </div>`;
   }).join('');
@@ -1251,6 +1282,48 @@ function renderGoogleWorm(route, idx){
       layout:{'line-join':'round','line-cap':'round'},
       paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,5,16,11],'line-opacity':0.88}
     },'stops-glow');
+
+    // ── WALK-TO-STOP dotted line from GPS → first transit stop ──
+    const firstTransitStep=(leg.steps||[]).find(s=>s.travel_mode==='TRANSIT');
+    const boardLoc=firstTransitStep?.start_location;
+    if(userLat&&boardLoc){
+      const walkCoords=[[userLng,userLat],[boardLoc.lng,boardLoc.lat]];
+      if(map.getLayer('walk-to-stop'))map.removeLayer('walk-to-stop');
+      if(map.getSource('walk-to-stop'))map.removeSource('walk-to-stop');
+      map.addSource('walk-to-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:walkCoords}}});
+      map.addLayer({
+        id:'walk-to-stop',type:'line',source:'walk-to-stop',
+        layout:{'line-join':'round','line-cap':'round'},
+        paint:{
+          'line-color':'#00A651',
+          'line-width':3,
+          'line-opacity':0.7,
+          'line-dasharray':[2,3],
+        }
+      },'stops-glow');
+    }
+
+    // ── WALK-FROM-STOP dotted line from last transit stop → destination ──
+    const lastTransitStep=[...(leg.steps||[])].reverse().find(s=>s.travel_mode==='TRANSIT');
+    const alightLoc=lastTransitStep?.end_location;
+    const lastWalkStep=(leg.steps||[]).slice(-1)[0];
+    const destLoc=lastWalkStep?.end_location;
+    if(alightLoc&&destLoc){
+      const walkCoords2=[[alightLoc.lng,alightLoc.lat],[destLoc.lng,destLoc.lat]];
+      if(map.getLayer('walk-from-stop'))map.removeLayer('walk-from-stop');
+      if(map.getSource('walk-from-stop'))map.removeSource('walk-from-stop');
+      map.addSource('walk-from-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:walkCoords2}}});
+      map.addLayer({
+        id:'walk-from-stop',type:'line',source:'walk-from-stop',
+        layout:{'line-join':'round','line-cap':'round'},
+        paint:{
+          'line-color':'#00A651',
+          'line-width':3,
+          'line-opacity':0.7,
+          'line-dasharray':[2,3],
+        }
+      },'stops-glow');
+    }
 
     // ── ORIENT MAP TO DIRECTION OF TRAVEL ──
     // Bearing = angle from start to end of transit portion
