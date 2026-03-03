@@ -107,7 +107,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   padding:12px 14px; border-radius:14px; margin-bottom:8px;
   background:#f8f8fa; border:1.5px solid transparent; transition:border-color 0.2s;
 }
-.arr-row.urg-now  { border-color:#FF6319; background:#fff8f4; }
+.arr-row.urg-now  { border-color:#FF3B30; background:#fff4f4; }
 .arr-row.urg-soon { border-color:#FFA500; background:#fffbf0; }
 .arr-row.urg-go   { border-color:#00A651; background:#f4fff8; }
 
@@ -133,8 +133,8 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
   line-height:1; flex-shrink:0; text-align:right;
 }
 .arr-mins small { font-size:11px; color:#aaa; font-weight:600; }
-.col-now  { color:#FF6319; }
-.col-soon { color:#FFA500; }
+.col-now  { color:#FF3B30; }
+.col-soon { color:#FF3B30; }
 .col-go   { color:#00A651; }
 
 /* ── WORM SHEET ── */
@@ -158,7 +158,7 @@ html, body { height:100%; overflow:hidden; font-family:'Outfit',sans-serif; }
 .urg-action { font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
 .urg-go   { color:#00A651; }
 .urg-soon { color:#FFA500; }
-.urg-now  { color:#FF6319; animation:upulse 1s ease-in-out infinite; }
+.urg-now  { color:#FF3B30; animation:upulse 1s ease-in-out infinite; }
 .urg-gone { color:#ccc; }
 @keyframes upulse { 0%,100%{opacity:1}50%{opacity:0.35} }
 .urg-sub { font-size:12px; color:#999; }
@@ -704,7 +704,7 @@ async function openStopSheet(stop, busName){
 
   document.getElementById('sf-arrivals-list').innerHTML=rows.map(r=>{
     const rc=BUS_COLOR[r.route]||{bg:'#555',text:r.route,type:'local'};
-    const urgCol=r.mins<=2?'#FF6319':r.mins<=8?'#FFA500':'#00A651';
+    const urgCol=r.mins<=2?'#FF3B30':r.mins<=3?'#FF3B30':r.mins<=8?'#FFA500':'#00A651';
     const seq=r.seq===0?'Next':r.seq===1?'Then':'After';
     return`<div class="sf-arr-row" onclick="sfPickBus('${r.route}')">
       <div class="bus-icon ${rc.type==='sbs'?'bus-sbs':''}" style="background:${rc.bg}">${rc.text}</div>
@@ -902,7 +902,8 @@ function closeWorm(){
     if(map.getLayer(id))map.removeLayer(id);
     if(map.getSource(id))map.removeSource(id);
   });
-  // Reset map to north-up
+  (window._tripMarkers||[]).forEach(m=>m.remove());
+  window._tripMarkers=[];
   map.easeTo({bearing:0,pitch:0,duration:800});
 }
 
@@ -955,7 +956,7 @@ function showAllOptions(routes, from, to){
     const arrTime=leg.arrival_time?.text||'—';
     const depVal=leg.departure_time?.value;
     const leaveIn=depVal?Math.round((depVal*1000-Date.now())/60000):null;
-    const urgCol=leaveIn==null?'#aaa':leaveIn<=2?'#FF6319':leaveIn<=6?'#FFA500':'#00A651';
+    const urgCol=leaveIn==null?'#aaa':leaveIn<=2?'#FF3B30':leaveIn<=6?'#FFA500':'#00A651';
     const leaveStr=leaveIn==null?depTime:leaveIn<=0?'Leave NOW':leaveIn<=1?'Leave in 1 min':`Leave in ${leaveIn} min`;
     const isFirst=i===0;
 
@@ -1260,7 +1261,7 @@ function renderGoogleWorm(route, idx){
   let action,cls;
   if(li<=0){action='LEAVE NOW';cls='urg-now';}
   else if(li<=2){action='LEAVE NOW';cls='urg-now';}
-  else if(li<=6){action=`LEAVE IN ${li} MIN`;cls='urg-soon';}
+  else if(li<=8){action=`Leave in ${li} min`;cls='urg-soon';}
   else{action=`Leave in ${li} min`;cls='urg-go';}
 
   document.getElementById('urg-hero').innerHTML=`
@@ -1282,73 +1283,117 @@ function renderGoogleWorm(route, idx){
 
   if(map.getLayer('worm-line'))map.removeLayer('worm-line');
   if(map.getSource('worm-source'))map.removeSource('worm-source');
+  // Clear all trip markers
+  (window._tripMarkers||[]).forEach(m=>m.remove());
+  window._tripMarkers=[];
 
   if(coords.length>=2){
-    map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
-    map.addLayer({id:'worm-line',type:'line',source:'worm-source',
-      layout:{'line-join':'round','line-cap':'round'},
-      paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,5,16,11],'line-opacity':0.88}
-    },'stops-glow');
-
-    // ── WALK-TO-STOP dotted line from GPS → first transit stop ──
-    const firstTransitStep=(leg.steps||[]).find(s=>s.travel_mode==='TRANSIT');
-    const boardLoc=firstTransitStep?.start_location;
-    if(userLat&&boardLoc){
-      const walkCoords=[[userLng,userLat],[boardLoc.lng,boardLoc.lat]];
-      if(map.getLayer('walk-to-stop'))map.removeLayer('walk-to-stop');
-      if(map.getSource('walk-to-stop'))map.removeSource('walk-to-stop');
-      map.addSource('walk-to-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:walkCoords}}});
-      map.addLayer({
-        id:'walk-to-stop',type:'line',source:'walk-to-stop',
+    // ── TRANSIT WORM (bus/train portion only) ──
+    const transitCoords=[];
+    (leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT').forEach(step=>{
+      if(step.start_location) transitCoords.push([step.start_location.lng,step.start_location.lat]);
+      if(step.end_location)   transitCoords.push([step.end_location.lng,step.end_location.lat]);
+    });
+    if(transitCoords.length>=2){
+      map.addSource('worm-source',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:transitCoords}}});
+      map.addLayer({id:'worm-line',type:'line',source:'worm-source',
         layout:{'line-join':'round','line-cap':'round'},
-        paint:{
-          'line-color':'#00A651',
-          'line-width':3,
-          'line-opacity':0.7,
-          'line-dasharray':[2,3],
-        }
+        paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,6,16,12],'line-opacity':0.92}
       },'stops-glow');
     }
 
-    // ── WALK-FROM-STOP dotted line from last transit stop → destination ──
+    // ── KEY LOCATIONS ──
+    const firstTransitStep=(leg.steps||[]).find(s=>s.travel_mode==='TRANSIT');
     const lastTransitStep=[...(leg.steps||[])].reverse().find(s=>s.travel_mode==='TRANSIT');
+    const boardLoc=firstTransitStep?.start_location;
     const alightLoc=lastTransitStep?.end_location;
-    const lastWalkStep=(leg.steps||[]).slice(-1)[0];
-    const destLoc=lastWalkStep?.end_location;
-    if(alightLoc&&destLoc){
-      const walkCoords2=[[alightLoc.lng,alightLoc.lat],[destLoc.lng,destLoc.lat]];
-      if(map.getLayer('walk-from-stop'))map.removeLayer('walk-from-stop');
-      if(map.getSource('walk-from-stop'))map.removeSource('walk-from-stop');
-      map.addSource('walk-from-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:walkCoords2}}});
-      map.addLayer({
-        id:'walk-from-stop',type:'line',source:'walk-from-stop',
+    const lastStep=(leg.steps||[]).slice(-1)[0];
+    const destLoc=lastStep?.end_location||leg.end_location;
+    const originLoc=leg.start_location;
+
+    // ── WALK-TO-STOP dotted green line ──
+    const walkStart=userLat?[userLng,userLat]:originLoc?[originLoc.lng,originLoc.lat]:null;
+    if(walkStart&&boardLoc){
+      ['walk-to-stop'].forEach(id=>{if(map.getLayer(id))map.removeLayer(id);if(map.getSource(id))map.removeSource(id);});
+      map.addSource('walk-to-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[walkStart,[boardLoc.lng,boardLoc.lat]]}}});
+      map.addLayer({id:'walk-to-stop',type:'line',source:'walk-to-stop',
         layout:{'line-join':'round','line-cap':'round'},
-        paint:{
-          'line-color':'#00A651',
-          'line-width':3,
-          'line-opacity':0.7,
-          'line-dasharray':[2,3],
-        }
+        paint:{'line-color':'#00A651','line-width':3,'line-opacity':0.7,'line-dasharray':[2,3]}
       },'stops-glow');
+    }
+
+    // ── WALK-FROM-STOP dotted green line ──
+    if(alightLoc&&destLoc){
+      ['walk-from-stop'].forEach(id=>{if(map.getLayer(id))map.removeLayer(id);if(map.getSource(id))map.removeSource(id);});
+      map.addSource('walk-from-stop',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[[alightLoc.lng,alightLoc.lat],[destLoc.lng,destLoc.lat]]}}});
+      map.addLayer({id:'walk-from-stop',type:'line',source:'walk-from-stop',
+        layout:{'line-join':'round','line-cap':'round'},
+        paint:{'line-color':'#00A651','line-width':3,'line-opacity':0.7,'line-dasharray':[2,3]}
+      },'stops-glow');
+    }
+
+    // ── HELPER: create a labeled map marker ──
+    function makeMarker(lngLat, bgColor, emoji, label, sublabel){
+      const el=document.createElement('div');
+      el.style.cssText=`
+        background:${bgColor}; color:white; border-radius:12px;
+        padding:5px 9px; font-family:Outfit,sans-serif;
+        font-size:11px; font-weight:800; white-space:nowrap;
+        box-shadow:0 2px 12px rgba(0,0,0,0.22); cursor:default;
+        display:flex; align-items:center; gap:5px;
+        border:2px solid white; max-width:160px;
+      `;
+      el.innerHTML=`<span style="font-size:14px;line-height:1">${emoji}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis">
+          <span style="display:block;font-size:11px;font-weight:800;line-height:1.2">${label}</span>
+          ${sublabel?`<span style="display:block;font-size:9px;opacity:0.8;font-weight:500">${sublabel}</span>`:''}
+        </span>`;
+      const marker=new mapboxgl.Marker({element:el,anchor:'bottom'}).setLngLat(lngLat).addTo(map);
+      window._tripMarkers.push(marker);
+      return marker;
+    }
+
+    // 1. Origin pin — green
+    const originCoord=walkStart;
+    if(originCoord){
+      const fromLabel=(window._fromVal||'Origin').split(',')[0].trim();
+      makeMarker(originCoord,'#00A651','📍',fromLabel,'You are here');
+    }
+
+    // 2. Boarding stop — bus color
+    if(boardLoc){
+      const boardName=firstTransitStep?.transit_details?.stop_name||'Board here';
+      const busName=firstTransitStep?.transit_details?.line?.short_name||'Bus';
+      const firstWalk=(leg.steps||[])[0];
+      const walkMins=firstWalk?.travel_mode==='WALKING'?Math.round((firstWalk.duration?.value||0)/60):0;
+      makeMarker([boardLoc.lng,boardLoc.lat],wormColor,'🚏',boardName,walkMins>0?`Walk ${walkMins} min · Board ${busName}`:`Board ${busName}`);
+    }
+
+    // 3. Alighting stop — bus color
+    if(alightLoc&&boardLoc&&(Math.abs(alightLoc.lat-boardLoc.lat)>0.001||Math.abs(alightLoc.lng-boardLoc.lng)>0.001)){
+      const alightName=lastTransitStep?.transit_details?.arrival_stop?.name||'Get off here';
+      const lastBus=lastTransitStep?.transit_details?.line?.short_name||'Bus';
+      makeMarker([alightLoc.lng,alightLoc.lat],wormColor,'🚏',alightName,`Exit ${lastBus}`);
+    }
+
+    // 4. Destination pin — dark blue star
+    if(destLoc){
+      const toLabel=(window._toVal||'Destination').split(',')[0].trim();
+      const lastWalk=(leg.steps||[]).slice(-1)[0];
+      const walkMins2=lastWalk?.travel_mode==='WALKING'?Math.round((lastWalk.duration?.value||0)/60):0;
+      makeMarker([destLoc.lng,destLoc.lat],'#0039A6','⭐',toLabel,walkMins2>0?`Walk ${walkMins2} min from stop`:'Destination');
     }
 
     // ── ORIENT MAP TO DIRECTION OF TRAVEL ──
-    // Bearing = angle from start to end of transit portion
     const startCoord=coords[0];
     const endCoord=coords[coords.length-1];
     const bearing=getBearing(startCoord[1],startCoord[0],endCoord[1],endCoord[0]);
-
-    // Fit bounds first, then rotate
     const bounds=new mapboxgl.LngLatBounds();
     coords.forEach(c=>bounds.extend(c));
-
     map.fitBounds(bounds,{
-      bearing: bearing,      // rotate to face direction of travel
-      pitch: 20,             // slight tilt like Google
+      bearing,pitch:20,
       padding:{top:200,bottom:320,left:50,right:50},
-      maxZoom:15,
-      duration:1400,
-      essential:true,
+      maxZoom:15,duration:1400,essential:true,
     });
   }
 
