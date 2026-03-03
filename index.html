@@ -501,174 +501,186 @@ const BUS_COLOR = {
   'B44+':  {bg:'#00933C', text:'B44 SBS',  type:'sbs'},
 };
 
-// ── CORRIDOR DATA ──
-// Each option = a specific bus + its departure stop
+// ── CORRIDOR DATA — kept only for route-finding fallback logic ──
 const CORRIDORS = [{
   fromKeys:['alcott','co-op','coop','dreiser','carver','bellamy','baychester','einstein','140'],
   toKeys:['tiebout','fordham','2390','jerome'],
   label:'Co-op City → Fordham / Tiebout',
-  // All bus options for this trip — user picks one
   options:[
-    {
-      id:'bx12sbs',
-      busName:'BX12+',
-      busLabel:'BX12 SBS',
-      busColor:'#0039A6',
-      busType:'sbs',
-      boardStop:{id:'bartow', name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, elevation:22, stopId:'200760'},
-      alightStop:'Fordham Rd / Tiebout Ave',
-      rideTime:22,
-      walkFromStop:4,
-      detail:'Direct · No transfers · Every 6-8 min',
-      primary:true,
-    },
-    {
-      id:'bx26',
-      busName:'BX26',
-      busLabel:'BX26',
-      busColor:'#6BBE45',
-      busType:'local',
-      boardStop:{id:'bartow2', name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, elevation:22, stopId:'200758'},
-      alightStop:'Fordham Rd area',
-      rideTime:28,
-      walkFromStop:6,
-      detail:'Alt if BX12 SBS is packed · Every 10 min',
-      primary:false,
-    },
-    {
-      id:'bx28',
-      busName:'BX28',
-      busLabel:'BX28',
-      busColor:'#FF6319',
-      busType:'local',
-      boardStop:{id:'alcott', name:'Alcott Pl / Asch Loop', lat:40.8745, lng:-73.8308, walkFromHome:5, elevation:18, stopId:'200759'},
-      alightStop:'Fordham Rd area',
-      rideTime:32,
-      walkFromStop:7,
-      detail:'Closest stop — 5 min walk · Slower ride',
-      primary:false,
-    },
+    { id:'bx12sbs', busName:'BX12+', busColor:'#0039A6', boardStop:{id:'bartow', name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, stopId:'200760'} },
+    { id:'bx26',    busName:'BX26',  busColor:'#6BBE45', boardStop:{id:'bartow2',name:'Bartow Ave / Co-op City Blvd', lat:40.8735, lng:-73.8380, walkFromHome:12, stopId:'200758'} },
+    { id:'bx28',    busName:'BX28',  busColor:'#FF6319', boardStop:{id:'alcott', name:'Alcott Pl / Asch Loop',        lat:40.8745, lng:-73.8308, walkFromHome:5,  stopId:'200759'} },
   ],
-  // All stops along the main route (for worm drawing)
-  routeStops:[
-    {lat:40.8735, lng:-73.8380},
-    {lat:40.8560, lng:-73.8680},
-    {lat:40.8540, lng:-73.8780},
-    {lat:40.8631, lng:-73.9020},
-  ]
 }];
 
 // ── STATE ──
 let map, userLng=null, userLat=null, activeCorridor=null;
 let arrivals={}, pinDropMode=false, wormLayerAdded=false;
 let refreshTimer=null;
+let _stopsLoaded=false, _stopsMoveTimer=null;
 
 // ── INIT MAP ──
 async function initMap(){
-  // Fetch Mapbox token from our secure backend
   let token;
   try{
     const r=await fetch('/api/mapboxtoken');
     const d=await r.json();
     token=d.token;
   }catch(e){console.error('Token fetch failed',e);return;}
-
   if(!token){console.error('No Mapbox token');return;}
   mapboxgl.accessToken=token;
 
   map=new mapboxgl.Map({
     container:'map',
-    // Clean white style — closest to MTA map look
     style:'mapbox://styles/mapbox/light-v11',
-    center:[-74.0060, 40.7128], // NYC
-    zoom:10,
+    center:[-73.875, 40.870], // Co-op City area
+    zoom:13,
     minZoom:9,
     maxZoom:18,
   });
 
   map.on('load',()=>{
-    // Draw all corridor stops as interactive layers
-    CORRIDORS.forEach(c=>addCorridorLayer(c));
-    // Try to get user location
+    initStopLayer();
+    loadStopsForView();
     locateUser();
   });
 
-  // Click on map for pin drop
-  map.on('click', e=>{
-    if(pinDropMode){
-      dropPin(e.lngLat.lng, e.lngLat.lat);
-    }
+  // Reload stops when map moves (debounced)
+  map.on('moveend',()=>{
+    clearTimeout(_stopsMoveTimer);
+    _stopsMoveTimer=setTimeout(()=>loadStopsForView(), 400);
   });
 
-  // Stop clicks handled via layer events (added in addCorridorLayer)
-  map.on('mouseenter','stops-layer',()=>map.getCanvas().style.cursor='pointer');
-  map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
+  // Pin drop
+  map.on('click',e=>{ if(pinDropMode) dropPin(e.lngLat.lng,e.lngLat.lat); });
 }
 
-// ── ADD STOPS TO MAP ── 
-function addCorridorLayer(corridor){
-  // Build GeoJSON from all unique board stops
-  const seen=new Set();
-  const features=[];
-  corridor.options.forEach((opt,oi)=>{
-    const s=opt.boardStop;
-    if(seen.has(s.id)) return;
-    seen.add(s.id);
-    const rc=BUS_COLOR[opt.busName]||{bg:'#888',text:opt.busName};
-    features.push({
-      type:'Feature',
-      geometry:{type:'Point',coordinates:[s.lng,s.lat]},
-      properties:{
-        id:s.id, name:s.name,
-        route:opt.busName, color:rc.bg,
-        elevation:s.elevation||0,
-        walkFromHome:s.walkFromHome||0,
-        optIdx:oi,
-      }
-    });
-  });
+// ── INIT STOP LAYER (empty, filled by loadStopsForView) ──
+function initStopLayer(){
+  map.addSource('mta-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
 
-  if(map.getSource('stops-source')){
-    map.getSource('stops-source').setData({type:'FeatureCollection',features});
-    return;
-  }
-
-  map.addSource('stops-source',{type:'geojson',data:{type:'FeatureCollection',features}});
-  map.addLayer({id:'stops-glow',type:'circle',source:'stops-source',
-    paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,12,15,22],'circle-color':['get','color'],'circle-opacity':0.14,'circle-blur':0.6}});
-  map.addLayer({id:'stops-layer',type:'circle',source:'stops-source',
-    paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,7,14,14,16,19],
-      'circle-color':['get','color'],'circle-stroke-width':2.5,'circle-stroke-color':'white'}});
-  map.addLayer({id:'stops-labels',type:'symbol',source:'stops-source',minzoom:12,
-    layout:{'text-field':['get','route'],'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
-      'text-size':['interpolate',['linear'],['zoom'],12,8,16,11],
-      'text-offset':[0,0],'text-anchor':'center','text-allow-overlap':true},
-    paint:{'text-color':'white','text-halo-color':'rgba(0,0,0,0.1)','text-halo-width':0.5}});
-
-  map.on('click','stops-layer',e=>{
-    const p=e.features[0].properties;
-    const corr=CORRIDORS[0]; // for now single corridor
-    const opt=corr.options[p.optIdx];
-    if(opt){
-      // Pass full stop object with lat/lng for the stop-first flow
-      const stopObj={
-        id:opt.boardStop.id,
-        name:opt.boardStop.name,
-        lat:opt.boardStop.lat,
-        lng:opt.boardStop.lng,
-        walkFromHome:opt.boardStop.walkFromHome,
-        elevation:opt.boardStop.elevation,
-        stopId:opt.boardStop.stopId,
-        routes:corr.options.filter(o=>
-          Math.abs(o.boardStop.lat-opt.boardStop.lat)<0.0005&&
-          Math.abs(o.boardStop.lng-opt.boardStop.lng)<0.0005
-        ).map(o=>o.busName),
-      };
-      openStopSheet(stopObj, null);
+  // Outer glow — subtle, only at zoom 13+
+  map.addLayer({
+    id:'mta-stops-glow', type:'circle', source:'mta-stops', minzoom:13,
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],13,10,16,18],
+      'circle-color':['get','color'],
+      'circle-opacity':0.12,
+      'circle-blur':0.8,
     }
   });
-  map.on('mouseenter','stops-layer',()=>map.getCanvas().style.cursor='pointer');
-  map.on('mouseleave','stops-layer',()=>map.getCanvas().style.cursor='');
+
+  // Main dot — small grey below zoom 14, colored + bigger above
+  map.addLayer({
+    id:'mta-stops-dot', type:'circle', source:'mta-stops', minzoom:12,
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,5,16,8],
+      'circle-color':['case',['>=',['zoom'],14],['get','color'],'#999'],
+      'circle-stroke-width':['interpolate',['linear'],['zoom'],12,1,15,2],
+      'circle-stroke-color':'white',
+      'circle-opacity':['interpolate',['linear'],['zoom'],12,0.5,14,0.9],
+    }
+  });
+
+  // Route label inside dot — only at zoom 15+
+  map.addLayer({
+    id:'mta-stops-label', type:'symbol', source:'mta-stops', minzoom:15,
+    layout:{
+      'text-field':['get','routeShort'],
+      'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
+      'text-size':9,
+      'text-offset':[0,0],
+      'text-anchor':'center',
+      'text-allow-overlap':true,
+    },
+    paint:{
+      'text-color':'white',
+      'text-halo-width':0,
+    }
+  });
+
+  // Stop name label — floats above dot at zoom 15+
+  map.addLayer({
+    id:'mta-stops-name', type:'symbol', source:'mta-stops', minzoom:15,
+    layout:{
+      'text-field':['get','name'],
+      'text-font':['DIN Pro Regular','Arial Unicode MS Regular'],
+      'text-size':10,
+      'text-offset':[0,1.4],
+      'text-anchor':'top',
+      'text-allow-overlap':false,
+      'text-ignore-placement':false,
+    },
+    paint:{
+      'text-color':'#333',
+      'text-halo-color':'rgba(255,255,255,0.9)',
+      'text-halo-width':1.5,
+    }
+  });
+
+  // Click handler
+  map.on('click','mta-stops-dot',e=>{
+    e.preventDefault();
+    const p=e.features[0].properties;
+    const routes=p.routes?JSON.parse(p.routes):[];
+    openStopSheet({
+      id: p.id,
+      name: p.name,
+      lat: p.lat,
+      lng: p.lng,
+      stopId: p.stopId||p.id,
+      routes: routes,
+    }, null);
+  });
+  map.on('mouseenter','mta-stops-dot',()=>map.getCanvas().style.cursor='pointer');
+  map.on('mouseleave','mta-stops-dot',()=>map.getCanvas().style.cursor='');
+}
+
+// ── LOAD STOPS FOR CURRENT VIEWPORT ──
+async function loadStopsForView(){
+  if(!map) return;
+  const zoom=map.getZoom();
+  if(zoom<12) return; // don't load below zoom 12
+
+  const bounds=map.getBounds();
+  const params=new URLSearchParams({
+    minLat: bounds.getSouth().toFixed(4),
+    maxLat: bounds.getNorth().toFixed(4),
+    minLng: bounds.getWest().toFixed(4),
+    maxLng: bounds.getEast().toFixed(4),
+    zoom: Math.floor(zoom),
+  });
+
+  try{
+    const r=await fetch(`/api/stops?${params}`);
+    const d=await r.json();
+    if(!d.stops?.length) return;
+
+    const features=d.stops.map(s=>{
+      const routes=s.routes||[];
+      const primaryRoute=routes[0]||'';
+      const rc=BUS_COLOR[primaryRoute]||{bg:'#888'};
+      return{
+        type:'Feature',
+        geometry:{type:'Point',coordinates:[s.lng,s.lat]},
+        properties:{
+          id: s.id,
+          name: s.name,
+          lat: s.lat,
+          lng: s.lng,
+          stopId: s.id,
+          routes: JSON.stringify(routes),
+          routeShort: primaryRoute.replace('BX','').replace('+','⁺'),
+          color: rc.bg,
+        }
+      };
+    });
+
+    map.getSource('mta-stops')?.setData({type:'FeatureCollection',features});
+  }catch(e){
+    console.warn('Stop load failed, using fallback',e);
+    // Silently use whatever was already loaded
+  }
 }
 
 // ── USER LOCATION — robust with retry + error feedback ──
@@ -707,7 +719,16 @@ function onGotPos(pos){
   // Auto-fill from-input if empty
   if(!document.getElementById('from-input').value){
     reverseGeocode(userLng, userLat).then(addr=>{
-      if(addr) document.getElementById('from-input').value=addr;
+      if(addr){
+        window._userAddress=addr.split(',')[0].trim();
+        document.getElementById('from-input').value=addr;
+        // Update label
+        if(window._userMarker){
+          window._userMarker.remove();
+          window._userMarker=null;
+        }
+        updateUserDot();
+      }
     });
   }
 }
@@ -741,18 +762,27 @@ async function reverseGeocode(lng, lat){
 
 function updateUserDot(){
   if(!map||userLat==null)return;
-  if(!map.getSource('user-loc')){
+  const isFirst=!map.getSource('user-loc');
+  if(isFirst){
     map.addSource('user-loc',{type:'geojson',data:userGeoJSON()});
     map.addLayer({id:'user-pulse',type:'circle',source:'user-loc',
-      paint:{'circle-radius':18,'circle-color':'#0039A6','circle-opacity':0.12}});
+      paint:{'circle-radius':22,'circle-color':'#0039A6','circle-opacity':0.10,'circle-blur':0.6}});
     map.addLayer({id:'user-dot',type:'circle',source:'user-loc',
-      paint:{'circle-radius':8,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
-    map.flyTo({center:[userLng,userLat],zoom:14,speed:1.4});
+      paint:{'circle-radius':9,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
+    map.flyTo({center:[userLng,userLat],zoom:15,speed:1.4});
     document.getElementById('gps-btn').textContent='✓';
+    loadStopsForView();
   } else {
     map.getSource('user-loc').setData(userGeoJSON());
     document.getElementById('gps-btn').textContent='✓';
   }
+  // Address label floating above dot
+  if(window._userMarker) window._userMarker.remove();
+  const el=document.createElement('div');
+  el.style.cssText=`background:#0039A6;color:white;border-radius:10px;padding:4px 9px;font-family:Outfit,sans-serif;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,57,166,0.3);border:2px solid white;pointer-events:none;`;
+  el.textContent=window._userAddress||'You are here';
+  window._userMarker=new mapboxgl.Marker({element:el,anchor:'bottom',offset:[0,-14]})
+    .setLngLat([userLng,userLat]).addTo(map);
 }
 function userGeoJSON(){return{type:'Feature',geometry:{type:'Point',coordinates:[userLng,userLat]}};}
 function getGPS(){ locateUser(); }
@@ -1526,7 +1556,7 @@ function renderGoogleWorm(route, idx){
       map.addLayer({id:'worm-line',type:'line',source:'worm-source',
         layout:{'line-join':'round','line-cap':'round'},
         paint:{'line-color':wormColor,'line-width':['interpolate',['linear'],['zoom'],10,6,16,12],'line-opacity':0.92}
-      },'stops-glow');
+      },'mta-stops-glow');
     }
 
     // ── KEY LOCATIONS ──
@@ -1546,7 +1576,7 @@ function renderGoogleWorm(route, idx){
       map.addLayer({id:'walk-to-stop',type:'line',source:'walk-to-stop',
         layout:{'line-join':'round','line-cap':'round'},
         paint:{'line-color':'#00A651','line-width':3,'line-opacity':0.7,'line-dasharray':[2,3]}
-      },'stops-glow');
+      },'mta-stops-glow');
     }
 
     // ── WALK-FROM-STOP dotted green line ──
@@ -1556,7 +1586,7 @@ function renderGoogleWorm(route, idx){
       map.addLayer({id:'walk-from-stop',type:'line',source:'walk-from-stop',
         layout:{'line-join':'round','line-cap':'round'},
         paint:{'line-color':'#00A651','line-width':3,'line-opacity':0.7,'line-dasharray':[2,3]}
-      },'stops-glow');
+      },'mta-stops-glow');
     }
 
     // ── HELPER: create a labeled map marker ──
