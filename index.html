@@ -1182,15 +1182,22 @@ function buildOptionWorm(steps, totalSecs){
   return svg;
 }
 
-// ── SVG STICK FIGURE (walking person) ──
+// ── SVG FOOTSTEPS (walking indicator) ──
 function stickFigure(cx,cy){
-  // head + body + arms + legs — all in one clean SVG group
-  return`<g transform="translate(${cx},${cy})" opacity="0.4">
-    <circle cx="0" cy="-9" r="4" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>
-    <line x1="0" y1="-5" x2="0" y2="3" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="-4" y1="-2" x2="4" y2="-2" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="0" y1="3" x2="-3" y2="10" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="0" y1="3" x2="3" y2="10" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+  // Two footprints, slightly offset like mid-stride
+  return`<g transform="translate(${cx},${cy})" opacity="0.45">
+    <!-- left foot -->
+    <ellipse cx="-5" cy="-3" rx="3.5" ry="5.5" rx="2.5" ry="4" fill="rgba(0,0,0,0.5)" transform="rotate(-18,-5,-3)"/>
+    <!-- right foot -->
+    <ellipse cx="4" cy="3" rx="2.5" ry="4" fill="rgba(0,0,0,0.5)" transform="rotate(18,4,3)"/>
+    <!-- left toe bumps -->
+    <circle cx="-6.5" cy="-6.5" r="1.1" fill="rgba(0,0,0,0.4)"/>
+    <circle cx="-4.8" cy="-7.2" r="1.1" fill="rgba(0,0,0,0.4)"/>
+    <circle cx="-3.2" cy="-7.5" r="1.0" fill="rgba(0,0,0,0.4)"/>
+    <!-- right toe bumps -->
+    <circle cx="2.5" cy="6.5" r="1.1" fill="rgba(0,0,0,0.4)"/>
+    <circle cx="4.2" cy="7.2" r="1.1" fill="rgba(0,0,0,0.4)"/>
+    <circle cx="5.8" cy="7.5" r="1.0" fill="rgba(0,0,0,0.4)"/>
   </g>`;
 }
 
