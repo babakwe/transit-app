@@ -163,6 +163,80 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 .subway-img-wrap{overflow:auto;-webkit-overflow-scrolling:touch;padding:12px;}
 .subway-img-wrap img{width:100%;min-width:640px;border-radius:10px;display:block;}
 
+/* STOP PICKER SHEET — half height, sits above map */
+.picker-sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:210;
+  background:white; border-radius:26px 26px 0 0;
+  box-shadow:0 -4px 40px rgba(0,0,0,0.18);
+  transform:translateY(110%);
+  transition:transform 0.38s cubic-bezier(0.32,1.08,0.64,1);
+  height:52vh; display:flex; flex-direction:column;
+  padding-bottom:max(var(--safe-bot),12px);
+}
+.picker-sheet.open { transform:translateY(0); }
+
+.picker-hdr {
+  padding:0 16px 10px; flex-shrink:0;
+  border-bottom:1px solid #f0f0f5;
+}
+.picker-route-bar {
+  display:flex; align-items:center; gap:10px; margin-bottom:8px;
+}
+.picker-badge {
+  padding:5px 12px; border-radius:9px; color:white;
+  font-size:13px; font-weight:800; flex-shrink:0;
+}
+.picker-title { font-size:15px; font-weight:800; color:var(--ink); flex:1; min-width:0; }
+.picker-sub   { font-size:10px; color:var(--muted); margin-top:2px; }
+.picker-close {
+  width:28px; height:28px; border-radius:50%; background:#f2f2f7;
+  border:none; cursor:pointer; font-size:12px; color:#888;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+
+/* Direction toggle */
+.dir-toggle {
+  display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;
+}
+.dir-toggle::-webkit-scrollbar { display:none; }
+.dir-btn {
+  flex-shrink:0; padding:5px 12px; border-radius:20px; border:1.5px solid #eee;
+  background:#f7f7fb; font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+  color:var(--muted); cursor:pointer; white-space:nowrap; transition:all 0.15s;
+}
+.dir-btn.active { background:var(--ink); border-color:var(--ink); color:white; }
+
+/* Stop list */
+.picker-list {
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.stop-row {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 16px; border-bottom:1px solid #f5f5f8;
+  cursor:pointer; transition:background 0.12s;
+}
+.stop-row:active { background:#f0f4ff; }
+.stop-row.current { background:#efffef; }
+.stop-row.past { opacity:0.35; pointer-events:none; }
+.stop-row.highlighted { background:#f0f4ff; }
+
+.stop-line {
+  display:flex; flex-direction:column; align-items:center;
+  flex-shrink:0; width:16px; gap:0;
+}
+.stop-dot-line {
+  width:2px; height:10px; background:#e0e0e8;
+}
+.stop-dot-circle {
+  width:12px; height:12px; border-radius:50%;
+  border:2.5px solid var(--muted); background:white; flex-shrink:0;
+}
+.stop-dot-circle.active  { border-color:var(--green); background:var(--green); }
+.stop-dot-circle.current { border-color:var(--green); background:var(--green); box-shadow:0 0 0 4px rgba(0,166,81,0.15); }
+
+.stop-row-name { font-size:12px; font-weight:600; color:var(--ink); flex:1; min-width:0; line-height:1.3; }
+.stop-row-dist { font-size:10px; color:var(--muted); flex-shrink:0; }
+
 /* LOADING */
 .ldots{display:flex;gap:6px;justify-content:center;padding:28px 0;}
 .ld{width:7px;height:7px;border-radius:50%;background:#ddd;animation:ldot 1.2s ease-in-out infinite;}
@@ -250,6 +324,25 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
   </div>
 </div>
 
+<!-- STOP PICKER — tap a bus → pick your stop -->
+<div class="picker-sheet" id="picker-sheet">
+  <div class="sh-handle"></div>
+  <div class="picker-hdr">
+    <div class="picker-route-bar">
+      <div class="picker-badge" id="picker-badge">—</div>
+      <div style="flex:1;min-width:0">
+        <div class="picker-title" id="picker-title">Pick your stop</div>
+        <div class="picker-sub" id="picker-sub">Where are you getting off?</div>
+      </div>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="dir-toggle" id="dir-toggle"></div>
+  </div>
+  <div class="picker-list" id="picker-list">
+    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  </div>
+</div>
+
 <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
 <script>
@@ -281,6 +374,7 @@ let map,userLat=null,userLng=null;
 let _watchId=null,_moveTimer=null,_lastBounds=null;
 let _googleRoutes=[],_fromVal='',_toVal='';
 let _tripMarkers=[],_boardingStop=null;
+let _pickerRoute=null,_pickerStop=null,_pickerStops=[],_pickerDir=0,_pickerMarkers=[];
 
 // ── MAP INIT ──
 async function initMap(){
@@ -433,11 +527,13 @@ async function openStopSheet(stop){
     const col=a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
     const lbl=a.mins<=0?'NOW':String(a.mins);
     const bc=isSub?(SUBWAY_COLOR[a.route]||'#808183'):busColor(a.route);
-    return`<div class="arr-row">
+    // Only show "pick stop" for bus (not subway — subway has fixed stops)
+    const tapAction=isSub?'':`onclick="openStopPicker('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')})"`;
+    return`<div class="arr-row" style="${isSub?'':'cursor:pointer;'}" ${tapAction}>
       <div class="rte-badge${a.route?.includes('+')?' sbs':''}" style="background:${bc}">${a.route}</div>
       <div class="arr-info">
         <div class="arr-headsign">${a.headsign||a.route}</div>
-        <div class="arr-seq">${a.seq===0?'Next':a.seq===1?'Then':'After'}</div>
+        <div class="arr-seq">${a.seq===0?'Next':a.seq===1?'Then':'After'}${isSub?'':' · <span style="color:var(--blue);font-weight:700">Tap to pick stop →</span>'}</div>
       </div>
       <div class="arr-mins-col">
         <span class="arr-mins ${col}">${lbl}</span>
@@ -804,12 +900,268 @@ function openRideApp(lat,lng){
 
 // ── HELPERS ──
 function closeSheet(id){document.getElementById(id)?.classList.remove('open');}
-function closeAllSheets(){['stop-sheet','route-sheet','worm-sheet','subway-sheet'].forEach(closeSheet);}
+function closeAllSheets(){['stop-sheet','route-sheet','worm-sheet','subway-sheet','picker-sheet'].forEach(closeSheet);}
 function getBearing(lat1,lng1,lat2,lng2){
   const r=d=>d*Math.PI/180,g=r=>r*180/Math.PI;
   const dl=r(lng2-lng1),rl1=r(lat1),rl2=r(lat2);
   const y=Math.sin(dl)*Math.cos(rl2),x=Math.cos(rl1)*Math.sin(rl2)-Math.sin(rl1)*Math.cos(rl2)*Math.cos(dl);
   return(g(Math.atan2(y,x))+360)%360;
+}
+
+// ── STOP PICKER — tap a bus route → see all stops → pick destination ──
+async function openStopPicker(routeName, routeColor, boardingStop) {
+  _pickerRoute = routeName;
+  _pickerStop  = boardingStop;
+
+  // Shrink stop sheet, show picker
+  closeSheet('stop-sheet');
+
+  document.getElementById('picker-badge').textContent = routeName;
+  document.getElementById('picker-badge').style.background = routeColor;
+  document.getElementById('picker-title').textContent = `${routeName} — pick your stop`;
+  document.getElementById('picker-sub').textContent = 'Where are you getting off?';
+  document.getElementById('picker-list').innerHTML =
+    '<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>';
+  document.getElementById('dir-toggle').innerHTML = '';
+  document.getElementById('picker-sheet').classList.add('open');
+
+  // Load route stops from MTA
+  try {
+    const res = await fetch(`/api/route-stops?route=${encodeURIComponent(routeName)}&direction=${_pickerDir}`);
+    const data = await res.json();
+
+    if (data.stops?.length) {
+      _pickerStops = data.stops;
+
+      // Draw route on map behind the sheet
+      drawPickerRoute(data.stops, data.coords, routeColor, boardingStop);
+
+      // Direction buttons
+      if (data.directions?.length > 1) {
+        document.getElementById('dir-toggle').innerHTML = data.directions.map(d =>
+          `<button class="dir-btn${d.index==_pickerDir?' active':''}"
+            onclick="switchPickerDir('${routeName}','${routeColor}',${JSON.stringify(boardingStop).replace(/"/g,'&quot;')},${d.index})">
+            ${d.name}
+          </button>`
+        ).join('');
+      }
+
+      renderPickerList(data.stops, routeColor, boardingStop);
+    } else {
+      document.getElementById('picker-list').innerHTML =
+        `<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">
+          Could not load stop list for ${routeName}.<br>Try searching your destination above.
+        </div>`;
+    }
+  } catch(e) {
+    console.error('route-stops error:', e);
+    document.getElementById('picker-list').innerHTML =
+      `<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">
+        Could not load stops. Check connection.
+      </div>`;
+  }
+}
+
+function switchPickerDir(routeName, routeColor, boardingStop, dirIdx) {
+  _pickerDir = dirIdx;
+  openStopPicker(routeName, routeColor, boardingStop);
+}
+
+function renderPickerList(stops, routeColor, boardingStop) {
+  // Find current stop index
+  let currentIdx = -1;
+  if (boardingStop) {
+    currentIdx = stops.findIndex(s =>
+      s.name === boardingStop.name ||
+      (Math.abs(s.lat - boardingStop.lat) < 0.001 && Math.abs(s.lng - boardingStop.lng) < 0.001)
+    );
+  }
+
+  document.getElementById('picker-list').innerHTML = stops.map((s, i) => {
+    const isCurrent = i === currentIdx;
+    const isPast = currentIdx >= 0 && i < currentIdx;
+    const isLast = i === stops.length - 1;
+
+    let dotClass = 'stop-dot-circle';
+    if (isCurrent) dotClass += ' current';
+
+    return `<div class="stop-row${isCurrent?' current':''}${isPast?' past':''}"
+      id="stop-row-${i}"
+      onclick="pickDestStop(${i})">
+      <div class="stop-line">
+        ${i > 0 ? '<div class="stop-dot-line"></div>' : '<div style="height:10px"></div>'}
+        <div class="${dotClass}" style="${!isCurrent&&!isPast?'border-color:'+routeColor:''}"></div>
+        ${!isLast ? '<div class="stop-dot-line"></div>' : ''}
+      </div>
+      <div class="stop-row-name">${s.name}</div>
+      <div class="stop-row-dist">${isCurrent ? '📍 You' : i > currentIdx ? (i - currentIdx) + ' stop' + (i - currentIdx > 1 ? 's' : '') : ''}</div>
+    </div>`;
+  }).join('');
+
+  // Scroll to current stop
+  if (currentIdx > 2) {
+    setTimeout(() => {
+      const row = document.getElementById(`stop-row-${currentIdx}`);
+      row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 200);
+  }
+}
+
+function drawPickerRoute(stops, coords, routeColor, boardingStop) {
+  // Clear previous picker markers
+  _pickerMarkers.forEach(m => m.remove());
+  _pickerMarkers = [];
+  ['picker-route','picker-stops'].forEach(id => {
+    if (map.getLayer(id)) map.removeLayer(id);
+    if (map.getSource(id)) map.removeSource(id);
+  });
+
+  // Draw route line
+  const lineCoords = coords?.length >= 2 ? coords :
+    stops.map(s => [s.lng, s.lat]);
+
+  if (lineCoords.length >= 2) {
+    map.addSource('picker-route', {
+      type: 'geojson',
+      data: { type: 'Feature', geometry: { type: 'LineString', coordinates: lineCoords } }
+    });
+    map.addLayer({
+      id: 'picker-route', type: 'line', source: 'picker-route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': routeColor, 'line-width': 5, 'line-opacity': 0.8 }
+    });
+  }
+
+  // Draw all stops as dots on the map
+  const stopFeatures = stops.map((s, i) => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+    properties: { name: s.name, idx: i }
+  }));
+
+  map.addSource('picker-stops', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: stopFeatures }
+  });
+  map.addLayer({
+    id: 'picker-stops', type: 'circle', source: 'picker-stops',
+    paint: {
+      'circle-radius': 7,
+      'circle-color': routeColor,
+      'circle-stroke-width': 2,
+      'circle-stroke-color': 'white',
+      'circle-opacity': 0.9,
+    }
+  });
+
+  // Tap a stop dot on the map
+  map.on('click', 'picker-stops', e => {
+    e.preventDefault();
+    e.originalEvent._sh = true;
+    const idx = e.features[0].properties.idx;
+    pickDestStop(idx);
+  });
+  map.on('mouseenter', 'picker-stops', () => map.getCanvas().style.cursor = 'pointer');
+  map.on('mouseleave', 'picker-stops', () => map.getCanvas().style.cursor = '');
+
+  // Fit map to full route, leaving bottom half for sheet
+  const bounds = new mapboxgl.LngLatBounds();
+  lineCoords.forEach(c => bounds.extend(c));
+  map.fitBounds(bounds, {
+    padding: { top: 80, bottom: window.innerHeight * 0.55, left: 40, right: 40 },
+    maxZoom: 14, duration: 800
+  });
+
+  // Mark boarding stop
+  if (boardingStop) {
+    const el = document.createElement('div');
+    el.style.cssText = `background:${routeColor};color:white;border-radius:9px;padding:3px 8px;
+      font-family:Syne,sans-serif;font-size:10px;font-weight:800;white-space:nowrap;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);border:2px solid white;`;
+    el.textContent = '📍 You';
+    const m = new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
+      .setLngLat([boardingStop.lng, boardingStop.lat]).addTo(map);
+    _pickerMarkers.push(m);
+  }
+}
+
+function pickDestStop(stopIdx) {
+  const destStop = _pickerStops[stopIdx];
+  if (!destStop) return;
+
+  // Highlight selected row
+  document.querySelectorAll('.stop-row').forEach((r, i) => {
+    r.classList.toggle('highlighted', i === stopIdx);
+  });
+
+  // Show destination marker on map
+  _pickerMarkers.forEach(m => m.remove());
+  _pickerMarkers = [];
+  const el = document.createElement('div');
+  el.style.cssText = `background:#0039A6;color:white;border-radius:9px;padding:4px 10px;
+    font-family:Syne,sans-serif;font-size:11px;font-weight:800;white-space:nowrap;
+    box-shadow:0 2px 8px rgba(0,57,166,0.3);border:2px solid white;`;
+  el.textContent = '⭐ Get off here';
+  _pickerMarkers.push(
+    new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
+      .setLngLat([destStop.lng, destStop.lat]).addTo(map)
+  );
+
+  // Confirm with a brief delay so user sees the highlight
+  setTimeout(() => confirmDestStop(destStop), 300);
+}
+
+async function confirmDestStop(destStop) {
+  closePicker();
+
+  _fromVal = _pickerStop?.name || 'My location';
+  _toVal   = destStop.name;
+
+  // Set search inputs
+  document.getElementById('search-input').value = destStop.name;
+
+  const from = _pickerStop ?
+    `${_pickerStop.lat},${_pickerStop.lng}` :
+    (userLat ? `${userLat},${userLng}` : 'Co-op City, Bronx NY');
+
+  try {
+    const res = await fetch(
+      `/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(destStop.name + ', New York')}&alternatives=true`
+    );
+    const data = await res.json();
+    if (data.routes?.length) {
+      _googleRoutes = data.routes;
+      showRouteOptions(data.routes);
+    } else {
+      // Fall back: just show worm with what we know
+      showSimpleTrip(_pickerRoute, _pickerStop, destStop);
+    }
+  } catch(e) {
+    showSimpleTrip(_pickerRoute, _pickerStop, destStop);
+  }
+}
+
+function showSimpleTrip(routeName, fromStop, toStop) {
+  // Draw route segment on map between the two stops
+  _tripMarkers.forEach(m => m.remove()); _tripMarkers = [];
+  if (fromStop) addMapMarker([fromStop.lng, fromStop.lat], '#00A651', '📍', 'Board here', `Catch ${routeName}`);
+  addMapMarker([toStop.lng, toStop.lat], '#0039A6', '⭐', 'Get off here', toStop.name);
+
+  const bounds = new mapboxgl.LngLatBounds();
+  if (fromStop) bounds.extend([fromStop.lng, fromStop.lat]);
+  bounds.extend([toStop.lng, toStop.lat]);
+  map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 800 });
+}
+
+function closePicker() {
+  document.getElementById('picker-sheet').classList.remove('open');
+  // Clean up picker map layers
+  ['picker-route','picker-stops'].forEach(id => {
+    if (map.getLayer(id)) map.removeLayer(id);
+    if (map.getSource(id)) map.removeSource(id);
+  });
+  _pickerMarkers.forEach(m => m.remove());
+  _pickerMarkers = [];
 }
 
 initMap();
