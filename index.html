@@ -396,47 +396,58 @@ function addStopLayers(){
   map.addSource('bus-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
   map.addSource('subway-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
 
-  map.addLayer({id:'bus-dots',type:'circle',source:'bus-stops',minzoom:13,paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],13,4,15,7,17,9],
+  // Bus stops — square marker with route color + "B" label
+  map.addLayer({id:'bus-bg',type:'circle',source:'bus-stops',minzoom:13,paint:{
+    'circle-radius':['interpolate',['linear'],['zoom'],13,5,15,8,17,11],
     'circle-color':['get','color'],
-    'circle-opacity':['interpolate',['linear'],['zoom'],13,0.5,14,0.9],
-    'circle-stroke-width':1.5,'circle-stroke-color':'white',
+    'circle-opacity':['interpolate',['linear'],['zoom'],13,0.6,14,1],
+    'circle-stroke-width':2,'circle-stroke-color':'white',
+    'circle-pitch-alignment':'map',
+  }});
+  // Bus stop icon — small bus symbol inside dot
+  map.addLayer({id:'bus-icon',type:'symbol',source:'bus-stops',minzoom:14,layout:{
+    'text-field':'🚌',
+    'text-size':['interpolate',['linear'],['zoom'],14,8,16,12],
+    'text-anchor':'center','text-allow-overlap':true,'text-ignore-placement':true,
   }});
   map.addLayer({id:'bus-labels',type:'symbol',source:'bus-stops',minzoom:16,layout:{
     'text-field':['get','name'],'text-font':['DIN Pro Regular','Arial Unicode MS Regular'],
-    'text-size':9,'text-offset':[0,1.2],'text-anchor':'top','text-allow-overlap':false,
+    'text-size':9,'text-offset':[0,1.6],'text-anchor':'top','text-allow-overlap':false,
   },paint:{'text-color':'#444','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
 
-  map.addLayer({id:'subway-dots',type:'circle',source:'subway-stops',minzoom:12,paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],12,5,15,9,17,13],
+  // Subway stops — larger circle with route color + line letter
+  map.addLayer({id:'subway-bg',type:'circle',source:'subway-stops',minzoom:11,paint:{
+    'circle-radius':['interpolate',['linear'],['zoom'],11,6,14,11,17,16],
     'circle-color':['get','color'],
     'circle-stroke-width':2.5,'circle-stroke-color':'white','circle-opacity':1,
   }});
-  map.addLayer({id:'subway-line-label',type:'symbol',source:'subway-stops',minzoom:13,layout:{
+  map.addLayer({id:'subway-line-label',type:'symbol',source:'subway-stops',minzoom:12,layout:{
     'text-field':['get','short'],'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
-    'text-size':8,'text-anchor':'center','text-allow-overlap':true,
+    'text-size':['interpolate',['linear'],['zoom'],12,7,15,10],
+    'text-anchor':'center','text-allow-overlap':true,'text-ignore-placement':true,
   },paint:{'text-color':'white'}});
   map.addLayer({id:'subway-name',type:'symbol',source:'subway-stops',minzoom:15,layout:{
     'text-field':['get','name'],'text-font':['DIN Pro Regular','Arial Unicode MS Regular'],
-    'text-size':9,'text-offset':[0,1.4],'text-anchor':'top','text-allow-overlap':false,
+    'text-size':9,'text-offset':[0,1.8],'text-anchor':'top','text-allow-overlap':false,
   },paint:{'text-color':'#333','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
 
-  map.on('click','bus-dots',e=>{
+  // Click handlers — use new layer IDs
+  map.on('click','bus-bg',e=>{
     e.preventDefault();e.originalEvent._sh=true;
     const p=e.features[0].properties;
     openStopSheet({id:p.stopId,name:p.name,lat:p.lat,lng:p.lng,
       stopId:p.stopId,routes:JSON.parse(p.routes||'[]'),type:'bus'});
   });
-  map.on('click','subway-dots',e=>{
+  map.on('click','subway-bg',e=>{
     e.preventDefault();e.originalEvent._sh=true;
     const p=e.features[0].properties;
     openStopSheet({id:p.stopId,name:p.name,lat:p.lat,lng:p.lng,
       stopId:p.stopId,routes:JSON.parse(p.routes||'[]'),type:'subway'});
   });
-  map.on('mouseenter','bus-dots',()=>map.getCanvas().style.cursor='pointer');
-  map.on('mouseleave','bus-dots',()=>map.getCanvas().style.cursor='');
-  map.on('mouseenter','subway-dots',()=>map.getCanvas().style.cursor='pointer');
-  map.on('mouseleave','subway-dots',()=>map.getCanvas().style.cursor='');
+  ['bus-bg','bus-icon','subway-bg','subway-line-label'].forEach(id=>{
+    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
+    map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
+  });
 
   loadStops();
   map.on('moveend',()=>{clearTimeout(_moveTimer);_moveTimer=setTimeout(loadStops,400);});
@@ -528,7 +539,7 @@ async function openStopSheet(stop){
 
   const rows=arrivals.map(a=>{
     const bc=isSub?(SUBWAY_COLOR[a.route]||'#808183'):busColor(a.route);
-    const tapAction=isSub?'':`onclick="openStopPicker('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')})"`;
+    const tapAction=isSub?'':`onclick="showRouteArrivals('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')},${JSON.stringify(a).replace(/"/g,'&quot;')})"`;
     const pills=a.times.map(m=>{
       const c=m<=1?'col-now':m<=5?'col-soon':'col-go';
       return`<span class="arr-pill ${c}">${m<=0?'NOW':m+'m'}</span>`;
@@ -537,7 +548,7 @@ async function openStopSheet(stop){
       <div class="rte-badge${a.route?.includes('+')?' sbs':''}" style="background:${bc}">${a.route}</div>
       <div class="arr-info">
         <div class="arr-headsign">${a.headsign||a.route}</div>
-        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700">Tap to pick stop →</div>'}
+        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700;font-size:10px">Tap for details →</div>'}
       </div>
       <div class="arr-times">${pills}</div>
     </div>`;
@@ -943,6 +954,57 @@ function getBearing(lat1,lng1,lat2,lng2){
 }
 
 // ── STOP PICKER — tap a bus route → see all stops → pick destination ──
+// ── ROUTE ARRIVALS — tap a route → see all upcoming buses → then pick stop ──
+async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
+  const el = document.getElementById('stop-content');
+  const bc = routeColor;
+
+  // Show loading with back button
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
+      <div class="rte-badge" style="background:${bc}">${routeName}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1">${firstArrival.headsign||routeName}</div>
+    </div>
+    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+
+  // Fetch more arrivals for this specific route
+  try {
+    const r = await fetch(`/api/arrivals?stopId=${stop.stopId}&route=${encodeURIComponent(routeName)}`,
+      {signal: AbortSignal.timeout(5000)});
+    const data = r.ok ? await r.json() : null;
+    const arrivals = data?.arrivals || [];
+
+    const rows = arrivals.map((a,i) => {
+      const c = a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
+      const lbl = a.mins<=0?'NOW':a.mins+'m';
+      return `<div class="arr-row">
+        <div style="font-size:11px;color:var(--muted);width:36px;flex-shrink:0">${i===0?'Next':i===1?'Then':'After'}</div>
+        <div class="arr-info">
+          <div class="arr-headsign">${a.headsign||a.destination||routeName}</div>
+          ${a.approaching?'<div style="font-size:10px;color:var(--green);font-weight:700">Approaching stop</div>':''}
+        </div>
+        <span class="arr-pill ${c}" style="font-size:16px;padding:6px 12px">${lbl}</span>
+      </div>`;
+    }).join('') || '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:13px">No more arrivals right now</div>';
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
+        <div class="rte-badge" style="background:${bc}">${routeName}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
+      </div>
+      <div class="sec-label">Upcoming at ${stop.name}</div>
+      ${rows}
+      <button class="plan-btn" style="margin-top:16px" onclick="openStopPicker('${routeName}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')})">
+        Pick where I'm getting off →
+      </button>`;
+
+  } catch(e) {
+    el.innerHTML += `<div style="padding:20px;text-align:center;color:var(--muted)">Could not load arrivals</div>`;
+  }
+}
+
 async function openStopPicker(routeName, routeColor, boardingStop) {
   _pickerRoute = routeName;
   _pickerStop  = boardingStop;
