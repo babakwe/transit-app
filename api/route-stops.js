@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
   try {
     // MTA BusTime stops-for-route endpoint
-    const url = new URL('https://bustime.mta.info/api/where/stops-for-route/MTA%20NYCT_' + encodeURIComponent(route) + '.json');
+    const url = new URL('https://bustime.mta.info/api/where/stops-for-route/MTA_NYCT_' + encodeURIComponent(route) + '.json');
     url.searchParams.set('key', apiKey);
     url.searchParams.set('version', '2');
     url.searchParams.set('includePolylines', 'true');
