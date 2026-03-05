@@ -540,7 +540,7 @@ async function openStopSheet(stop){
   const rows=arrivals.map(a=>{
     const bc=isSub?(SUBWAY_COLOR[a.route]||'#808183'):busColor(a.route);
     const tapAction=isSub?'':`onclick="showRouteArrivals('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')},${JSON.stringify(a).replace(/"/g,'&quot;')})"`;
-    const pills=a.times.map(m=>{
+    const pills=a.times.slice(0,1).map(m=>{
       const c=m<=1?'col-now':m<=5?'col-soon':'col-go';
       return`<span class="arr-pill ${c}">${m<=0?'NOW':m+'m'}</span>`;
     }).join('');
@@ -957,48 +957,48 @@ function getBearing(lat1,lng1,lat2,lng2){
 // ── ROUTE ARRIVALS — tap a route → see all upcoming buses → then pick stop ──
 async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
   const el = document.getElementById('stop-content');
-  const bc = routeColor;
 
-  // Show loading with back button
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
-      <div class="rte-badge" style="background:${bc}">${routeName}</div>
-      <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1">${firstArrival.headsign||routeName}</div>
+      <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
     </div>
     <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
 
-  // Fetch more arrivals for this specific route
   try {
     const r = await fetch(`/api/arrivals?stopId=${stop.stopId}&route=${encodeURIComponent(routeName)}`,
       {signal: AbortSignal.timeout(5000)});
     const data = r.ok ? await r.json() : null;
     const arrivals = data?.arrivals || [];
 
-    const rows = arrivals.map((a,i) => {
+    const pills = arrivals.slice(0,4).map((a,i) => {
       const c = a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
       const lbl = a.mins<=0?'NOW':a.mins+'m';
-      return `<div class="arr-row">
-        <div style="font-size:11px;color:var(--muted);width:36px;flex-shrink:0">${i===0?'Next':i===1?'Then':'After'}</div>
-        <div class="arr-info">
-          <div class="arr-headsign">${a.headsign||a.destination||routeName}</div>
-          ${a.approaching?'<div style="font-size:10px;color:var(--green);font-weight:700">Approaching stop</div>':''}
-        </div>
-        <span class="arr-pill ${c}" style="font-size:16px;padding:6px 12px">${lbl}</span>
+      const label = i===0?'Next':i===1?'Then':i===2?'After':'Later';
+      return `<div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px">${label}</div>
+        <span class="arr-pill ${c}" style="font-size:22px;padding:10px 16px;display:inline-block">${lbl}</span>
       </div>`;
-    }).join('') || '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:13px">No more arrivals right now</div>';
+    }).join('');
 
     el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
         <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
-        <div class="rte-badge" style="background:${bc}">${routeName}</div>
+        <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
         <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
       </div>
-      <div class="sec-label">Upcoming at ${stop.name}</div>
-      ${rows}
-      <button class="plan-btn" style="margin-top:16px" onclick="openStopPicker('${routeName}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')})">
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+        ${pills||'<div style="color:var(--muted);font-size:13px;padding:20px">No upcoming arrivals</div>'}
+      </div>
+      <button class="plan-btn" onclick="openStopPicker('${routeName}','${routeColor}',${JSON.stringify(stop).replace(/"/g,'&quot;')})">
         Pick where I'm getting off →
       </button>`;
+
+  } catch(e) {
+    el.innerHTML += `<div style="padding:20px;text-align:center;color:var(--muted)">Could not load arrivals</div>`;
+  }
+}
 
   } catch(e) {
     el.innerHTML += `<div style="padding:20px;text-align:center;color:var(--muted)">Could not load arrivals</div>`;
