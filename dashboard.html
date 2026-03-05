@@ -1,1 +1,250 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TownTrip · Data Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#0a0a0f; --muted:#6b7280; --blue:#0039A6; --green:#00A651;
+  --red:#EE352E; --orange:#FF6319; --bg:#f8f8fc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* HEADER */
+.hdr{background:var(--ink);padding:20px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.hdr-logo{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;}
+.hdr-title{font-size:18px;font-weight:800;color:white;}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.refresh-btn{background:rgba(255,255,255,0.1);border:none;color:white;padding:7px 14px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background 0.15s;}
+.refresh-btn:hover{background:rgba(255,255,255,0.2);}
+.back-btn{background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:7px 14px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.last-updated{font-size:10px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:20px 24px;max-width:1200px;margin:0 auto;}
+
+/* CARDS */
+.card{background:white;border-radius:18px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.card-title{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.card-wide{grid-column:1/-1;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+.stat{background:white;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.stat-val{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;line-height:1;color:var(--ink);}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;}
+
+/* LOADING */
+.ldots{display:flex;gap:6px;justify-content:center;padding:28px 0;}
+.ld{width:7px;height:7px;border-radius:50%;background:#ddd;animation:ldot 1.2s ease-in-out infinite;}
+.ld:nth-child(2){animation-delay:.18s}.ld:nth-child(3){animation-delay:.36s}
+@keyframes ldot{0%,80%,100%{transform:scale(0.4);opacity:0.2}40%{transform:scale(1);opacity:1}}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:80px;margin-top:8px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar{width:100%;border-radius:4px 4px 0 0;background:var(--blue);opacity:0.8;transition:height 0.6s cubic-bezier(0.34,1.56,0.64,1);min-height:2px;}
+.bar:hover{opacity:1;}
+.bar-lbl{font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* ROUTE LIST */
+.route-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f2f2f5;}
+.route-row:last-child{border-bottom:none;}
+.rte-badge{border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;color:white;flex-shrink:0;min-width:48px;text-align:center;}
+.route-bar-wrap{flex:1;height:8px;background:#f0f0f5;border-radius:4px;overflow:hidden;}
+.route-bar{height:100%;border-radius:4px;background:var(--blue);transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+.route-count{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);flex-shrink:0;width:28px;text-align:right;}
+
+/* RECENT TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;padding:8px 10px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid #f0f0f5;white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid #f7f7fb;color:var(--ink);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.mins-pill{display:inline-block;padding:2px 7px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;}
+
+/* STOP LIST */
+.stop-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f2f2f5;}
+.stop-row:last-child{border-bottom:none;}
+.stop-name{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stop-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+
+/* HOUR LABELS */
+.hour-labels{display:flex;gap:3px;margin-top:4px;}
+.hour-label{flex:1;font-size:7px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">TT</div>
+  <div>
+    <div class="hdr-title">Data Dashboard</div>
+    <div class="hdr-sub">Live observations from TownTrip users</div>
+  </div>
+  <div class="hdr-right">
+    <span class="last-updated" id="last-updated">Loading…</span>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    <a href="/" class="back-btn">← App</a>
+  </div>
+</div>
+
+<div style="padding:20px 24px 0;max-width:1200px;margin:0 auto">
+  <div class="stats-row" id="stats-row">
+    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  </div>
+</div>
+
+<div class="grid" id="grid">
+  <div class="card card-wide" style="text-align:center;padding:40px">
+    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  </div>
+</div>
+
+<script>
+const BUS_COLOR={
+  'BX12+':'#0039A6','BX12':'#0039A6','BX26':'#6BBE45','BX28':'#FF6319',
+  'BX23':'#8C4799','BX5':'#00B2A9','BX38':'#E4002B','BX6':'#0039A6',
+  'BX1':'#0039A6','BX2':'#0039A6','BXM7':'#0039A6','BX30':'#FF6319',
+};
+function busColor(r){return BUS_COLOR[r]||'#555';}
+
+async function loadData() {
+  document.getElementById('last-updated').textContent = 'Refreshing…';
+  try {
+    const res = await fetch('/api/dashboard-data');
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    render(d);
+    document.getElementById('last-updated').textContent =
+      'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('grid').innerHTML =
+      `<div class="card card-wide" style="text-align:center;padding:40px;color:#888">
+        Error loading data: ${e.message}
+      </div>`;
+    document.getElementById('last-updated').textContent = 'Error';
+  }
+}
+
+function render(d) {
+  const total = d.total || 0;
+  const routes = d.routes || [];
+  const hours = d.hours || Array(24).fill(0);
+  const recent = d.recent || [];
+  const topStops = d.topStops || [];
+
+  const uniqueRoutes = routes.length;
+  const uniqueStops = topStops.length;
+  const peakHour = hours.indexOf(Math.max(...hours));
+  const peakLabel = peakHour === 0 ? '12am' : peakHour < 12 ? peakHour+'am' : peakHour === 12 ? '12pm' : (peakHour-12)+'pm';
+
+  // Stats
+  document.getElementById('stats-row').innerHTML = [
+    [total, 'Observations'],
+    [uniqueRoutes, 'Routes tracked'],
+    [uniqueStops, 'Stops seen'],
+    [peakLabel, 'Peak hour'],
+  ].map(([v,l]) => `
+    <div class="stat">
+      <div class="stat-val">${v}</div>
+      <div class="stat-label">${l}</div>
+    </div>`).join('');
+
+  // Charts
+  const maxHour = Math.max(...hours, 1);
+  const maxRoute = routes[0]?.[1] || 1;
+
+  document.getElementById('grid').innerHTML = `
+
+    <!-- ACTIVITY BY HOUR -->
+    <div class="card">
+      <div class="card-title">Activity by hour of day</div>
+      <div class="bar-chart">
+        ${hours.map((count, h) => {
+          const pct = Math.round((count / maxHour) * 100);
+          const color = h >= 7 && h <= 9 ? 'var(--orange)' : h >= 16 && h <= 19 ? 'var(--red)' : 'var(--blue)';
+          return `<div class="bar-wrap">
+            <div class="bar" style="height:${pct}%;background:${color}" title="${h}:00 — ${count} obs"></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="hour-labels">
+        ${hours.map((_,h) => `<div class="hour-label">${h%6===0?(h===0?'12a':h<12?h+'a':h===12?'12p':(h-12)+'p'):''}</div>`).join('')}
+      </div>
+    </div>
+
+    <!-- TOP ROUTES -->
+    <div class="card">
+      <div class="card-title">Most observed routes</div>
+      ${routes.slice(0,10).map(([route, count]) => `
+        <div class="route-row">
+          <div class="rte-badge" style="background:${busColor(route)}">${route}</div>
+          <div class="route-bar-wrap">
+            <div class="route-bar" style="width:${Math.round(count/maxRoute*100)}%;background:${busColor(route)}"></div>
+          </div>
+          <div class="route-count">${count}</div>
+        </div>`).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">No data yet</div>'}
+    </div>
+
+    <!-- TOP STOPS -->
+    <div class="card">
+      <div class="card-title">Most observed stops</div>
+      ${topStops.map(([name, count]) => `
+        <div class="stop-row">
+          <div class="stop-name">${name||'Unknown'}</div>
+          <div class="stop-count">${count}×</div>
+        </div>`).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">No data yet</div>'}
+    </div>
+
+    <!-- RECENT OBSERVATIONS -->
+    <div class="card card-wide">
+      <div class="card-title">Recent observations</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Route</th>
+              <th>Stop</th>
+              <th>Headsign</th>
+              <th>Mins away</th>
+              <th>Mode</th>
+              <th>Day</th>
+              <th>Hour</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${recent.map(r => {
+              const t = new Date(r.observed_at);
+              const mins = r.minutes_away;
+              const mc = mins<=1?'var(--red)':mins<=5?'var(--orange)':'var(--green)';
+              const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+              return `<tr>
+                <td style="font-family:'DM Mono',monospace">${t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>
+                <td><span class="rte-badge" style="background:${busColor(r.route)};font-size:10px;padding:3px 7px">${r.route||'—'}</span></td>
+                <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${r.stop_name||'—'}</td>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${r.headsign||'—'}</td>
+                <td>${mins!=null?`<span class="mins-pill" style="background:${mc}22;color:${mc}">${mins}m</span>`:'—'}</td>
+                <td style="text-transform:uppercase;font-size:10px;color:var(--muted)">${r.mode||'bus'}</td>
+                <td style="font-family:'DM Mono',monospace;color:var(--muted)">${days[r.day_of_week]||'—'}</td>
+                <td style="font-family:'DM Mono',monospace;color:var(--muted)">${r.hour_of_day!=null?r.hour_of_day+':00':'—'}</td>
+              </tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No observations yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+loadData();
+</script>
+</body>
+</html>
