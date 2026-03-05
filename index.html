@@ -558,7 +558,7 @@ async function openStopSheet(stop){
     <div class="stop-hdr">
       <div class="stop-ico">${ico}</div>
       <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} route${arrivals.length!==1?'s':''}</div></div>
+      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} route${arrivals.length!==1?'s':''} · Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>
     </div>
     ${rideBanner}
     <div class="sec-label">Live arrivals</div>
