@@ -112,9 +112,8 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 .arr-info{flex:1;min-width:0;}
 .arr-headsign{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .arr-seq{font-size:10px;color:var(--muted);margin-top:1px;}
-.arr-mins-col{text-align:right;flex-shrink:0;}
-.arr-mins{font-family:'DM Mono',monospace;font-size:28px;font-weight:400;line-height:1;display:block;}
-.arr-mins-lbl{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0.05em;}
+.arr-times{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+.arr-pill{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:4px 8px;border-radius:8px;background:#f2f2f7;}
 .col-now{color:var(--red);} .col-soon{color:var(--orange);} .col-go{color:var(--green);}
 
 .plan-btn{
@@ -516,7 +515,7 @@ async function openStopSheet(stop){
     return;
   }
 
-  const minWait=Math.min(...arrivals.map(a=>a.mins));
+  const minWait=arrivals[0]?.mins??99;
   const rideBanner=minWait>=10?`
     <div class="ride-banner" onclick="openRideApp(${stop.lat},${stop.lng})">
       <div class="rb-icon">🚗</div>
@@ -528,21 +527,19 @@ async function openStopSheet(stop){
     </div>`:'';
 
   const rows=arrivals.map(a=>{
-    const col=a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
-    const lbl=a.mins<=0?'NOW':String(a.mins);
     const bc=isSub?(SUBWAY_COLOR[a.route]||'#808183'):busColor(a.route);
-    // Only show "pick stop" for bus (not subway — subway has fixed stops)
     const tapAction=isSub?'':`onclick="openStopPicker('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')})"`;
+    const pills=a.times.map(m=>{
+      const c=m<=1?'col-now':m<=5?'col-soon':'col-go';
+      return`<span class="arr-pill ${c}">${m<=0?'NOW':m+'m'}</span>`;
+    }).join('');
     return`<div class="arr-row" style="${isSub?'':'cursor:pointer;'}" ${tapAction}>
       <div class="rte-badge${a.route?.includes('+')?' sbs':''}" style="background:${bc}">${a.route}</div>
       <div class="arr-info">
         <div class="arr-headsign">${a.headsign||a.route}</div>
-        <div class="arr-seq">${a.seq===0?'Next':a.seq===1?'Then':'After'}${isSub?'':' · <span style="color:var(--blue);font-weight:700">Tap to pick stop →</span>'}</div>
+        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700">Tap to pick stop →</div>'}
       </div>
-      <div class="arr-mins-col">
-        <span class="arr-mins ${col}">${lbl}</span>
-        <span class="arr-mins-lbl">MIN</span>
-      </div>
+      <div class="arr-times">${pills}</div>
     </div>`;
   }).join('');
 
@@ -550,7 +547,7 @@ async function openStopSheet(stop){
     <div class="stop-hdr">
       <div class="stop-ico">${ico}</div>
       <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} arrivals</div></div>
+      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} route${arrivals.length!==1?'s':''}</div></div>
     </div>
     ${rideBanner}
     <div class="sec-label">Live arrivals</div>
@@ -573,15 +570,21 @@ async function fetchArrivals(stop){
     fetch(`/api/arrivals?stopId=${stop.stopId}&route=${encodeURIComponent(route)}`,
       {signal:AbortSignal.timeout(5000)})
     .then(r=>r.ok?r.json():null).then(d=>({route,data:d}))));
-  const rows=[];
+  const grouped=[];
   results.forEach(res=>{
     if(res.status!=='fulfilled')return;
     const{route,data}=res.value;
     if(!data?.arrivals?.length)return;
-    data.arrivals.slice(0,3).forEach((a,i)=>
-      rows.push({route,mins:a.mins,headsign:a.headsign||a.destination||route,seq:i}));
+    const times=data.arrivals.slice(0,3).map(a=>a.mins).filter(m=>m!=null);
+    if(!times.length)return;
+    grouped.push({
+      route,
+      mins:times[0],
+      times,
+      headsign:data.arrivals[0].headsign||data.arrivals[0].destination||route,
+    });
   });
-  return rows.sort((a,b)=>a.mins-b.mins).slice(0,8);
+  return grouped.sort((a,b)=>a.mins-b.mins);
 }
 
 // ── SILENTLY LOG OBSERVATIONS TO SUPABASE ──
