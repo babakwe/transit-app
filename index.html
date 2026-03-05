@@ -271,6 +271,7 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <div class="sheet" id="stop-sheet">
   <div class="sh-handle"></div>
   <button class="sh-x" onclick="closeSheet('stop-sheet')">✕</button>
+  <button class="sh-x" style="right:50px" id="refresh-btn" onclick="refreshStopSheet()">↻</button>
   <div class="sh-inner" id="stop-content">
     <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
   </div>
@@ -374,7 +375,7 @@ function isSubwayRoute(r){return!!SUBWAY_COLOR[r];}
 let map,userLat=null,userLng=null;
 let _watchId=null,_moveTimer=null,_lastBounds=null;
 let _googleRoutes=[],_fromVal='',_toVal='';
-let _tripMarkers=[],_boardingStop=null;
+let _tripMarkers=[],_boardingStop=null,_currentStop=null;
 let _pickerRoute=null,_pickerStop=null,_pickerStops=[],_pickerDir=0,_pickerMarkers=[];
 
 // ── MAP INIT ──
@@ -483,6 +484,7 @@ async function loadStops(){
 
 // ── CORE: OPEN STOP SHEET ──
 async function openStopSheet(stop){
+  _currentStop = stop;
   closeAllSheets();
   const el=document.getElementById('stop-content');
   const isSub=stop.type==='subway';
@@ -500,6 +502,7 @@ async function openStopSheet(stop){
   document.getElementById('stop-sheet').classList.add('open');
 
   const arrivals=await fetchArrivals(stop);
+  logObservations(stop, arrivals);
 
   if(!arrivals?.length){
     el.innerHTML=`
@@ -555,6 +558,14 @@ async function openStopSheet(stop){
     <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here →</button>`;
 }
 
+function refreshStopSheet(){
+  if(!_currentStop) return;
+  const btn=document.getElementById('refresh-btn');
+  if(btn){ btn.style.transform='rotate(360deg)'; btn.style.transition='transform 0.5s'; }
+  setTimeout(()=>{ if(btn){ btn.style.transform=''; btn.style.transition=''; } }, 500);
+  openStopSheet(_currentStop);
+}
+
 async function fetchArrivals(stop){
   const routes=stop.routes||[];
   if(!routes.length)return[];
@@ -571,6 +582,25 @@ async function fetchArrivals(stop){
       rows.push({route,mins:a.mins,headsign:a.headsign||a.destination||route,seq:i}));
   });
   return rows.sort((a,b)=>a.mins-b.mins).slice(0,8);
+}
+
+// ── SILENTLY LOG OBSERVATIONS TO SUPABASE ──
+function logObservations(stop, arrivals) {
+  if (!arrivals?.length) return;
+  const observations = arrivals.map(a => ({
+    route: a.route,
+    stopId: stop.stopId,
+    stopName: stop.name,
+    headsign: a.headsign || '',
+    mins: a.mins,
+    passengers: a.passengers || null,
+    mode: stop.type === 'subway' ? 'subway' : 'bus',
+  }));
+  fetch('/api/log-observation', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(observations),
+  }).catch(() => {}); // silent — never block the UI
 }
 
 // ── PLAN TRIP FROM A STOP ──
