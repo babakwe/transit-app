@@ -1000,11 +1000,6 @@ async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
   }
 }
 
-  } catch(e) {
-    el.innerHTML += `<div style="padding:20px;text-align:center;color:var(--muted)">Could not load arrivals</div>`;
-  }
-}
-
 async function openStopPicker(routeName, routeColor, boardingStop) {
   _pickerRoute = routeName;
   _pickerStop  = boardingStop;
