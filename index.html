@@ -870,7 +870,7 @@ async function acSuggest(q){
         </div>`;
       }).join('');
       drop.style.display='block';
-    }catch(){drop.style.display='none';}
+    }catch(e){drop.style.display='none';}
   },220);
 }
 function acPick(name){document.getElementById('search-input').value=name;acHide();doSearch();}
