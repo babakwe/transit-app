@@ -1,8 +1,9 @@
 {
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "crons": [
-    {
-      "path": "/api/poller",
-      "schedule": "*/30 * * * *"
-    }
+    { "path": "/api/poller", "schedule": "*/2 * * * *" }
   ]
 }
