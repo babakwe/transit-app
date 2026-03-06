@@ -1,14 +1,14 @@
 export default async function handler(req, res) {
-  const { stopId, route, debug } = req.query;
+  const { stopId, route } = req.query;
   if (!stopId || !route) return res.status(400).json({ error: 'stopId and route required' });
   const key = process.env.MTA_API_KEY || '';
-  const agency = route.startsWith('BxM') || route.startsWith('QM') || route.startsWith('X') ? 'MTA BC' : 'MTA NYCT';
-  const lineRef = encodeURIComponent(agency + '_' + route);
+  const routeUpper = route.toUpperCase();
+  const agency = routeUpper.startsWith('BXM') || routeUpper.startsWith('QM') || routeUpper.startsWith('X') ? 'MTA BC' : 'MTA NYCT';
+  const lineRef = encodeURIComponent(agency + '_' + routeUpper);
   const url = `https://bustime.mta.info/api/siri/stop-monitoring.json?key=${key}&MonitoringRef=${stopId}&LineRef=${lineRef}`;
   try {
     const r = await fetch(url);
     const d = await r.json();
-    if (debug) return res.status(200).json({ url: url.replace(key, 'REDACTED'), raw: d });
     const visits = d?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
     const arrivals = visits.map(v => {
       const journey = v.MonitoredVehicleJourney;
