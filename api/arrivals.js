@@ -4,13 +4,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'stopId and route required' });
   }
   const key = process.env.MTA_API_KEY || '';
-  // MTA SIRI stop-monitoring endpoint
-  // MonitoringRef must be MTA_ + stopId
-  // LineRef must be MTA NYCT_ + route (or MTA BC_ for express buses)
+  // MonitoringRef = just the stopId number (no MTA_ prefix)
+  // LineRef = MTA NYCT_Bx28 or MTA BC_BxM7 for express
   const agency = route.startsWith('BxM') || route.startsWith('QM') || route.startsWith('X') ? 'MTA BC' : 'MTA NYCT';
   const lineRef = encodeURIComponent(agency + '_' + route);
-  const monitoringRef = encodeURIComponent('MTA_' + stopId);
-  const url = `https://bustime.mta.info/api/siri/stop-monitoring.json?key=${key}&MonitoringRef=${monitoringRef}&LineRef=${lineRef}`;
+  const url = `https://bustime.mta.info/api/siri/stop-monitoring.json?key=${key}&MonitoringRef=${stopId}&LineRef=${lineRef}`;
   try {
     const r = await fetch(url);
     const d = await r.json();
