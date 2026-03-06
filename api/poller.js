@@ -1,82 +1,88 @@
-// api/poller.js — Vercel cron job, runs every 30 min
-// Polls MTA arrivals for monitored stops and logs to Supabase
+// api/poller.js
+// Cron: every 2 min. Polls MTA arrivals for key stops, writes to Supabase.
+// This is the data engine for predictive routing - NYC today, KMC tomorrow.
 
 const MTA_KEY = process.env.MTA_API_KEY;
-const SUPABASE_URL = 'https://xyfyuvikqmxcazqgqoxb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Znl1dmlrcW14Y2F6cWdxb3hiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjY2ODc1OCwiZXhwIjoyMDg4MjQ0NzU4fQ.jPRln_LQRrIGF5iA-H_DBsRW2FjPaf3ys5yBvy908eo';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-// Key stops to monitor — high-traffic Bronx stops across multiple routes
-const MONITORED_STOPS = [
-  { stopId: '100080', routes: ['BX28','BX23','BX26','BX30'] }, // East Gun Hill Rd/Hull Av
-  { stopId: '100017', routes: ['BX28','BX38'] },               // Co-op City area
-  { stopId: '200461', routes: ['BX1','BX2'] },                 // Fordham Rd hub
-  { stopId: '302386', routes: ['BX12','BX15'] },               // Tremont Av
-  { stopId: '308214', routes: ['BX41'] },                      // White Plains Rd
+const MONITOR_STOPS = [
+  { stopId: '100080', name: 'BOSTON RD/E GUN HILL RD',      routes: ['Bx28','Bx38'] },
+  { stopId: '100998', name: 'FORDHAM RD/GRAND CONCOURSE',   routes: ['Bx12','Bx17','Bx19'] },
+  { stopId: '101002', name: 'FORDHAM RD/JEROME AV',         routes: ['Bx12','Bx17'] },
+  { stopId: '103042', name: 'VALENTINE AV/E 192 ST',        routes: ['Bx28'] },
+  { stopId: '200987', name: 'WHITE PLAINS RD/GUN HILL RD',  routes: ['Bx39','Bx41'] },
+  { stopId: '301036', name: 'PELHAM PKWY/WHITE PLAINS RD',  routes: ['Bx28','Bx39'] },
+  { stopId: '400721', name: 'JEROME AV/BURNSIDE AV',        routes: ['Bx13','Bx41'] },
+  { stopId: '500814', name: 'TREMONT AV/GRAND CONCOURSE',   routes: ['Bx1','Bx2'] },
+  { stopId: '200640', name: 'E GUN HILL RD/HULL AV',        routes: ['Bx28','Bx38'] },
+  { stopId: '104026', name: 'E 233 ST/WHITE PLAINS RD',     routes: ['Bx39','Bx41'] },
 ];
 
-async function fetchArrivals(stopId, route) {
-  const agency = route.startsWith('BXM') || route.startsWith('X') ? 'MTA+BC' : 'MTA+NYCT';
-  const url = `https://bustime.mta.info/api/siri/stop-monitoring.json?key=${MTA_KEY}&MonitoringRef=${stopId}&LineRef=${agency}_${route}&MaximumStopVisits=3`;
-  try {
-    const r = await fetch(url);
-    const d = await r.json();
-    const visits = d?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
-    return visits.map(v => {
-      const call = v.MonitoredVehicleJourney?.MonitoredCall;
-      const aimed = call?.AimedArrivalTime || call?.AimedDepartureTime;
-      const expected = call?.ExpectedArrivalTime || call?.ExpectedDepartureTime;
-      const now = Date.now();
-      const aimedMs = aimed ? new Date(aimed).getTime() : null;
-      const expectedMs = expected ? new Date(expected).getTime() : null;
-      const aimedMins = aimedMs ? Math.round((aimedMs - now) / 60000) : null;
-      const expectedMins = expectedMs ? Math.round((expectedMs - now) / 60000) : null;
-      return { aimed_mins: aimedMins, expected_mins: expectedMins, vehicle_id: v.MonitoredVehicleJourney?.VehicleRef || null };
-    });
-  } catch (e) {
-    return [];
+function agencyPrefix(route) {
+  const r = route.toUpperCase();
+  if (r.startsWith('BXM') || r.startsWith('QM') || r.startsWith('X')) return 'MTA BC_';
+  return 'MTA NYCT_';
+}
+
+async function pollStop(stop) {
+  const obs = [];
+  for (const route of stop.routes) {
+    try {
+      const lineRef = encodeURIComponent(agencyPrefix(route) + route.toUpperCase());
+      const url = `https://bustime.mta.info/api/siri/stop-monitoring.json?key=${MTA_KEY}&MonitoringRef=${stop.stopId}&LineRef=${lineRef}&MaximumStopVisits=5`;
+      const data = await fetch(url).then(r => r.json());
+      const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
+      for (const v of visits) {
+        const j = v?.MonitoredVehicleJourney;
+        if (!j) continue;
+        const call = j?.MonitoredCall;
+        const expectedTime = call?.ExpectedArrivalTime || call?.AimedArrivalTime;
+        if (!expectedTime) continue;
+        const expectedMins = Math.round((new Date(expectedTime) - Date.now()) / 60000);
+        const headsign = Array.isArray(j?.DestinationName) ? j.DestinationName[0] : j?.DestinationName || '';
+        const routeName = Array.isArray(j?.PublishedLineName) ? j.PublishedLineName[0] : j?.PublishedLineName || route;
+        obs.push({
+          stop_id: stop.stopId,
+          stop_name: stop.name,
+          route: routeName,
+          headsign: headsign.slice(0, 80),
+          vehicle_id: j?.VehicleRef || null,
+          expected_mins: expectedMins,
+          day_of_week: new Date().getDay(),
+          hour_of_day: new Date().getHours(),
+        });
+      }
+    } catch(e) { console.error('poller', stop.stopId, route, e.message); }
   }
+  return obs;
 }
 
 async function writeToSupabase(rows) {
-  if (!rows.length) return;
+  if (!rows.length) return 0;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/bus_observations`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'apikey': SUPABASE_KEY,
-      'Prefer': 'return=minimal'
+      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'apikey': SUPABASE_SERVICE_KEY,
+      'Prefer': 'return=minimal',
     },
-    body: JSON.stringify(rows)
+    body: JSON.stringify(rows),
   });
-  return res.status;
+  if (!res.ok) throw new Error(await res.text());
+  return rows.length;
 }
 
 export default async function handler(req, res) {
-  const now = new Date();
-  const rows = [];
-
-  for (const stop of MONITORED_STOPS) {
-    for (const route of stop.routes) {
-      const arrivals = await fetchArrivals(stop.stopId, route);
-      for (const a of arrivals) {
-        if (a.expected_mins !== null && a.expected_mins >= 0 && a.expected_mins < 90) {
-          rows.push({
-            stop_id: stop.stopId,
-            route,
-            observed_at: now.toISOString(),
-            day_of_week: now.getDay(),       // 0=Sun, 6=Sat
-            hour_of_day: now.getHours(),
-            aimed_mins: a.aimed_mins,
-            expected_mins: a.expected_mins,
-            delay_mins: (a.expected_mins !== null && a.aimed_mins !== null) ? a.expected_mins - a.aimed_mins : null,
-            vehicle_id: a.vehicle_id
-          });
-        }
-      }
-    }
+  if (req.method !== 'GET') return res.status(405).end();
+  const start = Date.now();
+  const allObs = [];
+  for (let i = 0; i < MONITOR_STOPS.length; i += 3) {
+    const results = await Promise.all(MONITOR_STOPS.slice(i, i+3).map(pollStop));
+    results.forEach(r => allObs.push(...r));
+    if (i + 3 < MONITOR_STOPS.length) await new Promise(r => setTimeout(r, 400));
   }
-
-  const status = await writeToSupabase(rows);
-  res.status(200).json({ written: rows.length, supabase_status: status, at: now.toISOString() });
+  const written = await writeToSupabase(allObs);
+  return res.status(200).json({ ok: true, written, elapsed: Date.now()-start, stops: MONITOR_STOPS.length });
 }
