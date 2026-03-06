@@ -974,10 +974,12 @@ async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
     const pills = arrivals.slice(0,4).map((a,i) => {
       const c = a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
       const lbl = a.mins<=0?'NOW':a.mins+'m';
+      const t=new Date(Date.now()+a.mins*60000),hr=t.getHours(),mn=t.getMinutes(),ap=hr>=12?'PM':'AM',h12=hr%12||12;
+      const clockTime=a.mins<=0?'':h12+':'+(mn<10?'0'+mn:mn)+ap;
       const label = i===0?'Next':i===1?'Then':i===2?'After':'Later';
       return `<div style="text-align:center">
         <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px">${label}</div>
-        <span class="arr-pill ${c}" style="font-size:22px;padding:10px 16px;display:inline-block">${lbl}</span>
+        <span class="arr-pill ${c}" style="font-size:22px;padding:10px 16px;display:inline-block">${lbl}</span><span style="font-size:9px;opacity:0.55;display:block;letter-spacing:0.3px">${clockTime}</span>
       </div>`;
     }).join('');
 
@@ -1255,6 +1257,12 @@ function closePicker() {
 }
 
 initMap();
+
+async function loadWeather(){try{if(!navigator.geolocation)return;const go=async(lat,lon)=>{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m,apparent_temperature,weather_code&temperature_unit=fahrenheit&forecast_days=1");const d=await r.json();const cur=d.current,temp=Math.round(cur.temperature_2m),feels=Math.round(cur.apparent_temperature),code=cur.weather_code;const icon=code<=1?"☀️":code<=3?"⛅":code<=48?"🌫":code<=67?"🌧":code<=77?"❄️":code<=82?"🌧":code<=99?"⛈️":"⛅";const desc=code===0?"Clear":code<=1?"Mainly clear":code<=2?"Partly cloudy":code<=3?"Overcast":code<=48?"Foggy":code<=55?"Drizzle":code<=67?"Rain":code<=77?"Snow":code<=82?"Rain showers":code<=99?"Thunderstorm":"Clear";document.getElementById("wx-temp").textContent=temp+"°";document.getElementById("wx-icon").textContent=icon;document.getElementById("wx-desc").textContent=desc;document.getElementById("wx-feels").textContent="Feels like "+feels+"°";};navigator.geolocation.getCurrentPosition(p=>go(p.coords.latitude,p.coords.longitude),()=>go(40.87,-73.88));}catch(e){console.warn("weather",e);}}
+loadWeather();
+setInterval(loadWeather,600000);
 </script>
+
+<div id="weather-widget" style="position:fixed;bottom:80px;right:12px;z-index:200;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15);min-width:90px;text-align:center;font-family:inherit;cursor:default;user-select:none"><div id="wx-temp" style="font-size:24px;font-weight:700;line-height:1;color:#1a1a2e">--°</div><div id="wx-icon" style="font-size:20px;margin:2px 0">🌤</div><div id="wx-desc" style="font-size:10px;color:#666;font-weight:500;text-transform:capitalize">Loading</div><div id="wx-feels" style="font-size:9px;color:#999;margin-top:2px">Feels like --°</div></div>
 </body>
 </html>
