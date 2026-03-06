@@ -1022,8 +1022,8 @@ async function openStopPicker(routeName, routeColor, boardingStop) {
     const res = await fetch(`/api/route-stops?route=${encodeURIComponent(routeName)}&direction=${_pickerDir}`);
     const data = await res.json();
 
-    if (data.stops?.length) {
-      _pickerStops = data.stops;
+    if (data.directions?.[0]?.stops?.length) {
+      _pickerStops = data.directions[0].stops;
 
       // Draw route on map behind the sheet
       drawPickerRoute(data.stops, data.coords, routeColor, boardingStop);
