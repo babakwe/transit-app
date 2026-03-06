@@ -162,7 +162,7 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 .subway-img-wrap{overflow:auto;-webkit-overflow-scrolling:touch;padding:12px;}
 .subway-img-wrap img{width:100%;min-width:640px;border-radius:10px;display:block;}
 
-/* STOP PICKER SHEET â half height, sits above map */
+/* STOP PICKER SHEET — half height, sits above map */
 .picker-sheet {
   position:fixed; left:0; right:0; bottom:0; z-index:210;
   background:white; border-radius:26px 26px 0 0;
@@ -250,27 +250,27 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <div class="topbar">
   <div class="search-pill">
     <div class="brand-dot">TT</div>
-    <input id="search-input" placeholder="Tap a stop â or search an address"
+    <input id="search-input" placeholder="Tap a stop — or search an address"
       autocomplete="off"
       oninput="acSuggest(this.value)"
       onblur="setTimeout(acHide,200)"
       onkeydown="if(event.key==='Enter')doSearch()">
-    <button class="s-btn" id="gps-btn" onclick="centerOnMe()">ð</button>
-    <button class="s-btn" onclick="triggerCamera()">ð·</button>
+    <button class="s-btn" id="gps-btn" onclick="centerOnMe()">📍</button>
+    <button class="s-btn" onclick="triggerCamera()">📷</button>
   </div>
   <div class="ac-drop" id="ac-drop" style="display:none"></div>
 </div>
 
 <div class="fab-stack">
-  <button class="fab fab-subway" onclick="openSubwayMap()" title="Subway map">ð</button>
-  <button class="fab" onclick="recenter()">ð¯</button>
+  <button class="fab fab-subway" onclick="openSubwayMap()" title="Subway map">🚇</button>
+  <button class="fab" onclick="recenter()">🎯</button>
 </div>
 
 <!-- STOP ARRIVALS -->
 <div class="sheet" id="stop-sheet">
   <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('stop-sheet')">â</button>
-  <button class="sh-x" style="right:50px" id="refresh-btn" onclick="refreshStopSheet()">â»</button>
+  <button class="sh-x" onclick="closeSheet('stop-sheet')">✕</button>
+  <button class="sh-x" style="right:50px" id="refresh-btn" onclick="refreshStopSheet()">↻</button>
   <div class="sh-inner" id="stop-content">
     <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
   </div>
@@ -279,7 +279,7 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <!-- ROUTE OPTIONS -->
 <div class="sheet" id="route-sheet">
   <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('route-sheet')">â</button>
+  <button class="sh-x" onclick="closeSheet('route-sheet')">✕</button>
   <div class="sh-inner">
     <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:14px" id="route-title">Route options</div>
     <div id="route-list"></div>
@@ -289,22 +289,22 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <!-- ACTIVE TRIP / WORM -->
 <div class="sheet" id="worm-sheet">
   <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeTripView()">â</button>
+  <button class="sh-x" onclick="closeTripView()">✕</button>
   <div class="sh-inner">
     <div class="worm-hdr">
-      <div class="worm-badge" id="worm-badge">â</div>
+      <div class="worm-badge" id="worm-badge">—</div>
       <div style="flex:1;min-width:0">
-        <div class="worm-stop-name" id="worm-stop-name">â</div>
+        <div class="worm-stop-name" id="worm-stop-name">—</div>
         <div class="worm-stop-sub" id="worm-stop-sub"></div>
       </div>
-      <div class="worm-leave col-go" id="worm-leave">â</div>
+      <div class="worm-leave col-go" id="worm-leave">—</div>
     </div>
     <div class="worm-scroll" id="worm-svg"></div>
     <div class="sec-label" style="margin-top:10px">Trip steps</div>
     <div id="worm-steps"></div>
     <button class="plan-btn" style="background:#f2f2f7;color:var(--ink);margin-top:16px"
       onclick="closeSheet('worm-sheet');document.getElementById('route-sheet').classList.add('open')">
-      â All options
+      ← All options
     </button>
   </div>
 </div>
@@ -312,10 +312,10 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <!-- SUBWAY MAP -->
 <div class="sheet" id="subway-sheet">
   <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('subway-sheet')">â</button>
+  <button class="sh-x" onclick="closeSheet('subway-sheet')">✕</button>
   <div class="subway-hdr">
     <div class="subway-title">NYC Subway Map</div>
-    <div class="subway-sub">Works offline Â· Pinch to zoom</div>
+    <div class="subway-sub">Works offline · Pinch to zoom</div>
   </div>
   <div id="exit-box-wrap"></div>
   <div class="subway-img-wrap">
@@ -323,18 +323,18 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
   </div>
 </div>
 
-<!-- STOP PICKER â tap a bus â pick your stop -->
+<!-- STOP PICKER — tap a bus → pick your stop -->
 <div class="picker-sheet" id="picker-sheet">
   <div class="sh-handle"></div>
   <div class="picker-hdr">
     <div class="picker-route-bar">
-      <button class="picker-close" onclick="closePicker();document.getElementById('stop-sheet').classList.add('open')" style="margin-right:4px">â</button>
-      <div class="picker-badge" id="picker-badge">â</div>
+      <button class="picker-close" onclick="closePicker();document.getElementById('stop-sheet').classList.add('open')" style="margin-right:4px">←</button>
+      <div class="picker-badge" id="picker-badge">—</div>
       <div style="flex:1;min-width:0">
         <div class="picker-title" id="picker-title">Pick your stop</div>
         <div class="picker-sub" id="picker-sub">Where are you getting off?</div>
       </div>
-      <button class="picker-close" onclick="closePicker()">â</button>
+      <button class="picker-close" onclick="closePicker()">✕</button>
     </div>
     <div class="dir-toggle" id="dir-toggle"></div>
   </div>
@@ -346,7 +346,7 @@ html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
 <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
 <script>
-// ââ CONSTANTS ââ
+// ── CONSTANTS ──
 const BUS_COLOR={
   'BX12+':'#0039A6','BX12':'#0039A6','BX26':'#6BBE45','BX28':'#FF6319',
   'BX23':'#8C4799','BX5':'#00B2A9','BX38':'#E4002B','BX6':'#0039A6',
@@ -369,14 +369,14 @@ const SUBWAY_COLOR={
 function busColor(r){return BUS_COLOR[r]||BUS_COLOR[r?.toUpperCase()]||'#555';}
 function isSubwayRoute(r){return!!SUBWAY_COLOR[r];}
 
-// ââ STATE ââ
+// ── STATE ──
 let map,userLat=null,userLng=null;
 let _watchId=null,_moveTimer=null,_lastBounds=null;
 let _googleRoutes=[],_fromVal='',_toVal='';
 let _tripMarkers=[],_boardingStop=null,_currentStop=null;
 let _pickerRoute=null,_pickerStop=null,_pickerStops=[],_pickerDir=0,_pickerMarkers=[];
 
-// ââ MAP INIT ââ
+// ── MAP INIT ──
 async function initMap(){
   let token;
   try{const r=await fetch('/api/mapboxtoken');token=(await r.json()).token;}
@@ -390,12 +390,12 @@ async function initMap(){
   map.on('load',()=>{addStopLayers();locateUser();});
 }
 
-// ââ STOP LAYERS ââ
+// ── STOP LAYERS ──
 function addStopLayers(){
   map.addSource('bus-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
   map.addSource('subway-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
 
-  // Bus stops â square marker with route color + "B" label
+  // Bus stops — square marker with route color + "B" label
   map.addLayer({id:'bus-bg',type:'circle',source:'bus-stops',minzoom:13,paint:{
     'circle-radius':['interpolate',['linear'],['zoom'],13,5,15,8,17,11],
     'circle-color':['get','color'],
@@ -403,9 +403,9 @@ function addStopLayers(){
     'circle-stroke-width':2,'circle-stroke-color':'white',
     'circle-pitch-alignment':'map',
   }});
-  // Bus stop icon â small bus symbol inside dot
+  // Bus stop icon — small bus symbol inside dot
   map.addLayer({id:'bus-icon',type:'symbol',source:'bus-stops',minzoom:14,layout:{
-    'text-field':'ð',
+    'text-field':'🚌',
     'text-size':['interpolate',['linear'],['zoom'],14,8,16,12],
     'text-anchor':'center','text-allow-overlap':true,'text-ignore-placement':true,
   }});
@@ -414,7 +414,7 @@ function addStopLayers(){
     'text-size':9,'text-offset':[0,1.6],'text-anchor':'top','text-allow-overlap':false,
   },paint:{'text-color':'#444','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
 
-  // Subway stops â larger circle with route color + line letter
+  // Subway stops — larger circle with route color + line letter
   map.addLayer({id:'subway-bg',type:'circle',source:'subway-stops',minzoom:11,paint:{
     'circle-radius':['interpolate',['linear'],['zoom'],11,6,14,11,17,16],
     'circle-color':['get','color'],
@@ -430,7 +430,7 @@ function addStopLayers(){
     'text-size':9,'text-offset':[0,1.8],'text-anchor':'top','text-allow-overlap':false,
   },paint:{'text-color':'#333','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
 
-  // Click handlers â use new layer IDs
+  // Click handlers — use new layer IDs
   map.on('click','bus-bg',e=>{
     e.preventDefault();e.originalEvent._sh=true;
     const p=e.features[0].properties;
@@ -491,13 +491,13 @@ async function loadStops(){
   }catch(e){console.warn('Stops:',e.message);}
 }
 
-// ââ CORE: OPEN STOP SHEET ââ
+// ── CORE: OPEN STOP SHEET ──
 async function openStopSheet(stop){
   _currentStop = stop;
   closeAllSheets();
   const el=document.getElementById('stop-content');
   const isSub=stop.type==='subway';
-  const ico=isSub?'ð':'ð';
+  const ico=isSub?'🚇':'🚌';
   const routes=stop.routes||[];
 
   // Instant loading state
@@ -505,7 +505,7 @@ async function openStopSheet(stop){
     <div class="stop-hdr">
       <div class="stop-ico">${ico}</div>
       <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' Â· ')||'Loadingâ¦'}</div></div>
+      <div class="stop-sub">${routes.join(' · ')||'Loading…'}</div></div>
     </div>
     <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
   document.getElementById('stop-sheet').classList.add('open');
@@ -518,19 +518,19 @@ async function openStopSheet(stop){
       <div class="stop-hdr">
         <div class="stop-ico">${ico}</div>
         <div><div class="stop-title">${stop.name}</div>
-        <div class="stop-sub">${routes.join(' Â· ')||'Stop'}</div></div>
+        <div class="stop-sub">${routes.join(' · ')||'Stop'}</div></div>
       </div>
       <div style="padding:28px 0;text-align:center;color:var(--muted);font-size:13px">No arrivals right now</div>
-      <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here â</button>`;
+      <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here →</button>`;
     return;
   }
 
   const minWait=arrivals[0]?.mins??99;
   const rideBanner=minWait>=10?`
     <div class="ride-banner" onclick="openRideApp(${stop.lat},${stop.lng})">
-      <div class="rb-icon">ð</div>
+      <div class="rb-icon">🚗</div>
       <div class="rb-text">
-        <div class="rb-title">Next bus in ${minWait} min â ride faster?</div>
+        <div class="rb-title">Next bus in ${minWait} min — ride faster?</div>
         <div class="rb-sub">Open Uber or Lyft</div>
       </div>
       <div class="rb-mins">${minWait}<span style="font-size:11px;opacity:0.6"> m</span></div>
@@ -547,7 +547,7 @@ async function openStopSheet(stop){
       <div class="rte-badge${a.route?.includes('+')?' sbs':''}" style="background:${bc}">${a.route}</div>
       <div class="arr-info">
         <div class="arr-headsign">${a.headsign||a.route}</div>
-        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700;font-size:10px">Tap for details â</div>'}
+        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700;font-size:10px">Tap for details →</div>'}
       </div>
       <div class="arr-times">${pills}</div>
     </div>`;
@@ -557,12 +557,12 @@ async function openStopSheet(stop){
     <div class="stop-hdr">
       <div class="stop-ico">${ico}</div>
       <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' Â· ')||'Stop'} Â· ${arrivals.length} route${arrivals.length!==1?'s':''} Â· Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>
+      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} route${arrivals.length!==1?'s':''} · Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>
     </div>
     ${rideBanner}
     <div class="sec-label">Live arrivals</div>
     ${rows}
-    <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here â</button>`;
+    <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here →</button>`;
 }
 
 function refreshStopSheet(){
@@ -597,7 +597,7 @@ async function fetchArrivals(stop){
   return grouped.sort((a,b)=>a.mins-b.mins);
 }
 
-// ââ SILENTLY LOG OBSERVATIONS TO SUPABASE ââ
+// ── SILENTLY LOG OBSERVATIONS TO SUPABASE ──
 function logObservations(stop, arrivals) {
   if (!arrivals?.length) return;
   const observations = arrivals.map(a => ({
@@ -613,10 +613,10 @@ function logObservations(stop, arrivals) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(observations),
-  }).catch(() => {}); // silent â never block the UI
+  }).catch(() => {}); // silent — never block the UI
 }
 
-// ââ PLAN TRIP FROM A STOP ââ
+// ── PLAN TRIP FROM A STOP ──
 function startTripFrom(stop){
   _boardingStop=stop;
   closeSheet('stop-sheet');
@@ -632,23 +632,23 @@ async function doSearch(){
     (userLat?`${userLat},${userLng}`:'Co-op City, Bronx NY');
   _fromVal=_boardingStop?.name||'My location';
   _toVal=q;
-  document.getElementById('search-input').placeholder='Finding routesâ¦';
+  document.getElementById('search-input').placeholder='Finding routes…';
   try{
     const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(q)}&alternatives=true`);
     const data=await res.json();
     if(data.routes?.length){_googleRoutes=data.routes;showRouteOptions(data.routes);}
     else alert('No routes found. Try a different destination.');
   }catch(e){console.error(e);}
-  document.getElementById('search-input').placeholder='Tap a stop â or search an address';
+  document.getElementById('search-input').placeholder='Tap a stop — or search an address';
   _boardingStop=null;
 }
 
-// ââ ROUTE OPTIONS ââ
+// ── ROUTE OPTIONS ──
 function showRouteOptions(routes){
   routes.sort((a,b)=>(a.legs?.[0]?.duration?.value||0)-(b.legs?.[0]?.duration?.value||0));
   const cards=routes.map((route,i)=>{
     const leg=route.legs?.[0];if(!leg)return'';
-    const dur=leg.duration?.text||'â';
+    const dur=leg.duration?.text||'—';
     const depVal=leg.departure_time?.value;
     const li=depVal?Math.round((depVal*1000-Date.now())/60000):null;
     const safeL=li??99;
@@ -670,7 +670,7 @@ function showRouteOptions(routes){
       <div class="rc-top">
         <div class="rc-info">
           <div class="rc-badges">${badges}</div>
-          <div class="rc-detail">${walkMins>0?`ð¶ ${walkMins} min walk Â· `:''}${waitMins!=null?`â± ${waitMins} min wait Â· `:''}${transfers}${showRide?'<br><span style="color:var(--blue);font-weight:700">ð¡ Ride to stop saves time</span>':''}</div>
+          <div class="rc-detail">${walkMins>0?`🚶 ${walkMins} min walk · `:''}${waitMins!=null?`⏱ ${waitMins} min wait · `:''}${transfers}${showRide?'<br><span style="color:var(--blue);font-weight:700">💡 Ride to stop saves time</span>':''}</div>
         </div>
         <div>
           <div class="rc-mins" style="color:${urgCol}">${dur.replace(' mins','').replace(' min','')}</div>
@@ -681,7 +681,7 @@ function showRouteOptions(routes){
         ${i===0?'<span class="rbdg rbdg-blue">Fastest</span>':''}
         ${leaveStr?`<span class="rbdg" style="color:${urgCol};font-weight:700">${leaveStr}</span>`:''}
         <span class="rbdg">$2.90</span>
-        ${showRide?'<span class="rbdg rbdg-ride">ð Ride option</span>':''}
+        ${showRide?'<span class="rbdg rbdg-ride">🚗 Ride option</span>':''}
       </div>
     </div>`;
   }).join('');
@@ -695,7 +695,7 @@ function selectRoute(idx){
   closeSheet('route-sheet');drawRouteOnMap(route);showWormSheet(route);
 }
 
-// ââ DRAW ROUTE ON MAP ââ
+// ── DRAW ROUTE ON MAP ──
 function drawRouteOnMap(route){
   const leg=route.legs?.[0];if(!leg)return;
   _tripMarkers.forEach(m=>m.remove());_tripMarkers=[];
@@ -723,12 +723,12 @@ function drawRouteOnMap(route){
   const dL=(leg.steps||[]).slice(-1)[0]?.end_location||leg.end_location;
   if(wS&&bL)addWalkLine('walk-to',wS,[bL.lng,bL.lat]);
   if(aL&&dL)addWalkLine('walk-from',[aL.lng,aL.lat],[dL.lng,dL.lat]);
-  if(wS)addMapMarker(wS,'#00A651','ð',_fromVal.split(',')[0],'You are here');
-  if(bL)addMapMarker([bL.lng,bL.lat],wc,'ð',firstT.transit_details?.stop_name||'Board',`Board ${busName}`);
+  if(wS)addMapMarker(wS,'#00A651','📍',_fromVal.split(',')[0],'You are here');
+  if(bL)addMapMarker([bL.lng,bL.lat],wc,'🚏',firstT.transit_details?.stop_name||'Board',`Board ${busName}`);
   if(aL&&bL&&(Math.abs(aL.lat-bL.lat)>0.001||Math.abs(aL.lng-bL.lng)>0.001))
-    addMapMarker([aL.lng,aL.lat],wc,'ð',lastT.transit_details?.arrival_stop?.name||'Alight',
+    addMapMarker([aL.lng,aL.lat],wc,'🚏',lastT.transit_details?.arrival_stop?.name||'Alight',
       `Exit ${lastT.transit_details?.line?.short_name||'Bus'}`);
-  if(dL)addMapMarker([dL.lng,dL.lat],'#0039A6','â­',_toVal.split(',')[0],'Destination');
+  if(dL)addMapMarker([dL.lng,dL.lat],'#0039A6','⭐',_toVal.split(',')[0],'Destination');
   const allC=[...tc];
   if(wS)allC.unshift(wS);
   if(dL)allC.push([dL.lng,dL.lat]);
@@ -753,7 +753,7 @@ function addMapMarker(lngLat,bg,emoji,label,sub){
   _tripMarkers.push(new mapboxgl.Marker({element:el,anchor:'bottom'}).setLngLat(lngLat).addTo(map));
 }
 
-// ââ WORM SHEET ââ
+// ── WORM SHEET ──
 function showWormSheet(route){
   const leg=route.legs?.[0];if(!leg)return;
   const depVal=leg.departure_time?.value;
@@ -764,7 +764,7 @@ function showWormSheet(route){
   const busName=firstT?.transit_details?.line?.short_name||'Bus';
   const rawC=firstT?.transit_details?.line?.color;
   const color=rawC?('#'+rawC.replace('#','')):busColor(busName);
-  const boardStop=firstT?.transit_details?.stop_name||'â';
+  const boardStop=firstT?.transit_details?.stop_name||'—';
   const fw=(leg.steps||[])[0];
   const walkMins=fw?.travel_mode==='WALKING'?Math.round((fw.duration?.value||0)/60):0;
 
@@ -773,7 +773,7 @@ function showWormSheet(route){
   document.getElementById('worm-stop-name').textContent=boardStop;
   document.getElementById('worm-stop-sub').textContent=walkMins>0?`Walk ${walkMins} min to stop`:'At your stop';
   const leaveEl=document.getElementById('worm-leave');
-  leaveEl.textContent=safeL<=0?'NOW':safeL>99?'â':safeL;
+  leaveEl.textContent=safeL<=0?'NOW':safeL>99?'—':safeL;
   leaveEl.className='worm-leave '+(safeL<=2?'col-now':safeL<=8?'col-soon':'col-go');
 
   buildWormSVG(ts,color);
@@ -781,11 +781,11 @@ function showWormSheet(route){
   document.getElementById('worm-steps').innerHTML=(leg.steps||[]).map(s=>{
     if(s.travel_mode==='WALKING'){
       const m=Math.round((s.duration?.value||0)/60);
-      return`<div class="step-row"><div class="step-ico">ð¶</div><div class="step-info"><div class="step-main">Walk ${m>0?m+' min':''}</div><div class="step-sub">${(s.html_instructions||'').replace(/<[^>]*>/g,'')}</div></div></div>`;
+      return`<div class="step-row"><div class="step-ico">🚶</div><div class="step-info"><div class="step-main">Walk ${m>0?m+' min':''}</div><div class="step-sub">${(s.html_instructions||'').replace(/<[^>]*>/g,'')}</div></div></div>`;
     }
     const t=s.transit_details;const name=t?.line?.short_name||t?.line?.name||'Bus';
     const rawC=t?.line?.color;const c=rawC?('#'+rawC.replace('#','')):busColor(name);
-    return`<div class="step-row"><div class="rte-badge" style="background:${c};min-width:40px;text-align:center;font-size:10px">${name}</div><div class="step-info"><div class="step-main">${t?.stop_name||'â'} â ${t?.arrival_stop?.name||'â'}</div><div class="step-sub">${t?.num_stops||'?'} stops Â· ${t?.departure_time?.text||''}${t?.arrival_time?.text?' â '+t.arrival_time.text:''}</div></div></div>`;
+    return`<div class="step-row"><div class="rte-badge" style="background:${c};min-width:40px;text-align:center;font-size:10px">${name}</div><div class="step-info"><div class="step-main">${t?.stop_name||'—'} → ${t?.arrival_stop?.name||'—'}</div><div class="step-sub">${t?.num_stops||'?'} stops · ${t?.departure_time?.text||''}${t?.arrival_time?.text?' → '+t.arrival_time.text:''}</div></div></div>`;
   }).join('');
   document.getElementById('worm-sheet').classList.add('open');
 }
@@ -830,22 +830,22 @@ function closeTripView(){
   map.easeTo({bearing:0,pitch:0,duration:600});
 }
 
-// ââ SUBWAY MAP ââ
+// ── SUBWAY MAP ──
 function openSubwayMap(exitInfo){
   document.getElementById('exit-box-wrap').innerHTML=exitInfo?
-    `<div class="exit-box"><div class="exit-title">ð Best exit for your destination</div><div class="exit-desc">${exitInfo}</div></div>`:'';
+    `<div class="exit-box"><div class="exit-title">📍 Best exit for your destination</div><div class="exit-desc">${exitInfo}</div></div>`:'';
   closeAllSheets();
   document.getElementById('subway-sheet').classList.add('open');
 }
 
-// ââ USER LOCATION ââ
+// ── USER LOCATION ──
 function locateUser(){
   if(!navigator.geolocation)return;
-  document.getElementById('gps-btn').textContent='â³';
+  document.getElementById('gps-btn').textContent='⟳';
   if(_watchId!=null){navigator.geolocation.clearWatch(_watchId);_watchId=null;}
   navigator.geolocation.getCurrentPosition(
     pos=>{onGotPos(pos);startWatch();},
-    ()=>{document.getElementById('gps-btn').textContent='ð';},
+    ()=>{document.getElementById('gps-btn').textContent='📍';},
     {enableHighAccuracy:false,timeout:6000,maximumAge:30000}
   );
 }
@@ -856,7 +856,7 @@ function startWatch(){
 }
 function onGotPos(pos){
   userLat=pos.coords.latitude;userLng=pos.coords.longitude;drawUserDot();
-  document.getElementById('gps-btn').textContent='â';
+  document.getElementById('gps-btn').textContent='✓';
   reverseGeocode(userLng,userLat).then(addr=>{
     if(addr){window._userAddress=addr.split(',')[0].trim();drawUserDot();}
   });
@@ -889,7 +889,7 @@ async function reverseGeocode(lng,lat){
   }catch{return null;}
 }
 
-// ââ AUTOCOMPLETE ââ
+// ── AUTOCOMPLETE ──
 let _acTimer;
 async function acSuggest(q){
   const drop=document.getElementById('ac-drop');
@@ -920,11 +920,11 @@ async function acSuggest(q){
 function acPick(name){document.getElementById('search-input').value=name;acHide();doSearch();}
 function acHide(){document.getElementById('ac-drop').style.display='none';}
 
-// ââ CAMERA ââ
+// ── CAMERA ──
 function triggerCamera(){document.getElementById('cam-input').click();}
 async function handlePhoto(e){
   const file=e.target.files[0];if(!file)return;
-  document.getElementById('search-input').value='Identifying landmarkâ¦';
+  document.getElementById('search-input').value='Identifying landmark…';
   const reader=new FileReader();
   reader.onload=async ev=>{
     try{
@@ -937,12 +937,12 @@ async function handlePhoto(e){
   reader.readAsDataURL(file);e.target.value='';
 }
 
-// ââ RIDE LINK ââ
+// ── RIDE LINK ──
 function openRideApp(lat,lng){
   window.open('https://m.uber.com/looking'+(lat&&lng?'?dropoff[latitude]='+lat+'&dropoff[longitude]='+lng:''),'_blank');
 }
 
-// ââ HELPERS ââ
+// ── HELPERS ──
 function closeSheet(id){document.getElementById(id)?.classList.remove('open');}
 function closeAllSheets(){['stop-sheet','route-sheet','worm-sheet','subway-sheet','picker-sheet'].forEach(closeSheet);}
 function getBearing(lat1,lng1,lat2,lng2){
@@ -952,14 +952,14 @@ function getBearing(lat1,lng1,lat2,lng2){
   return(g(Math.atan2(y,x))+360)%360;
 }
 
-// ââ STOP PICKER â tap a bus route â see all stops â pick destination ââ
-// ââ ROUTE ARRIVALS â tap a route â see all upcoming buses â then pick stop ââ
+// ── STOP PICKER — tap a bus route → see all stops → pick destination ──
+// ── ROUTE ARRIVALS — tap a route → see all upcoming buses → then pick stop ──
 async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
   const el = document.getElementById('stop-content');
 
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">â Back</button>
+      <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
       <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
       <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
     </div>
@@ -983,7 +983,7 @@ async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
 
     el.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-        <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">â Back</button>
+        <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
         <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
         <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
       </div>
@@ -991,7 +991,7 @@ async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
         ${pills||'<div style="color:var(--muted);font-size:13px;padding:20px">No upcoming arrivals</div>'}
       </div>
       <button class="plan-btn" onclick="openStopPicker('${routeName}','${routeColor}',${JSON.stringify(stop).replace(/"/g,'&quot;')})">
-        Pick where I'm getting off â
+        Pick where I'm getting off →
       </button>`;
 
   } catch(e) {
@@ -1008,7 +1008,7 @@ async function openStopPicker(routeName, routeColor, boardingStop) {
 
   document.getElementById('picker-badge').textContent = routeName;
   document.getElementById('picker-badge').style.background = routeColor;
-  document.getElementById('picker-title').textContent = `${routeName} â pick your stop`;
+  document.getElementById('picker-title').textContent = `${routeName} — pick your stop`;
   document.getElementById('picker-sub').textContent = 'Where are you getting off?';
   document.getElementById('picker-list').innerHTML =
     '<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>';
@@ -1084,7 +1084,7 @@ function renderPickerList(stops, routeColor, boardingStop) {
         ${!isLast ? '<div class="stop-dot-line"></div>' : ''}
       </div>
       <div class="stop-row-name">${s.name}</div>
-      <div class="stop-row-dist">${isCurrent ? 'ð You' : i > currentIdx ? (i - currentIdx) + ' stop' + (i - currentIdx > 1 ? 's' : '') : ''}</div>
+      <div class="stop-row-dist">${isCurrent ? '📍 You' : i > currentIdx ? (i - currentIdx) + ' stop' + (i - currentIdx > 1 ? 's' : '') : ''}</div>
     </div>`;
   }).join('');
 
@@ -1168,7 +1168,7 @@ function drawPickerRoute(stops, coords, routeColor, boardingStop) {
     el.style.cssText = `background:${routeColor};color:white;border-radius:9px;padding:3px 8px;
       font-family:Syne,sans-serif;font-size:10px;font-weight:800;white-space:nowrap;
       box-shadow:0 2px 8px rgba(0,0,0,0.2);border:2px solid white;`;
-    el.textContent = 'ð You';
+    el.textContent = '📍 You';
     const m = new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
       .setLngLat([boardingStop.lng, boardingStop.lat]).addTo(map);
     _pickerMarkers.push(m);
@@ -1191,7 +1191,7 @@ function pickDestStop(stopIdx) {
   el.style.cssText = `background:#0039A6;color:white;border-radius:9px;padding:4px 10px;
     font-family:Syne,sans-serif;font-size:11px;font-weight:800;white-space:nowrap;
     box-shadow:0 2px 8px rgba(0,57,166,0.3);border:2px solid white;`;
-  el.textContent = 'â­ Get off here';
+  el.textContent = '⭐ Get off here';
   _pickerMarkers.push(
     new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
       .setLngLat([destStop.lng, destStop.lat]).addTo(map)
@@ -1234,8 +1234,8 @@ async function confirmDestStop(destStop) {
 function showSimpleTrip(routeName, fromStop, toStop) {
   // Draw route segment on map between the two stops
   _tripMarkers.forEach(m => m.remove()); _tripMarkers = [];
-  if (fromStop) addMapMarker([fromStop.lng, fromStop.lat], '#00A651', 'ð', 'Board here', `Catch ${routeName}`);
-  addMapMarker([toStop.lng, toStop.lat], '#0039A6', 'â­', 'Get off here', toStop.name);
+  if (fromStop) addMapMarker([fromStop.lng, fromStop.lat], '#00A651', '📍', 'Board here', `Catch ${routeName}`);
+  addMapMarker([toStop.lng, toStop.lat], '#0039A6', '⭐', 'Get off here', toStop.name);
 
   const bounds = new mapboxgl.LngLatBounds();
   if (fromStop) bounds.extend([fromStop.lng, fromStop.lat]);
