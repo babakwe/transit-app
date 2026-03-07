@@ -1,1268 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TownTrip">
-<meta name="theme-color" content="#ffffff">
-<title>TownTrip</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-<style>
-:root {
-  --ink:#0a0a0f; --muted:#8a8a9a; --blue:#0039A6; --green:#00A651;
-  --red:#EE352E; --orange:#FF6319;
-  --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;font-family:'Syne',sans-serif;}
-#map{position:fixed;inset:0;z-index:0;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>TownTrip</title>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* TOP BAR */
-.topbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:calc(var(--safe-top) + 10px) 14px 10px;}
-.search-pill{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,0.97);backdrop-filter:blur(24px);
-  border-radius:18px;padding:10px 14px;
-  box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:500px;margin:0 auto;
-}
-.brand-dot{
-  width:30px;height:30px;border-radius:9px;background:var(--blue);
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:800;color:white;flex-shrink:0;
-}
-.search-pill input{
-  flex:1;border:none;outline:none;background:transparent;
-  font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--ink);min-width:0;
-}
-.search-pill input::placeholder{color:var(--muted);font-weight:400;}
-.s-btn{
-  width:34px;height:34px;border-radius:10px;background:#f2f2f7;border:none;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:15px;transition:transform 0.12s;flex-shrink:0;
-}
-.s-btn:active{transform:scale(0.86);}
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: rgba(255,255,255,0.08);
+      --accent: #4f8dff;
+      --accent2: #7c5cfc;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #f1f1f5;
+      --muted: #8888a0;
+      --radius: 16px;
+    }
 
-/* AUTOCOMPLETE */
-.ac-drop{
-  position:fixed;left:14px;right:14px;z-index:9999;background:white;border-radius:18px;
-  box-shadow:0 12px 40px rgba(0,0,0,0.15);overflow:hidden;max-height:240px;overflow-y:auto;
-}
-.ac-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;border-bottom:1px solid #f2f2f2;}
-.ac-item:last-child{border-bottom:none;}
-.ac-item:active{background:#f7f7f7;}
-.ac-ico{width:32px;height:32px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ac-ico svg{width:15px;height:15px;}
-.ac-main{font-size:14px;font-weight:600;color:var(--ink);}
-.ac-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
 
-/* FABs */
-.fab-stack{position:fixed;right:14px;z-index:100;bottom:calc(var(--safe-bot) + 22px);display:flex;flex-direction:column;gap:10px;}
-.fab{
-  width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.97);
-  backdrop-filter:blur(20px);border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:20px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.14);transition:transform 0.12s;
-}
-.fab:active{transform:scale(0.88);}
-.fab-subway{background:var(--ink);color:white;font-size:22px;}
+    /* ── MAP (fills background) ── */
+    #map { position: fixed; inset: 0; z-index: 0; }
 
-/* SHEET */
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:200;background:white;
-  border-radius:26px 26px 0 0;box-shadow:0 -4px 40px rgba(0,0,0,0.16);
-  transform:translateY(110%);transition:transform 0.38s cubic-bezier(0.32,1.08,0.64,1);
-  padding-bottom:max(var(--safe-bot),20px);max-height:82vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-}
-.sheet.open{transform:translateY(0);}
-.sh-handle{width:36px;height:4px;background:#e0e0e8;border-radius:2px;margin:14px auto 0;}
-.sh-x{
-  position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
-  background:#f2f2f7;border:none;cursor:pointer;font-size:12px;color:#888;
-  display:flex;align-items:center;justify-content:center;
-}
-.sh-inner{padding:14px 20px 24px;}
+    /* ── OVERLAY STACK (sits above map) ── */
+    #overlay {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      pointer-events: none;
+    }
+    #overlay > * { pointer-events: auto; }
 
-/* STOP SHEET */
-.stop-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
-.stop-ico{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;}
-.stop-title{font-size:17px;font-weight:800;color:var(--ink);line-height:1.2;}
-.stop-sub{font-size:11px;color:var(--muted);margin-top:3px;font-weight:400;}
+    /* ── TOP BAR ── */
+    #topbar {
+      padding: 14px 16px 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #logo { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); background: rgba(79,141,255,0.12); padding: 4px 10px; border-radius: 8px; }
+    #search-wrap { flex: 1; position: relative; }
+    #search {
+      width: 100%; height: 40px; padding: 0 14px;
+      background: rgba(26,26,34,0.92); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 14px; outline: none;
+    }
+    #search::placeholder { color: var(--muted); }
+    #search-results {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; display: none; z-index: 50;
+    }
+    .sr-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .sr-item:last-child { border-bottom: none; }
+    .sr-item:hover { background: var(--surface2); }
 
-.ride-banner{
-  display:flex;align-items:center;gap:12px;
-  background:linear-gradient(135deg,#111,#0039A6);
-  border-radius:16px;padding:12px 14px;margin-bottom:14px;cursor:pointer;transition:opacity 0.15s;
-}
-.ride-banner:active{opacity:0.85;}
-.rb-icon{font-size:22px;flex-shrink:0;}
-.rb-text{flex:1;min-width:0;}
-.rb-title{font-size:13px;font-weight:700;color:white;}
-.rb-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;}
-.rb-mins{font-family:'DM Mono',monospace;font-size:24px;color:white;flex-shrink:0;line-height:1;}
+    /* ── SPACER (pushes bottom panel down) ── */
+    #spacer { flex: 1; }
 
-.sec-label{font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
-.arr-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f2f2f5;}
-.arr-row:last-child{border-bottom:none;}
-.rte-badge{border-radius:8px;padding:5px 10px;font-size:12px;font-weight:800;color:white;font-family:'Syne',sans-serif;flex-shrink:0;min-width:50px;text-align:center;}
-.rte-badge.sbs{min-width:68px;}
-.arr-info{flex:1;min-width:0;}
-.arr-headsign{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.arr-seq{font-size:10px;color:var(--muted);margin-top:1px;}
-.arr-times{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
-.arr-pill{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:4px 8px;border-radius:8px;background:#f2f2f7;}
-.col-now{color:var(--red);} .col-soon{color:var(--orange);} .col-go{color:var(--green);}
+    /* ── BOTTOM PANEL ── */
+    #panel {
+      background: rgba(15,15,19,0.95); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 20px 20px 32px;
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
 
-.plan-btn{
-  width:100%;margin-top:16px;background:var(--ink);color:white;border:none;
-  border-radius:14px;padding:13px;font-family:'Syne',sans-serif;
-  font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.15s;
-}
-.plan-btn:active{opacity:0.8;}
+    /* ── WIDGET — the hero ── */
+    #widget {
+      background: linear-gradient(135deg, rgba(79,141,255,0.08), rgba(124,92,252,0.08));
+      border: 1px solid rgba(79,141,255,0.2);
+      border-radius: 14px; padding: 18px; margin-bottom: 16px;
+    }
+    #widget.hidden { display: none; }
+    #widget.urgent { border-color: rgba(239,68,68,0.4); background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04)); }
+    #widget.soon   { border-color: rgba(245,158,11,0.4); background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); }
+    #widget.good   { border-color: rgba(34,197,94,0.3); background: linear-gradient(135deg, rgba(34,197,94,0.07), rgba(79,141,255,0.05)); }
 
-/* ROUTE OPTIONS */
-.route-card{border-radius:16px;border:1.5px solid #eee;padding:14px;margin-bottom:10px;cursor:pointer;background:#fafafa;transition:all 0.18s;}
-.route-card:active{transform:scale(0.98);}
-.route-card.best{border-color:var(--blue);background:#f0f4ff;}
-.rc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:10px;}
-.rc-info{flex:1;min-width:0;}
-.rc-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px;}
-.rc-detail{font-size:11px;color:var(--muted);line-height:1.5;}
-.rc-mins{font-family:'DM Mono',monospace;font-size:26px;font-weight:400;line-height:1;text-align:right;flex-shrink:0;}
-.rc-foot{display:flex;gap:6px;flex-wrap:wrap;}
-.rbdg{font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;background:#f0f0f5;color:#666;}
-.rbdg-blue{background:var(--blue);color:white;}
-.rbdg-ride{background:#e8f0ff;color:var(--blue);}
+    #widget-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    #widget-route { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    #widget-headsign { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    #widget-status { font-size: 11px; color: var(--muted); text-align: right; }
 
-/* WORM */
-.worm-hdr{display:flex;align-items:center;gap:8px;background:var(--ink);border-radius:14px;padding:10px 14px;margin-bottom:12px;}
-.worm-badge{padding:4px 9px;border-radius:7px;color:white;font-size:12px;font-weight:800;flex-shrink:0;}
-.worm-stop-name{font-size:11px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.worm-stop-sub{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px;}
-.worm-leave{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;line-height:1;flex-shrink:0;}
-.worm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0 8px;}
-.worm-scroll::-webkit-scrollbar{display:none;}
-.step-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f2f2f5;}
-.step-row:last-child{border-bottom:none;}
-.step-ico{font-size:18px;width:36px;text-align:center;flex-shrink:0;}
-.step-info{flex:1;min-width:0;}
-.step-main{font-size:12px;font-weight:600;color:var(--ink);}
-.step-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4;}
+    #widget-timer {
+      display: flex; align-items: flex-end; gap: 20px;
+      padding: 10px 0;
+    }
+    .timer-block { text-align: center; }
+    .timer-num {
+      font-size: 52px; font-weight: 900; line-height: 1;
+      letter-spacing: -3px;
+    }
+    .timer-num.urgent { color: var(--red); }
+    .timer-num.soon   { color: var(--yellow); }
+    .timer-num.good   { color: var(--green); }
+    .timer-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
 
-/* SUBWAY */
-.subway-hdr{padding:16px 20px 12px;border-bottom:1px solid rgba(0,0,0,0.07);}
-.subway-title{font-size:16px;font-weight:800;color:var(--ink);}
-.subway-sub{font-size:10px;color:var(--muted);margin-top:1px;}
-.exit-box{margin:12px 20px;background:#f7f7fb;border-radius:14px;padding:14px;}
-.exit-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;}
-.exit-desc{font-size:11px;color:var(--muted);line-height:1.5;}
-.subway-img-wrap{overflow:auto;-webkit-overflow-scrolling:touch;padding:12px;}
-.subway-img-wrap img{width:100%;min-width:640px;border-radius:10px;display:block;}
+    .timer-divider { color: var(--muted); font-size: 28px; font-weight: 300; padding-bottom: 10px; }
 
-/* STOP PICKER SHEET — half height, sits above map */
-.picker-sheet {
-  position:fixed; left:0; right:0; bottom:0; z-index:210;
-  background:white; border-radius:26px 26px 0 0;
-  box-shadow:0 -4px 40px rgba(0,0,0,0.18);
-  transform:translateY(110%);
-  transition:transform 0.38s cubic-bezier(0.32,1.08,0.64,1);
-  height:52vh; display:flex; flex-direction:column;
-  padding-bottom:max(var(--safe-bot),12px);
-}
-.picker-sheet.open { transform:translateY(0); }
+    #widget-footer { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .pill {
+      font-size: 11px; padding: 4px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.06); color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .pill.active { background: rgba(79,141,255,0.15); color: var(--accent); border-color: rgba(79,141,255,0.3); }
 
-.picker-hdr {
-  padding:0 16px 10px; flex-shrink:0;
-  border-bottom:1px solid #f0f0f5;
-}
-.picker-route-bar {
-  display:flex; align-items:center; gap:10px; margin-bottom:8px;
-}
-.picker-badge {
-  padding:5px 12px; border-radius:9px; color:white;
-  font-size:13px; font-weight:800; flex-shrink:0;
-}
-.picker-title { font-size:15px; font-weight:800; color:var(--ink); flex:1; min-width:0; }
-.picker-sub   { font-size:10px; color:var(--muted); margin-top:2px; }
-.picker-close {
-  width:28px; height:28px; border-radius:50%; background:#f2f2f7;
-  border:none; cursor:pointer; font-size:12px; color:#888;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
+    /* ── NEXT BUSES ── */
+    #next-buses { display: flex; gap: 10px; margin-bottom: 16px; }
+    .next-bus-card {
+      flex: 1; padding: 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+    }
+    .nb-mins { font-size: 22px; font-weight: 800; }
+    .nb-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .nb-dist  { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-/* Direction toggle */
-.dir-toggle {
-  display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;
-}
-.dir-toggle::-webkit-scrollbar { display:none; }
-.dir-btn {
-  flex-shrink:0; padding:5px 12px; border-radius:20px; border:1.5px solid #eee;
-  background:#f7f7fb; font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
-  color:var(--muted); cursor:pointer; white-space:nowrap; transition:all 0.15s;
-}
-.dir-btn.active { background:var(--ink); border-color:var(--ink); color:white; }
+    /* ── STOP PICKER ── */
+    #stop-picker {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+    }
+    #stop-picker-text { flex: 1; font-size: 14px; }
+    #stop-picker-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .stop-icon { font-size: 20px; }
 
-/* Stop list */
-.picker-list {
-  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-}
-.stop-row {
-  display:flex; align-items:center; gap:12px;
-  padding:11px 16px; border-bottom:1px solid #f5f5f8;
-  cursor:pointer; transition:background 0.12s;
-}
-.stop-row:active { background:#f0f4ff; }
-.stop-row.current { background:#efffef; }
-.stop-row.past { opacity:0.35; pointer-events:none; }
-.stop-row.highlighted { background:#f0f4ff; }
+    /* ── LOADING / EMPTY ── */
+    #widget-loading { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+    #widget-empty   { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 
-.stop-line {
-  display:flex; flex-direction:column; align-items:center;
-  flex-shrink:0; width:16px; gap:0;
-}
-.stop-dot-line {
-  width:2px; height:10px; background:#e0e0e8;
-}
-.stop-dot-circle {
-  width:12px; height:12px; border-radius:50%;
-  border:2.5px solid var(--muted); background:white; flex-shrink:0;
-}
-.stop-dot-circle.active  { border-color:var(--green); background:var(--green); }
-.stop-dot-circle.current { border-color:var(--green); background:var(--green); box-shadow:0 0 0 4px rgba(0,166,81,0.15); }
-
-.stop-row-name { font-size:12px; font-weight:600; color:var(--ink); flex:1; min-width:0; line-height:1.3; }
-.stop-row-dist { font-size:10px; color:var(--muted); flex-shrink:0; }
-
-/* LOADING */
-.ldots{display:flex;gap:6px;justify-content:center;padding:28px 0;}
-.ld{width:7px;height:7px;border-radius:50%;background:#ddd;animation:ldot 1.2s ease-in-out infinite;}
-.ld:nth-child(2){animation-delay:.18s}.ld:nth-child(3){animation-delay:.36s}
-@keyframes ldot{0%,80%,100%{transform:scale(0.4);opacity:0.2}40%{transform:scale(1);opacity:1}}
-.mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib,.mapboxgl-ctrl-group{display:none!important;}
-</style>
+    /* ── REFRESH PULSE ── */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .refreshing { animation: pulse 1.2s ease infinite; }
+  </style>
 </head>
 <body>
+
 <div id="map"></div>
 
-<div class="topbar">
-  <div class="search-pill">
-    <div class="brand-dot">TT</div>
-    <input id="search-input" placeholder="Tap a stop — or search an address"
-      autocomplete="off"
-      oninput="acSuggest(this.value)"
-      onblur="setTimeout(acHide,200)"
-      onkeydown="if(event.key==='Enter')doSearch()">
-    <button class="s-btn" id="gps-btn" onclick="centerOnMe()">📍</button>
-    <button class="s-btn" onclick="triggerCamera()">📷</button>
-  </div>
-  <div class="ac-drop" id="ac-drop" style="display:none"></div>
-</div>
-
-<div class="fab-stack">
-  <button class="fab fab-subway" onclick="openSubwayMap()" title="Subway map">🚇</button>
-  <button class="fab" onclick="recenter()">🎯</button>
-</div>
-
-<!-- STOP ARRIVALS -->
-<div class="sheet" id="stop-sheet">
-  <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('stop-sheet')">✕</button>
-  <button class="sh-x" style="right:50px" id="refresh-btn" onclick="refreshStopSheet()">↻</button>
-  <div class="sh-inner" id="stop-content">
-    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
-  </div>
-</div>
-
-<!-- ROUTE OPTIONS -->
-<div class="sheet" id="route-sheet">
-  <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('route-sheet')">✕</button>
-  <div class="sh-inner">
-    <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:14px" id="route-title">Route options</div>
-    <div id="route-list"></div>
-  </div>
-</div>
-
-<!-- ACTIVE TRIP / WORM -->
-<div class="sheet" id="worm-sheet">
-  <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeTripView()">✕</button>
-  <div class="sh-inner">
-    <div class="worm-hdr">
-      <div class="worm-badge" id="worm-badge">—</div>
-      <div style="flex:1;min-width:0">
-        <div class="worm-stop-name" id="worm-stop-name">—</div>
-        <div class="worm-stop-sub" id="worm-stop-sub"></div>
-      </div>
-      <div class="worm-leave col-go" id="worm-leave">—</div>
+<div id="overlay">
+  <div id="topbar">
+    <div id="logo">TT</div>
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Search an address or stop…" autocomplete="off" />
+      <div id="search-results"></div>
     </div>
-    <div class="worm-scroll" id="worm-svg"></div>
-    <div class="sec-label" style="margin-top:10px">Trip steps</div>
-    <div id="worm-steps"></div>
-    <button class="plan-btn" style="background:#f2f2f7;color:var(--ink);margin-top:16px"
-      onclick="closeSheet('worm-sheet');document.getElementById('route-sheet').classList.add('open')">
-      ← All options
-    </button>
   </div>
-</div>
 
-<!-- SUBWAY MAP -->
-<div class="sheet" id="subway-sheet">
-  <div class="sh-handle"></div>
-  <button class="sh-x" onclick="closeSheet('subway-sheet')">✕</button>
-  <div class="subway-hdr">
-    <div class="subway-title">NYC Subway Map</div>
-    <div class="subway-sub">Works offline · Pinch to zoom</div>
-  </div>
-  <div id="exit-box-wrap"></div>
-  <div class="subway-img-wrap">
-    <img src="https://new.mta.info/map/5256" alt="NYC Subway Map">
-  </div>
-</div>
+  <div id="spacer"></div>
 
-<!-- STOP PICKER — tap a bus → pick your stop -->
-<div class="picker-sheet" id="picker-sheet">
-  <div class="sh-handle"></div>
-  <div class="picker-hdr">
-    <div class="picker-route-bar">
-      <button class="picker-close" onclick="closePicker();document.getElementById('stop-sheet').classList.add('open')" style="margin-right:4px">←</button>
-      <div class="picker-badge" id="picker-badge">—</div>
-      <div style="flex:1;min-width:0">
-        <div class="picker-title" id="picker-title">Pick your stop</div>
-        <div class="picker-sub" id="picker-sub">Where are you getting off?</div>
+  <div id="panel">
+    <!-- Departure widget — the hero -->
+    <div id="widget" class="hidden">
+      <div id="widget-header">
+        <div>
+          <div id="widget-route">—</div>
+          <div id="widget-headsign"></div>
+        </div>
+        <div id="widget-status"></div>
       </div>
-      <button class="picker-close" onclick="closePicker()">✕</button>
+      <div id="widget-timer">
+        <div class="timer-block">
+          <div id="leave-num" class="timer-num">—</div>
+          <div class="timer-label">Leave in (min)</div>
+        </div>
+        <div class="timer-divider">·</div>
+        <div class="timer-block">
+          <div id="bus-num" class="timer-num" style="font-size:34px;color:var(--muted)">—</div>
+          <div class="timer-label">Bus arrives</div>
+        </div>
+        <div class="timer-divider">·</div>
+        <div class="timer-block">
+          <div id="walk-num" class="timer-num" style="font-size:28px;color:var(--muted)">3</div>
+          <div class="timer-label">Walk (min)</div>
+        </div>
+      </div>
+      <div id="widget-footer"></div>
     </div>
-    <div class="dir-toggle" id="dir-toggle"></div>
-  </div>
-  <div class="picker-list" id="picker-list">
-    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+
+    <div id="widget-loading" class="hidden">Checking buses…</div>
+    <div id="widget-empty" class="hidden"></div>
+
+    <!-- Next 2 buses -->
+    <div id="next-buses" class="hidden"></div>
+
+    <!-- Stop selector -->
+    <div id="stop-picker">
+      <div class="stop-icon">🚏</div>
+      <div>
+        <div id="stop-picker-text">Tap a stop on the map</div>
+        <div id="stop-picker-sub">or search an address above</div>
+      </div>
+    </div>
   </div>
 </div>
-
-<input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
 
 <script>
-// ── CONSTANTS ──
-const BUS_COLOR={
-  'BX12+':'#0039A6','BX12':'#0039A6','BX26':'#6BBE45','BX28':'#FF6319',
-  'BX23':'#8C4799','BX5':'#00B2A9','BX38':'#E4002B','BX6':'#0039A6',
-  'BX1':'#0039A6','BX2':'#0039A6','BX9':'#0039A6','BX13':'#0039A6',
-  'BX15':'#0039A6','BX19':'#0039A6','BX22':'#0039A6','BX29':'#0039A6',
-  'BX30':'#0039A6','BX32':'#0039A6','BX33':'#0039A6','BX36':'#0039A6',
-  'BX39':'#0039A6','BX40':'#0039A6','BX41':'#0039A6','BX42':'#0039A6',
-  'BX55':'#0039A6','M15+':'#EE352E','M86+':'#EE352E','B44+':'#00933C','Q44+':'#6D3B8C',
-};
-const SUBWAY_COLOR={
-  '1':'#EE352E','2':'#EE352E','3':'#EE352E',
-  '4':'#00933C','5':'#00933C','6':'#00933C','6X':'#00933C',
-  '7':'#B933AD','7X':'#B933AD',
-  'A':'#0039A6','C':'#0039A6','E':'#0039A6',
-  'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
-  'G':'#6CBE45','J':'#996633','Z':'#996633','L':'#A7A9AC',
-  'N':'#FCCC0A','Q':'#FCCC0A','R':'#FCCC0A','W':'#FCCC0A',
-  'S':'#808183','GS':'#808183','FS':'#808183',
-};
-function busColor(r){return BUS_COLOR[r]||BUS_COLOR[r?.toUpperCase()]||'#555';}
-function isSubwayRoute(r){return!!SUBWAY_COLOR[r];}
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const REFRESH_MS   = 30_000; // refresh widget every 30 seconds
+const WALK_DEFAULT = 3;
 
-// ── STATE ──
-let map,userLat=null,userLng=null;
-let _watchId=null,_moveTimer=null,_lastBounds=null;
-let _googleRoutes=[],_fromVal='',_toVal='';
-let _tripMarkers=[],_boardingStop=null,_currentStop=null;
-let _pickerRoute=null,_pickerStop=null,_pickerStops=[],_pickerDir=0,_pickerMarkers=[];
+// ── STATE ───────────────────────────────────────────────────────────────────
+let map, selectedStop = null, selectedRoute = null;
+let widgetTimer = null, countdownTimer = null;
+let currentWidget = null;
 
-// ── MAP INIT ──
-async function initMap(){
-  let token;
-  try{const r=await fetch('/api/mapboxtoken');token=(await r.json()).token;}
-  catch(e){console.error('Token error',e);return;}
-  if(!token)return;
-  mapboxgl.accessToken=token;
-  map=new mapboxgl.Map({
-    container:'map',style:'mapbox://styles/mapbox/light-v11',
-    center:[-73.875,40.870],zoom:14,minZoom:10,maxZoom:18,
+// ── MAP INIT ─────────────────────────────────────────────────────────────────
+async function initMap() {
+  const r = await fetch('/api/mapboxtoken');
+  const { token } = await r.json();
+  mapboxgl.accessToken = token;
+
+  map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [-73.886, 40.865],
+    zoom: 13.5,
+    attributionControl: false,
   });
-  map.on('load',()=>{addStopLayers();locateUser();});
+
+  map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), 'top-right');
+
+  map.on('load', loadStops);
 }
 
-// ── STOP LAYERS ──
-function addStopLayers(){
-  map.addSource('bus-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-  map.addSource('subway-stops',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+// ── STOPS ─────────────────────────────────────────────────────────────────
+async function loadStops() {
+  try {
+    const res   = await fetch('/api/stops');
+    const data  = await res.json();
+    const stops = data.stops || data;
 
-  // Bus stops — square marker with route color + "B" label
-  map.addLayer({id:'bus-bg',type:'circle',source:'bus-stops',minzoom:13,paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],13,5,15,8,17,11],
-    'circle-color':['get','color'],
-    'circle-opacity':['interpolate',['linear'],['zoom'],13,0.6,14,1],
-    'circle-stroke-width':2,'circle-stroke-color':'white',
-    'circle-pitch-alignment':'map',
-  }});
-  // Bus stop icon — small bus symbol inside dot
-  map.addLayer({id:'bus-icon',type:'symbol',source:'bus-stops',minzoom:14,layout:{
-    'text-field':'🚌',
-    'text-size':['interpolate',['linear'],['zoom'],14,8,16,12],
-    'text-anchor':'center','text-allow-overlap':true,'text-ignore-placement':true,
-  }});
-  map.addLayer({id:'bus-labels',type:'symbol',source:'bus-stops',minzoom:16,layout:{
-    'text-field':['get','name'],'text-font':['DIN Pro Regular','Arial Unicode MS Regular'],
-    'text-size':9,'text-offset':[0,1.6],'text-anchor':'top','text-allow-overlap':false,
-  },paint:{'text-color':'#444','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
+    // Group stops by route color
+    const routeColors = {
+      'Bx1':'#4f8dff','Bx2':'#4f8dff','Bx12':'#7c5cfc','Bx13':'#7c5cfc',
+      'Bx17':'#22c55e','Bx19':'#22c55e','Bx28':'#f59e0b','Bx38':'#f59e0b',
+      'Bx39':'#ef4444','Bx41':'#ef4444',
+    };
 
-  // Subway stops — larger circle with route color + line letter
-  map.addLayer({id:'subway-bg',type:'circle',source:'subway-stops',minzoom:11,paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],11,6,14,11,17,16],
-    'circle-color':['get','color'],
-    'circle-stroke-width':2.5,'circle-stroke-color':'white','circle-opacity':1,
-  }});
-  map.addLayer({id:'subway-line-label',type:'symbol',source:'subway-stops',minzoom:12,layout:{
-    'text-field':['get','short'],'text-font':['DIN Pro Bold','Arial Unicode MS Bold'],
-    'text-size':['interpolate',['linear'],['zoom'],12,7,15,10],
-    'text-anchor':'center','text-allow-overlap':true,'text-ignore-placement':true,
-  },paint:{'text-color':'white'}});
-  map.addLayer({id:'subway-name',type:'symbol',source:'subway-stops',minzoom:15,layout:{
-    'text-field':['get','name'],'text-font':['DIN Pro Regular','Arial Unicode MS Regular'],
-    'text-size':9,'text-offset':[0,1.8],'text-anchor':'top','text-allow-overlap':false,
-  },paint:{'text-color':'#333','text-halo-color':'rgba(255,255,255,0.9)','text-halo-width':1.5}});
+    stops.forEach(stop => {
+      const color = routeColors[stop.routes?.[0]] || '#8888a0';
+      const el = document.createElement('div');
+      el.style.cssText = `width:12px;height:12px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.4);cursor:pointer;transition:transform 0.15s;`;
 
-  // Click handlers — use new layer IDs
-  map.on('click','bus-bg',e=>{
-    e.preventDefault();e.originalEvent._sh=true;
-    const p=e.features[0].properties;
-    openStopSheet({id:p.stopId,name:p.name,lat:p.lat,lng:p.lng,
-      stopId:p.stopId,routes:JSON.parse(p.routes||'[]'),type:'bus'});
-  });
-  map.on('click','subway-bg',e=>{
-    e.preventDefault();e.originalEvent._sh=true;
-    const p=e.features[0].properties;
-    openStopSheet({id:p.stopId,name:p.name,lat:p.lat,lng:p.lng,
-      stopId:p.stopId,routes:JSON.parse(p.routes||'[]'),type:'subway'});
-  });
-  ['bus-bg','bus-icon','subway-bg','subway-line-label'].forEach(id=>{
-    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-    map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
-  });
+      el.addEventListener('mouseenter', () => el.style.transform = 'scale(1.6)');
+      el.addEventListener('mouseleave', () => el.style.transform = 'scale(1)');
 
-  loadStops();
-  map.on('moveend',()=>{clearTimeout(_moveTimer);_moveTimer=setTimeout(loadStops,400);});
-}
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([stop.lng || stop.longitude, stop.lat || stop.latitude])
+        .addTo(map);
 
-async function loadStops(){
-  if(!map||map.getZoom()<12){
-    map.getSource?.('bus-stops')?.setData({type:'FeatureCollection',features:[]});
-    map.getSource?.('subway-stops')?.setData({type:'FeatureCollection',features:[]});
-    _lastBounds=null;return;
+      marker.getElement().addEventListener('click', () => selectStop(stop));
+    });
+  } catch (e) {
+    console.warn('stops load error', e.message);
   }
-  const b=map.getBounds();
-  const key=[b.getSouth().toFixed(3),b.getNorth().toFixed(3),b.getWest().toFixed(3),b.getEast().toFixed(3)].join(',');
-  if(key===_lastBounds)return;
-  _lastBounds=key;
-  try{
-    const params=new URLSearchParams({
-      minLat:b.getSouth().toFixed(4),maxLat:b.getNorth().toFixed(4),
-      minLng:b.getWest().toFixed(4),maxLng:b.getEast().toFixed(4),
-    });
-    const r=await fetch('/api/stops?'+params,{signal:AbortSignal.timeout(6000)});
-    if(!r.ok)return;
-    const d=await r.json();
-    if(!d.stops?.length)return;
-    const busF=[],subF=[];
-    d.stops.forEach(s=>{
-      const routes=Array.isArray(s.routes)?s.routes:[];
-      const isSub=s.type==='subway'||routes.some(r=>isSubwayRoute(r));
-      if(isSub){
-        const c=SUBWAY_COLOR[routes[0]]||'#808183';
-        subF.push({type:'Feature',geometry:{type:'Point',coordinates:[s.lng,s.lat]},
-          properties:{stopId:s.stopId||s.id,name:s.name,lat:s.lat,lng:s.lng,
-            routes:JSON.stringify(routes),color:c,short:routes.slice(0,3).join('')}});
-      }else{
-        busF.push({type:'Feature',geometry:{type:'Point',coordinates:[s.lng,s.lat]},
-          properties:{stopId:s.stopId||s.id,name:s.name,lat:s.lat,lng:s.lng,
-            routes:JSON.stringify(routes),color:busColor(routes[0])}});
-      }
-    });
-    map.getSource('bus-stops')?.setData({type:'FeatureCollection',features:busF});
-    map.getSource('subway-stops')?.setData({type:'FeatureCollection',features:subF});
-  }catch(e){console.warn('Stops:',e.message);}
 }
 
-// ── CORE: OPEN STOP SHEET ──
-async function openStopSheet(stop){
-  _currentStop = stop;
-  closeAllSheets();
-  const el=document.getElementById('stop-content');
-  const isSub=stop.type==='subway';
-  const ico=isSub?'🚇':'🚌';
-  const routes=stop.routes||[];
+// ── STOP SELECTION ───────────────────────────────────────────────────────────
+function selectStop(stop) {
+  selectedStop  = stop.stopId || stop.id || stop.stop_id;
+  selectedRoute = stop.routes?.[0] || stop.route;
 
-  // Instant loading state
-  el.innerHTML=`
-    <div class="stop-hdr">
-      <div class="stop-ico">${ico}</div>
-      <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' · ')||'Loading…'}</div></div>
-    </div>
-    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
-  document.getElementById('stop-sheet').classList.add('open');
+  document.getElementById('stop-picker-text').textContent = stop.name || stop.stop_name || selectedStop;
+  document.getElementById('stop-picker-sub').textContent  = (stop.routes || [stop.route]).filter(Boolean).join(' · ');
 
-  const arrivals=await fetchArrivals(stop);
-  logObservations(stop, arrivals);
+  map.flyTo({ center: [stop.lng || stop.longitude, stop.lat || stop.latitude], zoom: 15, duration: 600 });
 
-  if(!arrivals?.length){
-    el.innerHTML=`
-      <div class="stop-hdr">
-        <div class="stop-ico">${ico}</div>
-        <div><div class="stop-title">${stop.name}</div>
-        <div class="stop-sub">${routes.join(' · ')||'Stop'}</div></div>
-      </div>
-      <div style="padding:28px 0;text-align:center;color:var(--muted);font-size:13px">No arrivals right now</div>
-      <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here →</button>`;
+  refreshWidget();
+  if (widgetTimer) clearInterval(widgetTimer);
+  widgetTimer = setInterval(refreshWidget, REFRESH_MS);
+}
+
+// ── WIDGET ───────────────────────────────────────────────────────────────────
+async function refreshWidget() {
+  if (!selectedStop || !selectedRoute) return;
+
+  showLoading(true);
+
+  try {
+    const r    = await fetch(`/api/widget?stop=${selectedStop}&route=${encodeURIComponent(selectedRoute)}&walk_mins=${WALK_DEFAULT}`);
+    const data = await r.json();
+    renderWidget(data);
+  } catch (e) {
+    showEmpty('Could not load bus times. Check your connection.');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function renderWidget(data) {
+  currentWidget = data;
+
+  const w          = document.getElementById('widget');
+  const leaveNum   = document.getElementById('leave-num');
+  const busNum     = document.getElementById('bus-num');
+  const walkNum    = document.getElementById('walk-num');
+  const routeEl    = document.getElementById('widget-route');
+  const headsignEl = document.getElementById('widget-headsign');
+  const statusEl   = document.getElementById('widget-status');
+  const footerEl   = document.getElementById('widget-footer');
+  const emptyEl    = document.getElementById('widget-empty');
+  const nextEl     = document.getElementById('next-buses');
+
+  emptyEl.classList.add('hidden');
+
+  if (data.status === 'no_buses') {
+    w.classList.add('hidden');
+    nextEl.classList.add('hidden');
+    emptyEl.classList.remove('hidden');
+    emptyEl.textContent = 'No buses found right now for ' + data.route + '. Try again in a minute.';
     return;
   }
 
-  const minWait=arrivals[0]?.mins??99;
-  const rideBanner=minWait>=10?`
-    <div class="ride-banner" onclick="openRideApp(${stop.lat},${stop.lng})">
-      <div class="rb-icon">🚗</div>
-      <div class="rb-text">
-        <div class="rb-title">Next bus in ${minWait} min — ride faster?</div>
-        <div class="rb-sub">Open Uber or Lyft</div>
-      </div>
-      <div class="rb-mins">${minWait}<span style="font-size:11px;opacity:0.6"> m</span></div>
-    </div>`:'';
+  const leave = data.leave_in_mins ?? 0;
+  const busIn = data.next_bus_mins ?? 0;
+  const walk  = data.walk_mins     ?? WALK_DEFAULT;
 
-  const rows=arrivals.map(a=>{
-    const bc=isSub?(SUBWAY_COLOR[a.route]||'#808183'):busColor(a.route);
-    const tapAction=isSub?'':`onclick="showRouteArrivals('${a.route}','${bc}',${JSON.stringify(stop).replace(/"/g,'&quot;')},${JSON.stringify(a).replace(/"/g,'&quot;')})"`;
-    const pills=a.times.slice(0,1).map(m=>{
-      const c=m<=1?'col-now':m<=5?'col-soon':'col-go';
-      return`<span class="arr-pill ${c}">${m<=0?'NOW':m+'m'}</span>`;
-    }).join('');
-    return`<div class="arr-row" style="${isSub?'':'cursor:pointer;'}" ${tapAction}>
-      <div class="rte-badge${a.route?.includes('+')?' sbs':''}" style="background:${bc}">${a.route}</div>
-      <div class="arr-info">
-        <div class="arr-headsign">${a.headsign||a.route}</div>
-        ${isSub?'':'<div class="arr-seq" style="color:var(--blue);font-weight:700;font-size:10px">Tap for details →</div>'}
-      </div>
-      <div class="arr-times">${pills}</div>
-    </div>`;
-  }).join('');
+  // Color mode by urgency
+  w.classList.remove('hidden','urgent','soon','good');
+  leaveNum.classList.remove('urgent','soon','good');
+  if (leave <= 1)      { w.classList.add('urgent'); leaveNum.classList.add('urgent'); }
+  else if (leave <= 4) { w.classList.add('soon');   leaveNum.classList.add('soon'); }
+  else                 { w.classList.add('good');   leaveNum.classList.add('good'); }
 
-  el.innerHTML=`
-    <div class="stop-hdr">
-      <div class="stop-ico">${ico}</div>
-      <div><div class="stop-title">${stop.name}</div>
-      <div class="stop-sub">${routes.join(' · ')||'Stop'} · ${arrivals.length} route${arrivals.length!==1?'s':''} · Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>
-    </div>
-    ${rideBanner}
-    <div class="sec-label">Live arrivals</div>
-    ${rows}
-    <button class="plan-btn" onclick='startTripFrom(${JSON.stringify(stop)})'>Plan a trip from here →</button>`;
-}
+  leaveNum.textContent = leave <= 0 ? 'NOW' : leave;
+  busNum.textContent   = busIn + 'm';
+  walkNum.textContent  = walk + 'm';
+  routeEl.textContent  = data.route;
+  headsignEl.textContent = data.headsign ? ('→ ' + data.headsign) : '';
 
-function refreshStopSheet(){
-  if(!_currentStop) return;
-  const btn=document.getElementById('refresh-btn');
-  if(btn){ btn.style.transform='rotate(360deg)'; btn.style.transition='transform 0.5s'; }
-  setTimeout(()=>{ if(btn){ btn.style.transform=''; btn.style.transition=''; } }, 500);
-  openStopSheet(_currentStop);
-}
+  const updatedSecs = data.last_updated
+    ? Math.round((Date.now() - new Date(data.last_updated)) / 1000) : null;
+  statusEl.textContent = updatedSecs !== null ? ('Updated ' + updatedSecs + 's ago') : '';
 
-async function fetchArrivals(stop){
-  const routes=stop.routes||[];
-  if(!routes.length)return[];
-  const results=await Promise.allSettled(routes.map(route=>
-    fetch(`/api/arrivals?stopId=${stop.stopId}&route=${encodeURIComponent(route)}`,
-      {signal:AbortSignal.timeout(5000)})
-    .then(r=>r.ok?r.json():null).then(d=>({route,data:d}))));
-  const grouped=[];
-  results.forEach(res=>{
-    if(res.status!=='fulfilled')return;
-    const{route,data}=res.value;
-    if(!data?.arrivals?.length)return;
-    const times=data.arrivals.slice(0,3).map(a=>a.mins).filter(m=>m!=null);
-    if(!times.length)return;
-    grouped.push({
-      route,
-      mins:times[0],
-      times,
-      headsign:data.arrivals[0].headsign||data.arrivals[0].destination||route,
-    });
+  // Footer pills
+  footerEl.innerHTML = '';
+  const nb = data.next_bus;
+  if (nb?.distance_label) addPill(footerEl, '📍 ' + nb.distance_label);
+  if (nb?.stops_away != null) addPill(footerEl, nb.stops_away + ' stops away');
+  if (data.bias_active) addPill(footerEl, '🧠 AI-adjusted', true);
+  if (nb?.bias_sample_count) addPill(footerEl, nb.bias_sample_count + ' trips learned');
+
+  // Subsequent buses
+  const subs = data.subsequent_buses || [];
+  nextEl.innerHTML = '';
+  nextEl.classList.toggle('hidden', subs.length === 0);
+  subs.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'next-bus-card';
+    card.innerHTML = `
+      <div class="nb-mins">${b.mins_away}m</div>
+      <div class="nb-label">Next bus</div>
+      <div class="nb-dist">${b.distance_label || ''}</div>
+    `;
+    nextEl.appendChild(card);
   });
-  return grouped.sort((a,b)=>a.mins-b.mins);
+
+  // Start countdown
+  startCountdown(data.next_bus?.adjusted_arrival);
 }
 
-// ── SILENTLY LOG OBSERVATIONS TO SUPABASE ──
-function logObservations(stop, arrivals) {
-  if (!arrivals?.length) return;
-  const observations = arrivals.map(a => ({
-    route: a.route,
-    stopId: stop.stopId,
-    stopName: stop.name,
-    headsign: a.headsign || '',
-    mins: a.mins,
-    passengers: a.passengers || null,
-    mode: stop.type === 'subway' ? 'subway' : 'bus',
-  }));
-  fetch('/api/log-observation', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(observations),
-  }).catch(() => {}); // silent — never block the UI
+function startCountdown(arrivalISO) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (!arrivalISO) return;
+
+  const arrival = new Date(arrivalISO);
+  countdownTimer = setInterval(() => {
+    if (!currentWidget) return;
+    const now      = new Date();
+    const busIn    = Math.max(0, Math.round((arrival - now) / 60000));
+    const leaveIn  = Math.max(0, busIn - WALK_DEFAULT);
+    const leaveNum = document.getElementById('leave-num');
+    const busNum   = document.getElementById('bus-num');
+    const w        = document.getElementById('widget');
+
+    leaveNum.textContent = leaveIn <= 0 ? 'NOW' : leaveIn;
+    busNum.textContent   = busIn + 'm';
+
+    w.classList.remove('urgent','soon','good');
+    leaveNum.classList.remove('urgent','soon','good');
+    if (leaveIn <= 1)      { w.classList.add('urgent'); leaveNum.classList.add('urgent'); }
+    else if (leaveIn <= 4) { w.classList.add('soon');   leaveNum.classList.add('soon'); }
+    else                   { w.classList.add('good');   leaveNum.classList.add('good'); }
+  }, 10_000);
 }
 
-// ── PLAN TRIP FROM A STOP ──
-function startTripFrom(stop){
-  _boardingStop=stop;
-  closeSheet('stop-sheet');
-  const inp=document.getElementById('search-input');
-  inp.value='';inp.placeholder='Where to?';inp.focus();
+function addPill(parent, text, active = false) {
+  const p = document.createElement('div');
+  p.className = 'pill' + (active ? ' active' : '');
+  p.textContent = text;
+  parent.appendChild(p);
 }
 
-async function doSearch(){
-  const q=document.getElementById('search-input').value.trim();
-  if(!q)return;
-  acHide();
-  const from=_boardingStop?`${_boardingStop.lat},${_boardingStop.lng}`:
-    (userLat?`${userLat},${userLng}`:'Co-op City, Bronx NY');
-  _fromVal=_boardingStop?.name||'My location';
-  _toVal=q;
-  document.getElementById('search-input').placeholder='Finding routes…';
-  try{
-    const res=await fetch(`/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(q)}&alternatives=true`);
-    const data=await res.json();
-    if(data.routes?.length){_googleRoutes=data.routes;showRouteOptions(data.routes);}
-    else alert('No routes found. Try a different destination.');
-  }catch(e){console.error(e);}
-  document.getElementById('search-input').placeholder='Tap a stop — or search an address';
-  _boardingStop=null;
+function showLoading(on) {
+  document.getElementById('widget-loading').classList.toggle('hidden', !on);
+  if (on) document.getElementById('widget').classList.add('hidden');
 }
 
-// ── ROUTE OPTIONS ──
-function showRouteOptions(routes){
-  routes.sort((a,b)=>(a.legs?.[0]?.duration?.value||0)-(b.legs?.[0]?.duration?.value||0));
-  const cards=routes.map((route,i)=>{
-    const leg=route.legs?.[0];if(!leg)return'';
-    const dur=leg.duration?.text||'—';
-    const depVal=leg.departure_time?.value;
-    const li=depVal?Math.round((depVal*1000-Date.now())/60000):null;
-    const safeL=li??99;
-    const urgCol=safeL<=2?'var(--red)':safeL<=8?'var(--orange)':'var(--green)';
-    const leaveStr=safeL<=0?'Leave NOW':safeL<99?`Leave in ${safeL} min`:'';
-    const ts=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
-    const transfers=ts.length>1?`${ts.length-1} transfer${ts.length>2?'s':''}`:'Direct';
-    const fw=(leg.steps||[])[0];
-    const walkMins=fw?.travel_mode==='WALKING'?Math.round((fw.duration?.value||0)/60):0;
-    const waitMins=li!=null?Math.max(0,li-walkMins):null;
-    const showRide=waitMins!=null&&waitMins>=10;
-    const badges=ts.map(s=>{
-      const name=s.transit_details?.line?.short_name||s.transit_details?.line?.name||'Bus';
-      const rawC=s.transit_details?.line?.color;
-      const c=rawC?('#'+rawC.replace('#','')):busColor(name);
-      return`<span class="rte-badge" style="background:${c};font-size:10px;padding:3px 8px">${name}</span>`;
-    }).join('');
-    return`<div class="route-card${i===0?' best':''}" onclick="selectRoute(${i})">
-      <div class="rc-top">
-        <div class="rc-info">
-          <div class="rc-badges">${badges}</div>
-          <div class="rc-detail">${walkMins>0?`🚶 ${walkMins} min walk · `:''}${waitMins!=null?`⏱ ${waitMins} min wait · `:''}${transfers}${showRide?'<br><span style="color:var(--blue);font-weight:700">💡 Ride to stop saves time</span>':''}</div>
-        </div>
-        <div>
-          <div class="rc-mins" style="color:${urgCol}">${dur.replace(' mins','').replace(' min','')}</div>
-          <div style="font-size:8px;color:var(--muted);text-align:right;margin-top:2px">MIN</div>
-        </div>
-      </div>
-      <div class="rc-foot">
-        ${i===0?'<span class="rbdg rbdg-blue">Fastest</span>':''}
-        ${leaveStr?`<span class="rbdg" style="color:${urgCol};font-weight:700">${leaveStr}</span>`:''}
-        <span class="rbdg">$2.90</span>
-        ${showRide?'<span class="rbdg rbdg-ride">🚗 Ride option</span>':''}
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('route-title').textContent=`${routes.length} route${routes.length>1?'s':''} to ${_toVal.split(',')[0]}`;
-  document.getElementById('route-list').innerHTML=cards;
-  document.getElementById('route-sheet').classList.add('open');
+function showEmpty(msg) {
+  const el = document.getElementById('widget-empty');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  document.getElementById('widget').classList.add('hidden');
 }
 
-function selectRoute(idx){
-  const route=_googleRoutes[idx];if(!route)return;
-  closeSheet('route-sheet');drawRouteOnMap(route);showWormSheet(route);
-}
+// ── ADDRESS SEARCH ────────────────────────────────────────────────────────────
+const searchEl   = document.getElementById('search');
+const resultsEl  = document.getElementById('search-results');
+let searchTimer;
 
-// ── DRAW ROUTE ON MAP ──
-function drawRouteOnMap(route){
-  const leg=route.legs?.[0];if(!leg)return;
-  _tripMarkers.forEach(m=>m.remove());_tripMarkers=[];
-  ['worm-line','walk-to','walk-from'].forEach(id=>{
-    if(map.getLayer(id))map.removeLayer(id);if(map.getSource(id))map.removeSource(id);
-  });
-  const ts=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
-  const firstT=ts[0],lastT=ts[ts.length-1];
-  const busName=firstT?.transit_details?.line?.short_name||'Bus';
-  const rawC=firstT?.transit_details?.line?.color;
-  const wc=rawC?('#'+rawC.replace('#','')):busColor(busName);
-  const tc=[];
-  ts.forEach(s=>{
-    if(s.start_location)tc.push([s.start_location.lng,s.start_location.lat]);
-    if(s.end_location)tc.push([s.end_location.lng,s.end_location.lat]);
-  });
-  if(tc.length>=2){
-    map.addSource('worm-line',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:tc}}});
-    map.addLayer({id:'worm-line',type:'line',source:'worm-line',
-      layout:{'line-join':'round','line-cap':'round'},
-      paint:{'line-color':wc,'line-width':['interpolate',['linear'],['zoom'],10,6,16,12],'line-opacity':0.92}});
-  }
-  const bL=firstT?.start_location,aL=lastT?.end_location;
-  const wS=userLat?[userLng,userLat]:leg.start_location?[leg.start_location.lng,leg.start_location.lat]:null;
-  const dL=(leg.steps||[]).slice(-1)[0]?.end_location||leg.end_location;
-  if(wS&&bL)addWalkLine('walk-to',wS,[bL.lng,bL.lat]);
-  if(aL&&dL)addWalkLine('walk-from',[aL.lng,aL.lat],[dL.lng,dL.lat]);
-  if(wS)addMapMarker(wS,'#00A651','📍',_fromVal.split(',')[0],'You are here');
-  if(bL)addMapMarker([bL.lng,bL.lat],wc,'🚏',firstT.transit_details?.stop_name||'Board',`Board ${busName}`);
-  if(aL&&bL&&(Math.abs(aL.lat-bL.lat)>0.001||Math.abs(aL.lng-bL.lng)>0.001))
-    addMapMarker([aL.lng,aL.lat],wc,'🚏',lastT.transit_details?.arrival_stop?.name||'Alight',
-      `Exit ${lastT.transit_details?.line?.short_name||'Bus'}`);
-  if(dL)addMapMarker([dL.lng,dL.lat],'#0039A6','⭐',_toVal.split(',')[0],'Destination');
-  const allC=[...tc];
-  if(wS)allC.unshift(wS);
-  if(dL)allC.push([dL.lng,dL.lat]);
-  if(allC.length>=2){
-    const bounds=new mapboxgl.LngLatBounds();allC.forEach(c=>bounds.extend(c));
-    const s=allC[0],e=allC[allC.length-1];
-    map.fitBounds(bounds,{bearing:getBearing(s[1],s[0],e[1],e[0]),pitch:20,
-      padding:{top:200,bottom:300,left:40,right:40},maxZoom:15,duration:1200});
-  }
-}
+searchEl.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = searchEl.value.trim();
+  if (q.length < 3) { resultsEl.style.display = 'none'; return; }
+  searchTimer = setTimeout(() => doSearch(q), 350);
+});
 
-function addWalkLine(id,from,to){
-  map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[from,to]}}});
-  map.addLayer({id,type:'line',source:id,layout:{'line-join':'round','line-cap':'round'},
-    paint:{'line-color':'#00A651','line-width':2.5,'line-dasharray':[2,3],'line-opacity':0.8}});
-}
+searchEl.addEventListener('blur', () => setTimeout(() => resultsEl.style.display = 'none', 200));
 
-function addMapMarker(lngLat,bg,emoji,label,sub){
-  const el=document.createElement('div');
-  el.style.cssText=`background:${bg};color:white;border-radius:11px;padding:5px 9px;font-family:Syne,sans-serif;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.22);display:flex;align-items:center;gap:5px;border:2px solid white;max-width:160px;cursor:default;`;
-  el.innerHTML=`<span style="font-size:13px">${emoji}</span><span><span style="display:block;font-size:11px;font-weight:800;line-height:1.2">${label}</span>${sub?`<span style="display:block;font-size:9px;opacity:0.75">${sub}</span>`:''}</span>`;
-  _tripMarkers.push(new mapboxgl.Marker({element:el,anchor:'bottom'}).setLngLat(lngLat).addTo(map));
-}
-
-// ── WORM SHEET ──
-function showWormSheet(route){
-  const leg=route.legs?.[0];if(!leg)return;
-  const depVal=leg.departure_time?.value;
-  const li=depVal?Math.round((depVal*1000-Date.now())/60000):null;
-  const safeL=li??99;
-  const ts=(leg.steps||[]).filter(s=>s.travel_mode==='TRANSIT');
-  const firstT=ts[0];
-  const busName=firstT?.transit_details?.line?.short_name||'Bus';
-  const rawC=firstT?.transit_details?.line?.color;
-  const color=rawC?('#'+rawC.replace('#','')):busColor(busName);
-  const boardStop=firstT?.transit_details?.stop_name||'—';
-  const fw=(leg.steps||[])[0];
-  const walkMins=fw?.travel_mode==='WALKING'?Math.round((fw.duration?.value||0)/60):0;
-
-  document.getElementById('worm-badge').textContent=busName;
-  document.getElementById('worm-badge').style.background=color;
-  document.getElementById('worm-stop-name').textContent=boardStop;
-  document.getElementById('worm-stop-sub').textContent=walkMins>0?`Walk ${walkMins} min to stop`:'At your stop';
-  const leaveEl=document.getElementById('worm-leave');
-  leaveEl.textContent=safeL<=0?'NOW':safeL>99?'—':safeL;
-  leaveEl.className='worm-leave '+(safeL<=2?'col-now':safeL<=8?'col-soon':'col-go');
-
-  buildWormSVG(ts,color);
-
-  document.getElementById('worm-steps').innerHTML=(leg.steps||[]).map(s=>{
-    if(s.travel_mode==='WALKING'){
-      const m=Math.round((s.duration?.value||0)/60);
-      return`<div class="step-row"><div class="step-ico">🚶</div><div class="step-info"><div class="step-main">Walk ${m>0?m+' min':''}</div><div class="step-sub">${(s.html_instructions||'').replace(/<[^>]*>/g,'')}</div></div></div>`;
-    }
-    const t=s.transit_details;const name=t?.line?.short_name||t?.line?.name||'Bus';
-    const rawC=t?.line?.color;const c=rawC?('#'+rawC.replace('#','')):busColor(name);
-    return`<div class="step-row"><div class="rte-badge" style="background:${c};min-width:40px;text-align:center;font-size:10px">${name}</div><div class="step-info"><div class="step-main">${t?.stop_name||'—'} → ${t?.arrival_stop?.name||'—'}</div><div class="step-sub">${t?.num_stops||'?'} stops · ${t?.departure_time?.text||''}${t?.arrival_time?.text?' → '+t.arrival_time.text:''}</div></div></div>`;
-  }).join('');
-  document.getElementById('worm-sheet').classList.add('open');
-}
-
-function buildWormSVG(steps,color){
-  if(!steps.length){document.getElementById('worm-svg').innerHTML='';return;}
-  const H=50,cy=H/2,W=Math.max(260,steps.length*100+60);
-  const pts=steps.map((s,i)=>({
-    x:30+i*100,y:cy+(i%2===0?-8:8),
-    name:s.transit_details?.line?.short_name||'Bus',
-    color:s.transit_details?.line?.color?('#'+s.transit_details.line.color.replace('#','')):color,
-  }));
-  let path=`M 10 ${cy} Q 20 ${cy} ${pts[0].x} ${pts[0].y}`;
-  for(let i=1;i<pts.length;i++){
-    const cpx=(pts[i-1].x+pts[i].x)/2;
-    path+=` Q ${cpx} ${(pts[i-1].y+pts[i].y)/2} ${pts[i].x} ${pts[i].y}`;
-  }
-  const uid=Math.random().toString(36).slice(2,6);
-  let svg=`<svg width="${W}" height="${H}" style="display:block;min-width:${W}px">
-<defs><filter id="gw${uid}"><feGaussianBlur stdDeviation="2.2" result="b"/>
-<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-<path d="${path}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" filter="url(#gw${uid})" opacity="0.9"/>
-<path d="${path}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="4" stroke-dasharray="14 28">
-  <animate attributeName="stroke-dashoffset" from="42" to="0" dur="1.6s" repeatCount="indefinite"/>
-</path>`;
-  pts.forEach(pt=>{
-    svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="16" fill="${pt.color}" stroke="white" stroke-width="2.5" filter="url(#gw${uid})"/>`;
-    svg+=`<text x="${pt.x}" y="${pt.y+4}" text-anchor="middle" fill="white" font-size="8" font-weight="900" font-family="Syne,sans-serif">${pt.name}</text>`;
-  });
-  svg+=`<circle cx="10" cy="${cy}" r="10" fill="#00A651" stroke="white" stroke-width="2.5" filter="url(#gw${uid})">
-  <animate attributeName="r" values="9;12;9" dur="2s" repeatCount="indefinite"/>
-</circle><circle cx="10" cy="${cy}" r="4" fill="white"/></svg>`;
-  document.getElementById('worm-svg').innerHTML=svg;
-}
-
-function closeTripView(){
-  closeSheet('worm-sheet');
-  _tripMarkers.forEach(m=>m.remove());_tripMarkers=[];
-  ['worm-line','walk-to','walk-from'].forEach(id=>{
-    if(map.getLayer(id))map.removeLayer(id);if(map.getSource(id))map.removeSource(id);
-  });
-  map.easeTo({bearing:0,pitch:0,duration:600});
-}
-
-// ── SUBWAY MAP ──
-function openSubwayMap(exitInfo){
-  document.getElementById('exit-box-wrap').innerHTML=exitInfo?
-    `<div class="exit-box"><div class="exit-title">📍 Best exit for your destination</div><div class="exit-desc">${exitInfo}</div></div>`:'';
-  closeAllSheets();
-  document.getElementById('subway-sheet').classList.add('open');
-}
-
-// ── USER LOCATION ──
-function locateUser(){
-  if(!navigator.geolocation)return;
-  document.getElementById('gps-btn').textContent='⟳';
-  if(_watchId!=null){navigator.geolocation.clearWatch(_watchId);_watchId=null;}
-  navigator.geolocation.getCurrentPosition(
-    pos=>{onGotPos(pos);startWatch();},
-    ()=>{document.getElementById('gps-btn').textContent='📍';},
-    {enableHighAccuracy:false,timeout:6000,maximumAge:30000}
-  );
-}
-function startWatch(){
-  if(_watchId!=null)return;
-  _watchId=navigator.geolocation.watchPosition(pos=>onGotPos(pos),()=>{},
-    {enableHighAccuracy:true,timeout:12000,maximumAge:5000});
-}
-function onGotPos(pos){
-  userLat=pos.coords.latitude;userLng=pos.coords.longitude;drawUserDot();
-  document.getElementById('gps-btn').textContent='✓';
-  reverseGeocode(userLng,userLat).then(addr=>{
-    if(addr){window._userAddress=addr.split(',')[0].trim();drawUserDot();}
-  });
-}
-function drawUserDot(){
-  if(!map||userLat==null)return;
-  const isFirst=!map.getSource('user-loc');
-  if(isFirst){
-    map.addSource('user-loc',{type:'geojson',data:ugj()});
-    map.addLayer({id:'user-pulse',type:'circle',source:'user-loc',
-      paint:{'circle-radius':20,'circle-color':'#0039A6','circle-opacity':0.12,'circle-blur':0.6}});
-    map.addLayer({id:'user-dot',type:'circle',source:'user-loc',
-      paint:{'circle-radius':8,'circle-color':'#0039A6','circle-stroke-width':3,'circle-stroke-color':'white'}});
-    map.flyTo({center:[userLng,userLat],zoom:15,speed:1.4});
-  }else{map.getSource('user-loc').setData(ugj());}
-  if(window._userMarker)window._userMarker.remove();
-  const el=document.createElement('div');
-  el.style.cssText='background:#0039A6;color:white;border-radius:9px;padding:3px 8px;font-family:Syne,sans-serif;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,57,166,0.35);border:2px solid white;pointer-events:none;';
-  el.textContent=window._userAddress||'You are here';
-  window._userMarker=new mapboxgl.Marker({element:el,anchor:'bottom',offset:[0,-12]}).setLngLat([userLng,userLat]).addTo(map);
-}
-function ugj(){return{type:'Feature',geometry:{type:'Point',coordinates:[userLng,userLat]}};}
-function centerOnMe(){if(map&&userLat)map.flyTo({center:[userLng,userLat],zoom:15,speed:1.4});}
-function recenter(){centerOnMe();}
-async function reverseGeocode(lng,lat){
-  try{
-    const r=await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=address&access_token=${mapboxgl.accessToken}`);
-    const d=await r.json();
-    return d.features?.[0]?.place_name?.split(',').slice(0,2).join(',').trim()||null;
-  }catch{return null;}
-}
-
-// ── AUTOCOMPLETE ──
-let _acTimer;
-async function acSuggest(q){
-  const drop=document.getElementById('ac-drop');
-  if(q.length<2){drop.style.display='none';return;}
-  clearTimeout(_acTimer);
-  _acTimer=setTimeout(async()=>{
-    try{
-      if(!mapboxgl.accessToken)return;
-      const r=await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?bbox=-74.26,40.49,-73.70,40.92&types=address,poi,neighborhood,place&limit=5&access_token=${mapboxgl.accessToken}&country=US`);
-      const d=await r.json();
-      const features=d.features||[];
-      if(!features.length){drop.style.display='none';return;}
-      const rect=document.querySelector('.search-pill').getBoundingClientRect();
-      drop.style.top=(rect.bottom+6)+'px';
-      drop.innerHTML=features.map(f=>{
-        const main=f.text||f.place_name.split(',')[0];
-        const sub=f.place_name.split(',').slice(1,3).join(',').trim();
-        const isPOI=f.place_type?.[0]==='poi';
-        return`<div class="ac-item" onmousedown="acPick(${JSON.stringify(f.place_name).replace(/"/g,'&quot;')})">
-          <div class="ac-ico"><svg viewBox="0 0 24 24" fill="none" stroke="${isPOI?'#0039A6':'#888'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
-          <div><div class="ac-main">${main}</div>${sub?`<div class="ac-sub">${sub}</div>`:''}</div>
-        </div>`;
-      }).join('');
-      drop.style.display='block';
-    }catch(e){drop.style.display='none';}
-  },220);
-}
-function acPick(name){document.getElementById('search-input').value=name;acHide();doSearch();}
-function acHide(){document.getElementById('ac-drop').style.display='none';}
-
-// ── CAMERA ──
-function triggerCamera(){document.getElementById('cam-input').click();}
-async function handlePhoto(e){
-  const file=e.target.files[0];if(!file)return;
-  document.getElementById('search-input').value='Identifying landmark…';
-  const reader=new FileReader();
-  reader.onload=async ev=>{
-    try{
-      const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({image:ev.target.result.split(',')[1]})});
-      const d=await res.json();
-      document.getElementById('search-input').value=d.address||d.landmark||'Could not identify';
-    }catch{document.getElementById('search-input').value='Could not identify';}
-  };
-  reader.readAsDataURL(file);e.target.value='';
-}
-
-// ── RIDE LINK ──
-function openRideApp(lat,lng){
-  window.open('https://m.uber.com/looking'+(lat&&lng?'?dropoff[latitude]='+lat+'&dropoff[longitude]='+lng:''),'_blank');
-}
-
-// ── HELPERS ──
-function closeSheet(id){document.getElementById(id)?.classList.remove('open');}
-function closeAllSheets(){['stop-sheet','route-sheet','worm-sheet','subway-sheet','picker-sheet'].forEach(closeSheet);}
-function getBearing(lat1,lng1,lat2,lng2){
-  const r=d=>d*Math.PI/180,g=r=>r*180/Math.PI;
-  const dl=r(lng2-lng1),rl1=r(lat1),rl2=r(lat2);
-  const y=Math.sin(dl)*Math.cos(rl2),x=Math.cos(rl1)*Math.sin(rl2)-Math.sin(rl1)*Math.cos(rl2)*Math.cos(dl);
-  return(g(Math.atan2(y,x))+360)%360;
-}
-
-// ── STOP PICKER — tap a bus route → see all stops → pick destination ──
-// ── ROUTE ARRIVALS — tap a route → see all upcoming buses → then pick stop ──
-async function showRouteArrivals(routeName, routeColor, stop, firstArrival) {
-  const el = document.getElementById('stop-content');
-
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
-      <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
-      <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
-    </div>
-    <div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
-
+async function doSearch(q) {
   try {
-    const r = await fetch(`/api/arrivals?stopId=${stop.stopId}&route=${encodeURIComponent(routeName)}`,
-      {signal: AbortSignal.timeout(5000)});
-    const data = r.ok ? await r.json() : null;
-    const arrivals = data?.arrivals || [];
-
-    const pills = arrivals.slice(0,4).map((a,i) => {
-      const c = a.mins<=1?'col-now':a.mins<=5?'col-soon':'col-go';
-      const lbl = a.mins<=0?'NOW':a.mins+'m';
-      const t=new Date(Date.now()+a.mins*60000),hr=t.getHours(),mn=t.getMinutes(),ap=hr>=12?'PM':'AM',h12=hr%12||12;
-      const clockTime=a.mins<=0?'':h12+':'+(mn<10?'0'+mn:mn)+ap;
-      const label = i===0?'Next':i===1?'Then':i===2?'After':'Later';
-      return `<div style="text-align:center">
-        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px">${label}</div>
-        <span class="arr-pill ${c}" style="font-size:22px;padding:10px 16px;display:inline-block">${lbl}</span><span style="font-size:9px;opacity:0.55;display:block;letter-spacing:0.3px">${clockTime}</span>
-      </div>`;
-    }).join('');
-
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-        <button onclick="openStopSheet(_currentStop)" style="background:#f2f2f7;border:none;border-radius:10px;padding:6px 12px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer">← Back</button>
-        <div class="rte-badge" style="background:${routeColor}">${routeName}</div>
-        <div style="font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${firstArrival.headsign||routeName}</div>
-      </div>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
-        ${pills||'<div style="color:var(--muted);font-size:13px;padding:20px">No upcoming arrivals</div>'}
-      </div>
-      <button class="plan-btn" onclick="openStopPicker('${routeName}','${routeColor}',${JSON.stringify(stop).replace(/"/g,'&quot;')})">
-        Pick where I'm getting off →
-      </button>`;
-
-  } catch(e) {
-    el.innerHTML += `<div style="padding:20px;text-align:center;color:var(--muted)">Could not load arrivals</div>`;
-  }
+    const tkRes = await fetch('/api/mapboxtoken');
+    const { token } = await tkRes.json();
+    const r = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${token}&country=US&proximity=-73.886,40.865&limit=5`);
+    const d = await r.json();
+    renderSearchResults(d.features || []);
+  } catch (e) { resultsEl.style.display = 'none'; }
 }
 
-async function openStopPicker(routeName, routeColor, boardingStop) {
-  _pickerRoute = routeName;
-  _pickerStop  = boardingStop;
-
-  // Shrink stop sheet, show picker
-  closeSheet('stop-sheet');
-
-  document.getElementById('picker-badge').textContent = routeName;
-  document.getElementById('picker-badge').style.background = routeColor;
-  document.getElementById('picker-title').textContent = `${routeName} — pick your stop`;
-  document.getElementById('picker-sub').textContent = 'Where are you getting off?';
-  document.getElementById('picker-list').innerHTML =
-    '<div class="ldots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>';
-  document.getElementById('dir-toggle').innerHTML = '';
-  document.getElementById('picker-sheet').classList.add('open');
-
-  // Load route stops from MTA
-  try {
-    const res = await fetch(`/api/route-stops?route=${encodeURIComponent(routeName)}&direction=${_pickerDir}`);
-    const data = await res.json();
-
-    if (data.directions?.[0]?.stops?.length) {
-      _pickerStops = data.directions[0].stops;
-
-      // Draw route on map behind the sheet
-      drawPickerRoute(data.stops, data.coords, routeColor, boardingStop);
-
-      // Direction buttons
-      if (data.directions?.length > 1) {
-        document.getElementById('dir-toggle').innerHTML = data.directions.map(d =>
-          `<button class="dir-btn${d.index==_pickerDir?' active':''}"
-            onclick="switchPickerDir('${routeName}','${routeColor}',${JSON.stringify(boardingStop).replace(/"/g,'&quot;')},${d.index})">
-            ${d.name}
-          </button>`
-        ).join('');
-      }
-
-      renderPickerList(data.stops, routeColor, boardingStop);
-    } else {
-      document.getElementById('picker-list').innerHTML =
-        `<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">
-          Could not load stop list for ${routeName}.<br>Try searching your destination above.
-        </div>`;
-    }
-  } catch(e) {
-    console.error('route-stops error:', e);
-    document.getElementById('picker-list').innerHTML =
-      `<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">
-        Could not load stops. Check connection.
-      </div>`;
-  }
-}
-
-function switchPickerDir(routeName, routeColor, boardingStop, dirIdx) {
-  _pickerDir = dirIdx;
-  openStopPicker(routeName, routeColor, boardingStop);
-}
-
-function renderPickerList(stops, routeColor, boardingStop) {
-  // Find current stop index
-  let currentIdx = -1;
-  if (boardingStop) {
-    currentIdx = stops.findIndex(s =>
-      s.name === boardingStop.name ||
-      (Math.abs(s.lat - boardingStop.lat) < 0.001 && Math.abs(s.lng - boardingStop.lng) < 0.001)
-    );
-  }
-
-  document.getElementById('picker-list').innerHTML = stops.map((s, i) => {
-    const isCurrent = i === currentIdx;
-    const isPast = currentIdx >= 0 && i < currentIdx;
-    const isLast = i === stops.length - 1;
-
-    let dotClass = 'stop-dot-circle';
-    if (isCurrent) dotClass += ' current';
-
-    return `<div class="stop-row${isCurrent?' current':''}${isPast?' past':''}"
-      id="stop-row-${i}"
-      onclick="pickDestStop(${i})">
-      <div class="stop-line">
-        ${i > 0 ? '<div class="stop-dot-line"></div>' : '<div style="height:10px"></div>'}
-        <div class="${dotClass}" style="${!isCurrent&&!isPast?'border-color:'+routeColor:''}"></div>
-        ${!isLast ? '<div class="stop-dot-line"></div>' : ''}
-      </div>
-      <div class="stop-row-name">${s.name}</div>
-      <div class="stop-row-dist">${isCurrent ? '📍 You' : i > currentIdx ? (i - currentIdx) + ' stop' + (i - currentIdx > 1 ? 's' : '') : ''}</div>
-    </div>`;
-  }).join('');
-
-  // Scroll to current stop
-  if (currentIdx > 2) {
-    setTimeout(() => {
-      const row = document.getElementById(`stop-row-${currentIdx}`);
-      row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }, 200);
-  }
-}
-
-function drawPickerRoute(stops, coords, routeColor, boardingStop) {
-  // Clear previous picker markers
-  _pickerMarkers.forEach(m => m.remove());
-  _pickerMarkers = [];
-  ['picker-route','picker-stops'].forEach(id => {
-    if (map.getLayer(id)) map.removeLayer(id);
-    if (map.getSource(id)) map.removeSource(id);
-  });
-
-  // Draw route line
-  const lineCoords = coords?.length >= 2 ? coords :
-    stops.map(s => [s.lng, s.lat]);
-
-  if (lineCoords.length >= 2) {
-    map.addSource('picker-route', {
-      type: 'geojson',
-      data: { type: 'Feature', geometry: { type: 'LineString', coordinates: lineCoords } }
+function renderSearchResults(features) {
+  resultsEl.innerHTML = '';
+  if (!features.length) { resultsEl.style.display = 'none'; return; }
+  features.forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'sr-item';
+    item.textContent = f.place_name;
+    item.addEventListener('click', () => {
+      map.flyTo({ center: f.center, zoom: 15, duration: 600 });
+      searchEl.value = f.place_name;
+      resultsEl.style.display = 'none';
     });
-    map.addLayer({
-      id: 'picker-route', type: 'line', source: 'picker-route',
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': routeColor, 'line-width': 5, 'line-opacity': 0.8 }
-    });
-  }
-
-  // Draw all stops as dots on the map
-  const stopFeatures = stops.map((s, i) => ({
-    type: 'Feature',
-    geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
-    properties: { name: s.name, idx: i }
-  }));
-
-  map.addSource('picker-stops', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: stopFeatures }
+    resultsEl.appendChild(item);
   });
-  map.addLayer({
-    id: 'picker-stops', type: 'circle', source: 'picker-stops',
-    paint: {
-      'circle-radius': 7,
-      'circle-color': routeColor,
-      'circle-stroke-width': 2,
-      'circle-stroke-color': 'white',
-      'circle-opacity': 0.9,
-    }
-  });
-
-  // Tap a stop dot on the map
-  map.on('click', 'picker-stops', e => {
-    e.preventDefault();
-    e.originalEvent._sh = true;
-    const idx = e.features[0].properties.idx;
-    pickDestStop(idx);
-  });
-  map.on('mouseenter', 'picker-stops', () => map.getCanvas().style.cursor = 'pointer');
-  map.on('mouseleave', 'picker-stops', () => map.getCanvas().style.cursor = '');
-
-  // Fit map to full route, leaving bottom half for sheet
-  const bounds = new mapboxgl.LngLatBounds();
-  lineCoords.forEach(c => bounds.extend(c));
-  map.fitBounds(bounds, {
-    padding: { top: 80, bottom: window.innerHeight * 0.55, left: 40, right: 40 },
-    maxZoom: 14, duration: 800
-  });
-
-  // Mark boarding stop
-  if (boardingStop) {
-    const el = document.createElement('div');
-    el.style.cssText = `background:${routeColor};color:white;border-radius:9px;padding:3px 8px;
-      font-family:Syne,sans-serif;font-size:10px;font-weight:800;white-space:nowrap;
-      box-shadow:0 2px 8px rgba(0,0,0,0.2);border:2px solid white;`;
-    el.textContent = '📍 You';
-    const m = new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
-      .setLngLat([boardingStop.lng, boardingStop.lat]).addTo(map);
-    _pickerMarkers.push(m);
-  }
+  resultsEl.style.display = 'block';
 }
 
-function pickDestStop(stopIdx) {
-  const destStop = _pickerStops[stopIdx];
-  if (!destStop) return;
-
-  // Highlight selected row
-  document.querySelectorAll('.stop-row').forEach((r, i) => {
-    r.classList.toggle('highlighted', i === stopIdx);
-  });
-
-  // Show destination marker on map
-  _pickerMarkers.forEach(m => m.remove());
-  _pickerMarkers = [];
-  const el = document.createElement('div');
-  el.style.cssText = `background:#0039A6;color:white;border-radius:9px;padding:4px 10px;
-    font-family:Syne,sans-serif;font-size:11px;font-weight:800;white-space:nowrap;
-    box-shadow:0 2px 8px rgba(0,57,166,0.3);border:2px solid white;`;
-  el.textContent = '⭐ Get off here';
-  _pickerMarkers.push(
-    new mapboxgl.Marker({ element: el, anchor: 'bottom', offset: [0, -4] })
-      .setLngLat([destStop.lng, destStop.lat]).addTo(map)
-  );
-
-  // Confirm with a brief delay so user sees the highlight
-  setTimeout(() => confirmDestStop(destStop), 300);
-}
-
-async function confirmDestStop(destStop) {
-  closePicker();
-
-  _fromVal = _pickerStop?.name || 'My location';
-  _toVal   = destStop.name;
-
-  // Set search inputs
-  document.getElementById('search-input').value = destStop.name;
-
-  const from = _pickerStop ?
-    `${_pickerStop.lat},${_pickerStop.lng}` :
-    (userLat ? `${userLat},${userLng}` : 'Co-op City, Bronx NY');
-
-  try {
-    const res = await fetch(
-      `/api/directions?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(destStop.name + ', New York')}&alternatives=true`
-    );
-    const data = await res.json();
-    if (data.routes?.length) {
-      _googleRoutes = data.routes;
-      showRouteOptions(data.routes);
-    } else {
-      // Fall back: just show worm with what we know
-      showSimpleTrip(_pickerRoute, _pickerStop, destStop);
-    }
-  } catch(e) {
-    showSimpleTrip(_pickerRoute, _pickerStop, destStop);
-  }
-}
-
-function showSimpleTrip(routeName, fromStop, toStop) {
-  // Draw route segment on map between the two stops
-  _tripMarkers.forEach(m => m.remove()); _tripMarkers = [];
-  if (fromStop) addMapMarker([fromStop.lng, fromStop.lat], '#00A651', '📍', 'Board here', `Catch ${routeName}`);
-  addMapMarker([toStop.lng, toStop.lat], '#0039A6', '⭐', 'Get off here', toStop.name);
-
-  const bounds = new mapboxgl.LngLatBounds();
-  if (fromStop) bounds.extend([fromStop.lng, fromStop.lat]);
-  bounds.extend([toStop.lng, toStop.lat]);
-  map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 800 });
-}
-
-function closePicker() {
-  document.getElementById('picker-sheet').classList.remove('open');
-  // Clean up picker map layers
-  ['picker-route','picker-stops'].forEach(id => {
-    if (map.getLayer(id)) map.removeLayer(id);
-    if (map.getSource(id)) map.removeSource(id);
-  });
-  _pickerMarkers.forEach(m => m.remove());
-  _pickerMarkers = [];
-}
-
+// ── BOOT ─────────────────────────────────────────────────────────────────────
 initMap();
-
-async function loadWeather(){try{if(!navigator.geolocation)return;const go=async(lat,lon)=>{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m,apparent_temperature,weather_code&temperature_unit=fahrenheit&forecast_days=1");const d=await r.json();const cur=d.current,temp=Math.round(cur.temperature_2m),feels=Math.round(cur.apparent_temperature),code=cur.weather_code;const icon=code<=1?"☀️":code<=3?"⛅":code<=48?"🌫":code<=67?"🌧":code<=77?"❄️":code<=82?"🌧":code<=99?"⛈️":"⛅";const desc=code===0?"Clear":code<=1?"Mainly clear":code<=2?"Partly cloudy":code<=3?"Overcast":code<=48?"Foggy":code<=55?"Drizzle":code<=67?"Rain":code<=77?"Snow":code<=82?"Rain showers":code<=99?"Thunderstorm":"Clear";document.getElementById("wx-temp").textContent=temp+"°";document.getElementById("wx-icon").textContent=icon;document.getElementById("wx-desc").textContent=desc;document.getElementById("wx-feels").textContent="Feels like "+feels+"°";};navigator.geolocation.getCurrentPosition(p=>go(p.coords.latitude,p.coords.longitude),()=>go(40.87,-73.88));}catch(e){console.warn("weather",e);}}
-loadWeather();
-setInterval(loadWeather,600000);
 </script>
-
-<div id="weather-widget" style="position:fixed;bottom:80px;right:12px;z-index:200;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15);min-width:90px;text-align:center;font-family:inherit;cursor:default;user-select:none"><div id="wx-temp" style="font-size:24px;font-weight:700;line-height:1;color:#1a1a2e">--°</div><div id="wx-icon" style="font-size:20px;margin:2px 0">🌤</div><div id="wx-desc" style="font-size:10px;color:#666;font-weight:500;text-transform:capitalize">Loading</div><div id="wx-feels" style="font-size:9px;color:#999;margin-top:2px">Feels like --°</div></div>
 </body>
 </html>
