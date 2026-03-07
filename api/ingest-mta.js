@@ -1,13 +1,4 @@
-// api/ingest-mta.js
-// TownTrip — MTA Historical Data Ingestion
-// Hit /api/ingest-mta?dataset=bus_wait to load a specific dataset
-// Hit /api/ingest-mta?dataset=all to load everything (runs in background)
-//
-// Datasets: bus_wait | bus_service | bus_speeds | bus_journey |
-//           subway_wait | subway_journey | hourly_ridership |
-//           bus_hourly_ridership | monthly_ridership
-
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -90,7 +81,6 @@ function transformBusWait(row) {
     day_type: row.day_type || row.day || null,
   };
 }
-
 function transformBusService(row) {
   return {
     month: toDate(row.month || row.date),
@@ -104,7 +94,6 @@ function transformBusService(row) {
     day_type: row.day_type || null,
   };
 }
-
 function transformBusSpeeds(row) {
   return {
     month: toDate(row.month || row.date),
@@ -116,7 +105,6 @@ function transformBusSpeeds(row) {
     day_type: row.day_type || null,
   };
 }
-
 function transformBusJourney(row) {
   return {
     month: toDate(row.month || row.date),
@@ -131,7 +119,6 @@ function transformBusJourney(row) {
     day_type: row.day_type || null,
   };
 }
-
 function transformSubwayWait(row) {
   return {
     month: toDate(row.month || row.date),
@@ -142,7 +129,6 @@ function transformSubwayWait(row) {
     day_type: row.day_type || null,
   };
 }
-
 function transformSubwayJourney(row) {
   return {
     month: toDate(row.month || row.date),
@@ -156,7 +142,6 @@ function transformSubwayJourney(row) {
     day_type: row.day_type || null,
   };
 }
-
 function transformHourlyRidership(row) {
   return {
     transit_timestamp: row.transit_timestamp || null,
@@ -170,7 +155,6 @@ function transformHourlyRidership(row) {
     lng: toNum(row.longitude || row.lng),
   };
 }
-
 function transformBusHourlyRidership(row) {
   return {
     transit_timestamp: row.transit_timestamp || null,
@@ -180,7 +164,6 @@ function transformBusHourlyRidership(row) {
     fare_class: row.fare_class_category || row.fare_class || null,
   };
 }
-
 function transformMonthlyRidership(row) {
   return {
     month: toDate(row.month || row.date),
@@ -219,7 +202,7 @@ async function ingestDataset(config, table, transformFn, conflictCol) {
   return results;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const token = req.query.token || req.headers['x-ingest-token'];
   if (token !== process.env.INGEST_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -249,4 +232,4 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ success: false, error: e.message, results });
   }
-}
+};
