@@ -5,37 +5,42 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+// Corrected Socrata dataset IDs (data.ny.gov)
 const DATASETS = {
+  // Bus Wait: 2015-2024 were retired/consolidated into v4z4-2h6n (Beginning 2015)
   bus_wait: [
-    { id: 'bmix-dpzc', label: 'Bus Wait Assessment 2015-2019' },
-    { id: 'swky-c3v4', label: 'Bus Wait Assessment 2020-2024' },
-    { id: 'v4z4-2h6n', label: 'Bus Wait Assessment 2025+' },
+    { id: 'v4z4-2h6n', label: 'Bus Wait Assessment Beginning 2015' },
   ],
   bus_service: [
-    { id: '6qwi-vjde', label: 'Bus Service Delivered 2015+' },
+    { id: '6qwi-vjde', label: 'Bus Service Delivered Beginning 2015' },
   ],
+  // Bus Speeds: single unified dataset replacing the split 2015-2019 / 2020+ ones
   bus_speeds: [
-    { id: 'intd-i3as', label: 'Bus Speeds 2015-2019' },
-    { id: 'q8ws-imkh', label: 'Bus Speeds 2020+' },
+    { id: 'cudb-vcni', label: 'Bus Speeds Beginning 2015' },
   ],
   bus_journey: [
-    { id: 'gs4q-vdkw', label: 'Bus Journey Time 2020+' },
+    { id: '8mkn-d32t', label: 'Bus Journey Time 2017-2019' },
+    { id: 'wrt8-4b59', label: 'Bus Journey Time 2020-2024' },
+    { id: 'k5f7-e4wr', label: 'Bus Journey Time Beginning 2025' },
   ],
   subway_wait: [
     { id: '6b7q-snec', label: 'Subway Wait Assessment 2020-2024' },
-    { id: '62c4-mvcx', label: 'Subway Wait Assessment 2025+' },
+    { id: '62c4-mvcx', label: 'Subway Wait Assessment Beginning 2025' },
   ],
   subway_journey: [
-    { id: 'zghv-vkra', label: 'Subway Journey Time 2020+' },
+    { id: 'r7qk-6tcy', label: 'Subway Journey Time 2015-2019' },
+    { id: '4apg-4kt9', label: 'Subway Journey Time 2020-2024' },
+    { id: 's4u6-t435', label: 'Subway Journey Time Beginning 2025' },
+  ],
+  // Daily ridership by mode (subway, bus, LIRR, MNR, etc) - beginning 2020
+  daily_ridership: [
+    { id: 'vxuj-8kew', label: 'MTA Daily Ridership 2020+' },
   ],
   hourly_ridership: [
     { id: 'wujg-7c2s', label: 'Subway Hourly Ridership 2020+' },
   ],
   bus_hourly_ridership: [
     { id: 'kv7t-n8in', label: 'Bus Hourly Ridership' },
-  ],
-  monthly_ridership: [
-    { id: 'vxuj-8kew', label: 'MTA Monthly Ridership 2002+' },
   ],
 };
 
@@ -142,6 +147,14 @@ function transformSubwayJourney(row) {
     day_type: row.day_type || null,
   };
 }
+// Daily ridership by mode — uses 'date' field not 'month'
+function transformDailyRidership(row) {
+  return {
+    month: toDate(row.date || row.month),
+    mode: row.mode || row.transit_mode || '',
+    ridership: toInt(row.subways_total_estimated_ridership || row.buses_total_estimated_ridership || row.ridership || row.total_ridership),
+  };
+}
 function transformHourlyRidership(row) {
   return {
     transit_timestamp: row.transit_timestamp || null,
@@ -164,21 +177,15 @@ function transformBusHourlyRidership(row) {
     fare_class: row.fare_class_category || row.fare_class || null,
   };
 }
-function transformMonthlyRidership(row) {
-  return {
-    month: toDate(row.month || row.date),
-    mode: row.mode || row.transit_mode || '',
-    ridership: toInt(row.ridership || row.total_ridership),
-  };
-}
 
 async function upsertBatch(table, rows, conflictCol) {
   if (!rows.length) return { count: 0 };
   const valid = rows.filter(r => r.month || r.transit_timestamp);
   if (!valid.length) return { count: 0 };
-  const { error } = await supabase
-    .from(table)
-    .upsert(valid, { onConflict: conflictCol, ignoreDuplicates: true });
+  const opts = conflictCol
+    ? { onConflict: conflictCol, ignoreDuplicates: true }
+    : { ignoreDuplicates: true };
+  const { error } = await supabase.from(table).upsert(valid, opts);
   if (error) throw new Error(`Supabase ${table} error: ${error.message}`);
   return { count: valid.length };
 }
@@ -188,7 +195,9 @@ async function ingestDataset(config, table, transformFn, conflictCol) {
   for (const ds of config) {
     try {
       const raw = await fetchAll(ds.id);
-      const transformed = raw.map(transformFn).filter(r => r.route_id || r.line_name || r.station_complex || r.mode);
+      const transformed = raw.map(transformFn).filter(r =>
+        r.route_id || r.line_name || r.station_complex || r.mode
+      );
       let total = 0;
       for (let i = 0; i < transformed.length; i += 5000) {
         const { count } = await upsertBatch(table, transformed.slice(i, i + 5000), conflictCol);
@@ -222,8 +231,9 @@ module.exports = async function handler(req, res) {
       results.push(...await ingestDataset(DATASETS.subway_wait, 'mta_subway_wait_assessment', transformSubwayWait, 'line_name,month,period,day_type'));
     if (dataset === 'subway_journey' || dataset === 'all')
       results.push(...await ingestDataset(DATASETS.subway_journey, 'mta_subway_journey_time', transformSubwayJourney, 'line_name,month,period,day_type'));
-    if (dataset === 'monthly_ridership' || dataset === 'all')
-      results.push(...await ingestDataset(DATASETS.monthly_ridership, 'mta_monthly_ridership', transformMonthlyRidership, 'month,mode'));
+    if (dataset === 'daily_ridership' || dataset === 'all')
+      results.push(...await ingestDataset(DATASETS.daily_ridership, 'mta_monthly_ridership', transformDailyRidership, 'month,mode'));
+    // Hourly datasets are large — run explicitly only
     if (dataset === 'hourly_ridership')
       results.push(...await ingestDataset(DATASETS.hourly_ridership, 'mta_hourly_ridership', transformHourlyRidership, null));
     if (dataset === 'bus_hourly_ridership')
