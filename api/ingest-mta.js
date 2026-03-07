@@ -5,42 +5,60 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// Corrected Socrata dataset IDs (data.ny.gov)
+// ── Verified Socrata dataset IDs from official MTA catalog ─────────────────
 const DATASETS = {
-  // Bus Wait: 2015-2024 were retired/consolidated into v4z4-2h6n (Beginning 2015)
+  // Bus Wait Assessment (evenly-spaced buses metric)
   bus_wait: [
-    { id: 'v4z4-2h6n', label: 'Bus Wait Assessment Beginning 2015' },
+    { id: 'bmix-dpzc', label: 'Bus Wait Assessment 2015-2019' },
+    { id: 'swky-c3v4', label: 'Bus Wait Assessment 2020-2024' },
+    { id: 'v4z4-2h6n', label: 'Bus Wait Assessment 2025+' },
   ],
+  // Bus Service Delivered (% of scheduled buses that ran)
   bus_service: [
-    { id: '6qwi-vjde', label: 'Bus Service Delivered Beginning 2015' },
+    { id: 'tw28-zvtk', label: 'Bus Service Delivered 2015-2019' },
+    { id: '2e6s-9gpm', label: 'Bus Service Delivered 2020-2024' },
+    { id: '6qwi-vjde', label: 'Bus Service Delivered 2025+' },
   ],
-  // Bus Speeds: single unified dataset replacing the split 2015-2019 / 2020+ ones
+  // Bus Speeds (avg speed by route)
   bus_speeds: [
     { id: 'cudb-vcni', label: 'Bus Speeds Beginning 2015' },
   ],
+  // Bus Journey Time (additional stop time + travel time vs schedule)
   bus_journey: [
-    { id: '8mkn-d32t', label: 'Bus Journey Time 2017-2019' },
-    { id: 'wrt8-4b59', label: 'Bus Journey Time 2020-2024' },
-    { id: 'k5f7-e4wr', label: 'Bus Journey Time Beginning 2025' },
+    { id: '8mkn-d32t', label: 'Bus Journey Time Beginning 2017' },
   ],
+  // Bus Route Segment Speeds (speed between timepoints by hour/day — HIGH VALUE)
+  bus_segment_speeds: [
+    { id: '58t6-89vi', label: 'Bus Segment Speeds 2023-2024' },
+    { id: 'kufs-yh3x', label: 'Bus Segment Speeds 2025+' },
+  ],
+  // Bus Schedules — scheduled timepoint stop times by year
+  bus_schedules: [
+    { id: 'udt9-hvjq', label: 'Bus Schedules 2024' },
+    { id: 't4bz-xqa9', label: 'Bus Schedules 2025' },
+  ],
+  // Subway Wait Assessment
   subway_wait: [
     { id: '6b7q-snec', label: 'Subway Wait Assessment 2020-2024' },
-    { id: '62c4-mvcx', label: 'Subway Wait Assessment Beginning 2025' },
+    { id: '62c4-mvcx', label: 'Subway Wait Assessment 2025+' },
   ],
+  // Subway Journey Time
   subway_journey: [
     { id: 'r7qk-6tcy', label: 'Subway Journey Time 2015-2019' },
     { id: '4apg-4kt9', label: 'Subway Journey Time 2020-2024' },
-    { id: 's4u6-t435', label: 'Subway Journey Time Beginning 2025' },
+    { id: 's4u6-t435', label: 'Subway Journey Time 2025+' },
   ],
-  // Daily ridership by mode (subway, bus, LIRR, MNR, etc) - beginning 2020
+  // Daily ridership by mode (subway, bus, LIRR, MNR, etc)
   daily_ridership: [
     { id: 'vxuj-8kew', label: 'MTA Daily Ridership 2020+' },
   ],
+  // Large datasets — run explicitly, not included in 'all'
   hourly_ridership: [
-    { id: 'wujg-7c2s', label: 'Subway Hourly Ridership 2020+' },
+    { id: 'wujg-7c2s', label: 'Subway Hourly Ridership 2020-2024' },
   ],
   bus_hourly_ridership: [
-    { id: 'kv7t-n8in', label: 'Bus Hourly Ridership' },
+    { id: 'kv7t-n8in', label: 'Bus Hourly Ridership 2020-2024' },
+    { id: 'gxb3-akrn', label: 'Bus Hourly Ridership 2025+' },
   ],
 };
 
@@ -124,6 +142,42 @@ function transformBusJourney(row) {
     day_type: row.day_type || null,
   };
 }
+// Bus segment speeds: speed between timepoints by route/hour/day — core prediction data
+function transformBusSegmentSpeeds(row) {
+  return {
+    month: toDate(row.month || row.date),
+    route_id: (row.route_id || row.route || '').toUpperCase().trim(),
+    borough: row.borough || null,
+    from_stop: row.timepoint_1 || row.from_stop_name || null,
+    to_stop: row.timepoint_2 || row.to_stop_name || null,
+    from_lat: toNum(row.timepoint_1_latitude || row.from_lat),
+    from_lng: toNum(row.timepoint_1_longitude || row.from_lng),
+    to_lat: toNum(row.timepoint_2_latitude || row.to_lat),
+    to_lng: toNum(row.timepoint_2_longitude || row.to_lng),
+    avg_speed_mph: toNum(row.average_speed_mph || row.avg_speed),
+    avg_travel_time_min: toNum(row.average_travel_time_minutes || row.avg_travel_time),
+    distance_miles: toNum(row.distance_miles || row.distance),
+    trip_count: toInt(row.number_of_trips || row.trip_count),
+    day_of_week: row.day_of_week || row.day || null,
+    hour_of_day: toInt(row.hour_of_day || row.hour),
+    trip_type: row.trip_type || null,
+  };
+}
+// Bus schedules: planned timepoint arrivals
+function transformBusSchedule(row) {
+  return {
+    month: toDate(row.month || row.date || row.service_date),
+    route_id: (row.route_id || row.route || '').toUpperCase().trim(),
+    trip_id: row.trip_id || null,
+    stop_id: row.stop_id || null,
+    stop_name: row.stop_name || row.timepoint_name || null,
+    stop_sequence: toInt(row.stop_sequence),
+    arrival_time: row.arrival_time || row.scheduled_arrival || null,
+    departure_time: row.departure_time || row.scheduled_departure || null,
+    direction: row.direction_id || row.direction || null,
+    service_date: toDate(row.service_date || row.date),
+  };
+}
 function transformSubwayWait(row) {
   return {
     month: toDate(row.month || row.date),
@@ -147,13 +201,24 @@ function transformSubwayJourney(row) {
     day_type: row.day_type || null,
   };
 }
-// Daily ridership by mode — uses 'date' field not 'month'
+// Daily ridership — one row per date per mode (subway, bus, LIRR, MNR, etc)
 function transformDailyRidership(row) {
-  return {
-    month: toDate(row.date || row.month),
-    mode: row.mode || row.transit_mode || '',
-    ridership: toInt(row.subways_total_estimated_ridership || row.buses_total_estimated_ridership || row.ridership || row.total_ridership),
+  const date = toDate(row.date || row.month);
+  const results = [];
+  const modes = {
+    'Subway': row.subways_total_estimated_ridership,
+    'Bus': row.buses_total_estimated_ridership,
+    'LIRR': row.lirr_total_estimated_ridership,
+    'Metro-North': row.metro_north_total_estimated_ridership,
+    'Access-A-Ride': row.access_a_ride_total_scheduled_trips,
+    'Bridges-Tunnels': row.bridges_and_tunnels_total_traffic,
+    'Staten Island Railway': row.staten_island_railway_total_estimated_ridership,
   };
+  for (const [mode, val] of Object.entries(modes)) {
+    const ridership = toInt(val);
+    if (ridership !== null) results.push({ month: date, mode, ridership });
+  }
+  return results;
 }
 function transformHourlyRidership(row) {
   return {
@@ -180,7 +245,7 @@ function transformBusHourlyRidership(row) {
 
 async function upsertBatch(table, rows, conflictCol) {
   if (!rows.length) return { count: 0 };
-  const valid = rows.filter(r => r.month || r.transit_timestamp);
+  const valid = rows.filter(r => r.month || r.transit_timestamp || r.service_date);
   if (!valid.length) return { count: 0 };
   const opts = conflictCol
     ? { onConflict: conflictCol, ignoreDuplicates: true }
@@ -190,17 +255,38 @@ async function upsertBatch(table, rows, conflictCol) {
   return { count: valid.length };
 }
 
+// Standard ingest for flat transforms (1 row in → 1 row out)
 async function ingestDataset(config, table, transformFn, conflictCol) {
   const results = [];
   for (const ds of config) {
     try {
       const raw = await fetchAll(ds.id);
       const transformed = raw.map(transformFn).filter(r =>
-        r.route_id || r.line_name || r.station_complex || r.mode
+        r.route_id || r.line_name || r.station_complex || r.mode || r.trip_id || r.from_stop
       );
       let total = 0;
       for (let i = 0; i < transformed.length; i += 5000) {
         const { count } = await upsertBatch(table, transformed.slice(i, i + 5000), conflictCol);
+        total += count;
+      }
+      results.push({ dataset: ds.label, rows: total, status: 'ok' });
+    } catch (e) {
+      results.push({ dataset: ds.label, error: e.message, status: 'error' });
+    }
+  }
+  return results;
+}
+
+// Special ingest for daily ridership (1 row in → multiple rows out, one per mode)
+async function ingestDailyRidership() {
+  const results = [];
+  for (const ds of DATASETS.daily_ridership) {
+    try {
+      const raw = await fetchAll(ds.id);
+      const allRows = raw.flatMap(transformDailyRidership).filter(r => r.month && r.mode);
+      let total = 0;
+      for (let i = 0; i < allRows.length; i += 5000) {
+        const { count } = await upsertBatch('mta_monthly_ridership', allRows.slice(i, i + 5000), 'month,mode');
         total += count;
       }
       results.push({ dataset: ds.label, rows: total, status: 'ok' });
@@ -227,13 +313,17 @@ module.exports = async function handler(req, res) {
       results.push(...await ingestDataset(DATASETS.bus_speeds, 'mta_bus_speeds', transformBusSpeeds, 'route_id,month,period,day_type'));
     if (dataset === 'bus_journey' || dataset === 'all')
       results.push(...await ingestDataset(DATASETS.bus_journey, 'mta_bus_journey_time', transformBusJourney, 'route_id,month,period,day_type'));
+    if (dataset === 'bus_segment_speeds' || dataset === 'all')
+      results.push(...await ingestDataset(DATASETS.bus_segment_speeds, 'mta_bus_segment_speeds', transformBusSegmentSpeeds, 'route_id,month,from_stop,to_stop,day_of_week,hour_of_day'));
+    if (dataset === 'bus_schedules' || dataset === 'all')
+      results.push(...await ingestDataset(DATASETS.bus_schedules, 'mta_bus_schedules', transformBusSchedule, 'route_id,trip_id,stop_id,service_date'));
     if (dataset === 'subway_wait' || dataset === 'all')
       results.push(...await ingestDataset(DATASETS.subway_wait, 'mta_subway_wait_assessment', transformSubwayWait, 'line_name,month,period,day_type'));
     if (dataset === 'subway_journey' || dataset === 'all')
       results.push(...await ingestDataset(DATASETS.subway_journey, 'mta_subway_journey_time', transformSubwayJourney, 'line_name,month,period,day_type'));
     if (dataset === 'daily_ridership' || dataset === 'all')
-      results.push(...await ingestDataset(DATASETS.daily_ridership, 'mta_monthly_ridership', transformDailyRidership, 'month,mode'));
-    // Hourly datasets are large — run explicitly only
+      results.push(...await ingestDailyRidership());
+    // Large datasets — run explicitly only
     if (dataset === 'hourly_ridership')
       results.push(...await ingestDataset(DATASETS.hourly_ridership, 'mta_hourly_ridership', transformHourlyRidership, null));
     if (dataset === 'bus_hourly_ridership')
