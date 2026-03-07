@@ -7,4 +7,4 @@
   "crons": [
     { "path": "/api/poller", "schedule": "*/2 * * * *" }
   ]
-}
+} 
