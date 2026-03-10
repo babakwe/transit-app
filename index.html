@@ -20,10 +20,7 @@
       overflow: hidden;
     }
 
-    #map {
-      position: fixed;
-      inset: 0;
-    }
+    #map { position: fixed; inset: 0; }
 
     #topbar {
       position: fixed;
@@ -31,16 +28,16 @@
       left: 12px;
       right: 12px;
       z-index: 20;
-      display: flex;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: 42px 1fr 1fr 78px;
+      gap: 8px;
       align-items: center;
     }
 
     #brand {
       height: 42px;
-      min-width: 42px;
       border-radius: 12px;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.96);
       border: 1px solid rgba(0,0,0,0.08);
       box-shadow: 0 8px 24px rgba(0,0,0,0.10);
       display: flex;
@@ -49,28 +46,26 @@
       font-weight: 900;
       color: #2563eb;
       backdrop-filter: blur(10px);
-      flex-shrink: 0;
     }
 
-    #searchWrap {
-      flex: 1;
+    .searchWrap {
       position: relative;
     }
 
-    #searchInput {
+    .searchInput {
       width: 100%;
       height: 42px;
       border: 1px solid rgba(0,0,0,0.08);
       border-radius: 12px;
       background: rgba(255,255,255,0.96);
       box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-      padding: 0 14px;
+      padding: 0 12px;
       font-size: 14px;
       outline: none;
       backdrop-filter: blur(10px);
     }
 
-    #searchResults {
+    .searchResults {
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
@@ -81,6 +76,8 @@
       box-shadow: 0 10px 28px rgba(0,0,0,0.12);
       overflow: hidden;
       display: none;
+      max-height: 220px;
+      overflow-y: auto;
     }
 
     .search-item {
@@ -88,18 +85,13 @@
       font-size: 13px;
       cursor: pointer;
       border-bottom: 1px solid rgba(0,0,0,0.06);
+      background: white;
     }
 
-    .search-item:last-child {
-      border-bottom: none;
-    }
-
-    .search-item:hover {
-      background: #f8fafc;
-    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: #f8fafc; }
 
     #weatherChip {
-      min-width: 86px;
       height: 42px;
       border-radius: 12px;
       background: rgba(255,255,255,0.96);
@@ -108,11 +100,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 12px;
+      padding: 0 10px;
       font-size: 13px;
       font-weight: 700;
       backdrop-filter: blur(10px);
-      flex-shrink: 0;
     }
 
     #bottomCard {
@@ -156,17 +147,10 @@
       font-weight: 700;
     }
 
-    #cardBody {
-      padding: 12px 14px 14px;
-    }
+    #cardBody { padding: 12px 14px 14px; }
+    #bottomCard.collapsed #cardBody { display: none; }
 
-    #bottomCard.collapsed #cardBody {
-      display: none;
-    }
-
-    .row {
-      margin-bottom: 10px;
-    }
+    .row { margin-bottom: 10px; }
 
     .label {
       font-size: 11px;
@@ -183,9 +167,7 @@
       color: #111827;
     }
 
-    .muted {
-      color: #6b7280;
-    }
+    .muted { color: #6b7280; }
 
     .grid {
       display: grid;
@@ -210,7 +192,7 @@
     }
 
     .metric-value {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: -0.03em;
     }
@@ -256,9 +238,26 @@
       height: 18px;
       border-radius: 50%;
       background: #16a34a;
-      border: 3px solid white;
+      border: 3px solid #fff;
       box-shadow: 0 0 0 0 rgba(22,163,74,0.55);
       animation: pulse 1.8s infinite;
+    }
+
+    .pin-marker {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #2563eb;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .start-marker {
+      background: #111827;
+    }
+
+    .dest-marker {
+      background: #2563eb;
     }
 
     @keyframes pulse {
@@ -267,15 +266,25 @@
       100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 820px) {
       #topbar {
-        gap: 8px;
+        grid-template-columns: 42px 1fr 1fr 70px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #topbar {
+        grid-template-columns: 42px 1fr 1fr 62px;
+      }
+
+      .searchInput {
+        font-size: 13px;
+        padding: 0 10px;
       }
 
       #weatherChip {
-        min-width: 72px;
-        padding: 0 10px;
         font-size: 12px;
+        padding: 0 8px;
       }
 
       .grid {
@@ -290,9 +299,14 @@
   <div id="topbar">
     <div id="brand">TT</div>
 
-    <div id="searchWrap">
-      <input id="searchInput" type="text" placeholder="Enter destination..." autocomplete="off" />
-      <div id="searchResults"></div>
+    <div class="searchWrap">
+      <input id="startInput" class="searchInput" type="text" placeholder="Start" autocomplete="off" />
+      <div id="startResults" class="searchResults"></div>
+    </div>
+
+    <div class="searchWrap">
+      <input id="destInput" class="searchInput" type="text" placeholder="Destination" autocomplete="off" />
+      <div id="destResults" class="searchResults"></div>
     </div>
 
     <div id="weatherChip">--°</div>
@@ -311,22 +325,22 @@
       </div>
 
       <div class="row">
-        <div class="label">Destination</div>
-        <div id="destinationText" class="value muted">No destination selected yet.</div>
+        <div class="label">Route</div>
+        <div id="routeSummary" class="value muted">Choose a start and destination.</div>
       </div>
 
       <div class="grid">
         <div class="metric">
-          <div class="metric-label">Elevation</div>
-          <div id="elevationVal" class="metric-value">—</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Pointgrade</div>
-          <div id="pointgradeVal" class="metric-value">—</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Distance</div>
+          <div class="metric-label">Route distance</div>
           <div id="distanceVal" class="metric-value">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Route time</div>
+          <div id="durationVal" class="metric-value">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Elevation gain</div>
+          <div id="gainVal" class="metric-value">—</div>
         </div>
         <div class="metric">
           <div class="metric-label">Pathgrade</div>
@@ -340,10 +354,10 @@
       </div>
 
       <div class="actions">
-        <button id="centerBtn" class="action-btn primary">Center on me</button>
+        <button id="useMyLocationBtn" class="action-btn primary">Use my location as start</button>
+        <button id="swapBtn" class="action-btn">Swap</button>
+        <button id="centerBtn" class="action-btn">Center on me</button>
         <button id="clearTrackBtn" class="action-btn">Clear track</button>
-        <button id="kingsbridgeBtn" class="action-btn">Kingsbridge</button>
-        <button id="coopBtn" class="action-btn">Co-op City</button>
       </div>
     </div>
   </div>
@@ -354,22 +368,17 @@
     let liveMarker = null;
     let liveCoords = [];
     let lastAcceptedCoord = null;
-    let destination = null;
-    let destinationMarker = null;
-    let destinationLineSet = false;
 
-    const TRACK_STORAGE_KEY = "towntrip_live_track_v3";
-    const KINGSBRIDGE = [-73.9035, 40.8817];
-    const COOP_CITY = [-73.8292, 40.8748];
+    let startPlace = null;
+    let destPlace = null;
+    let startMarker = null;
+    let destMarker = null;
+
+    const TRACK_STORAGE_KEY = "towntrip_live_track_v4";
+    const DEFAULT_CENTER = [-73.9035, 40.8817];
 
     function fmt(n, digits = 2) {
       return Number.isFinite(n) ? n.toFixed(digits) : "—";
-    }
-
-    function offsetLngLat([lng, lat], eastMeters, northMeters) {
-      const dLat = northMeters / 111320;
-      const dLng = eastMeters / (111320 * Math.cos(lat * Math.PI / 180));
-      return [lng + dLng, lat + dLat];
     }
 
     function haversineMeters(lng1, lat1, lng2, lat2) {
@@ -383,11 +392,10 @@
       return 2 * R * Math.asin(Math.sqrt(a));
     }
 
-    function interpolate(a, b, t) {
-      return [
-        a[0] + (b[0] - a[0]) * t,
-        a[1] + (b[1] - a[1]) * t
-      ];
+    function offsetLngLat([lng, lat], eastMeters, northMeters) {
+      const dLat = northMeters / 111320;
+      const dLng = eastMeters / (111320 * Math.cos(lat * Math.PI / 180));
+      return [lng + dLng, lat + dLat];
     }
 
     function bearingFromVector(eastSlope, northSlope) {
@@ -405,14 +413,9 @@
       return el;
     }
 
-    function makeDestinationMarker() {
+    function makePinMarker(kind) {
       const el = document.createElement("div");
-      el.style.width = "16px";
-      el.style.height = "16px";
-      el.style.borderRadius = "50%";
-      el.style.background = "#2563eb";
-      el.style.border = "3px solid white";
-      el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+      el.className = `pin-marker ${kind === "start" ? "start-marker" : "dest-marker"}`;
       return el;
     }
 
@@ -451,28 +454,28 @@
       };
     }
 
-    async function getPathgrade(a, b) {
-      const samples = 30;
-      let totalDistance = 0;
+    async function computePathgradeFromRoute(routeCoords) {
+      if (!routeCoords || routeCoords.length < 2) return null;
+
+      let totalDist = 0;
       let totalGain = 0;
       let totalLoss = 0;
       let burden = 0;
 
-      let prevCoord = a;
-      let prevElev = await getElevation(a);
+      let prevCoord = routeCoords[0];
+      let prevElev = await getElevation(prevCoord);
       if (prevElev == null) return null;
 
-      for (let i = 1; i <= samples; i++) {
-        const t = i / samples;
-        const coord = interpolate(a, b, t);
+      for (let i = 1; i < routeCoords.length; i++) {
+        const coord = routeCoords[i];
         const elev = await getElevation(coord);
-        if (elev == null) return null;
+        if (elev == null) continue;
 
         const segDist = haversineMeters(prevCoord[0], prevCoord[1], coord[0], coord[1]);
         const delta = elev - prevElev;
         const grade = segDist > 0 ? delta / segDist : 0;
 
-        totalDistance += segDist;
+        totalDist += segDist;
         if (delta > 0) totalGain += delta;
         if (delta < 0) totalLoss += Math.abs(delta);
 
@@ -487,7 +490,7 @@
       }
 
       return {
-        distanceMeters: totalDistance,
+        distanceMeters: totalDist,
         gainMeters: totalGain,
         lossMeters: totalLoss,
         pathgrade: burden
@@ -533,105 +536,159 @@
     async function updateLiveInfo(coord, accuracy) {
       const pg = await getPointgrade(coord);
 
-      document.getElementById("elevationVal").textContent =
-        pg.elevation == null ? "—" : `${fmt(pg.elevation, 1)}m`;
-
-      document.getElementById("pointgradeVal").textContent =
-        pg.slopePct == null ? "—" : `${fmt(pg.slopePct, 2)}%`;
-
       document.getElementById("liveCoords").innerHTML = `
 Lng ${fmt(coord[0], 5)}, Lat ${fmt(coord[1], 5)}
 ${pg.uphillDir === "—" ? "" : "\nUphill direction: " + pg.uphillDir}
+Pointgrade ${pg.slopePct == null ? "—" : fmt(pg.slopePct, 2) + "%"}
 Accuracy ${fmt(accuracy, 1)}m
       `.trim();
-
-      if (destination) {
-        await updateDestinationMetrics(coord, destination.center);
-      }
     }
 
-    async function updateDestinationMetrics(fromCoord, toCoord) {
-      const path = await getPathgrade(fromCoord, toCoord);
-      if (!path) return;
+    async function geocodeSearch(q) {
+      const tkRes = await fetch("/api/mapboxtoken");
+      const { token } = await tkRes.json();
 
-      document.getElementById("distanceVal").textContent =
-        `${fmt(path.distanceMeters, 0)}m`;
+      const r = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${token}&country=US&proximity=-73.9035,40.8817&limit=5`
+      );
+      const d = await r.json();
+      return d.features || [];
+    }
 
-      document.getElementById("pathgradeVal").textContent =
-        `${fmt(path.pathgrade, 0)}`;
+    function setupSearch(inputId, resultsId, kind) {
+      const input = document.getElementById(inputId);
+      const box = document.getElementById(resultsId);
+      let timer;
 
-      map.getSource("destination-line").setData({
-        type: "Feature",
-        geometry: {
-          type: "LineString",
-          coordinates: [fromCoord, toCoord]
+      input.addEventListener("input", () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 3) {
+          box.style.display = "none";
+          return;
         }
+
+        timer = setTimeout(async () => {
+          try {
+            const features = await geocodeSearch(q);
+            box.innerHTML = "";
+
+            if (!features.length) {
+              box.style.display = "none";
+              return;
+            }
+
+            features.forEach(f => {
+              const item = document.createElement("div");
+              item.className = "search-item";
+              item.textContent = f.place_name;
+              item.addEventListener("click", async () => {
+                const place = { name: f.place_name, center: f.center };
+
+                if (kind === "start") {
+                  startPlace = place;
+                  input.value = place.name;
+                  setStartMarker(place.center);
+                } else {
+                  destPlace = place;
+                  input.value = place.name;
+                  setDestMarker(place.center);
+                }
+
+                box.style.display = "none";
+                await maybeBuildRoute();
+              });
+              box.appendChild(item);
+            });
+
+            box.style.display = "block";
+          } catch {
+            box.style.display = "none";
+          }
+        }, 350);
+      });
+
+      input.addEventListener("blur", () => {
+        setTimeout(() => { box.style.display = "none"; }, 200);
       });
     }
 
-    async function doSearch(q) {
-      try {
-        const tkRes = await fetch("/api/mapboxtoken");
-        const { token } = await tkRes.json();
-
-        const r = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${token}&country=US&proximity=-73.9035,40.8817&limit=5`
-        );
-        const d = await r.json();
-        renderSearchResults(d.features || []);
-      } catch {
-        document.getElementById("searchResults").style.display = "none";
-      }
+    function setStartMarker(coord) {
+      if (startMarker) startMarker.remove();
+      startMarker = new mapboxgl.Marker({ element: makePinMarker("start") })
+        .setLngLat(coord)
+        .addTo(map);
     }
 
-    function renderSearchResults(features) {
-      const box = document.getElementById("searchResults");
-      box.innerHTML = "";
+    function setDestMarker(coord) {
+      if (destMarker) destMarker.remove();
+      destMarker = new mapboxgl.Marker({ element: makePinMarker("dest") })
+        .setLngLat(coord)
+        .addTo(map);
+    }
 
-      if (!features.length) {
-        box.style.display = "none";
-        return;
-      }
+    async function fetchWalkingRoute(startCoord, destCoord) {
+      const tkRes = await fetch("/api/mapboxtoken");
+      const { token } = await tkRes.json();
 
-      features.forEach(f => {
-        const item = document.createElement("div");
-        item.className = "search-item";
-        item.textContent = f.place_name;
-        item.addEventListener("click", async () => {
-          destination = {
-            name: f.place_name,
-            center: f.center
-          };
+      const coords = `${startCoord[0]},${startCoord[1]};${destCoord[0]},${destCoord[1]}`;
+      const url =
+        `https://api.mapbox.com/directions/v5/mapbox/walking/${coords}` +
+        `?geometries=geojson&overview=full&steps=false&access_token=${token}`;
 
-          document.getElementById("destinationText").textContent = f.place_name;
-          document.getElementById("searchInput").value = f.place_name;
-          box.style.display = "none";
+      const r = await fetch(url);
+      const d = await r.json();
+      return d;
+    }
 
-          if (destinationMarker) destinationMarker.remove();
-          destinationMarker = new mapboxgl.Marker({ element: makeDestinationMarker() })
-            .setLngLat(f.center)
-            .addTo(map);
+    async function maybeBuildRoute() {
+      if (!startPlace || !destPlace) return;
 
-          map.flyTo({
-            center: f.center,
-            zoom: 15,
-            duration: 700
-          });
+      document.getElementById("routeSummary").textContent = "Calculating route…";
 
-          if (liveMarker) {
-            const lngLat = liveMarker.getLngLat();
-            await updateDestinationMetrics([lngLat.lng, lngLat.lat], f.center);
+      try {
+        const data = await fetchWalkingRoute(startPlace.center, destPlace.center);
+        const route = data.routes?.[0];
 
-            const bounds = new mapboxgl.LngLatBounds();
-            bounds.extend([lngLat.lng, lngLat.lat]);
-            bounds.extend(f.center);
-            map.fitBounds(bounds, { padding: 80, duration: 700 });
+        if (!route) {
+          document.getElementById("routeSummary").textContent = "No walking route found.";
+          return;
+        }
+
+        const routeCoords = route.geometry.coordinates;
+
+        map.getSource("route-line").setData({
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: routeCoords
           }
         });
-        box.appendChild(item);
-      });
 
-      box.style.display = "block";
+        const pathData = await computePathgradeFromRoute(routeCoords);
+
+        document.getElementById("distanceVal").textContent =
+          `${fmt(route.distance, 0)}m`;
+
+        document.getElementById("durationVal").textContent =
+          `${fmt(route.duration / 60, 1)}m`;
+
+        document.getElementById("gainVal").textContent =
+          pathData ? `${fmt(pathData.gainMeters, 1)}m` : "—";
+
+        document.getElementById("pathgradeVal").textContent =
+          pathData ? `${fmt(pathData.pathgrade, 0)}` : "—";
+
+        document.getElementById("routeSummary").textContent =
+          `${startPlace.name} → ${destPlace.name}`;
+
+        const bounds = new mapboxgl.LngLatBounds();
+        routeCoords.forEach(c => bounds.extend(c));
+        map.fitBounds(bounds, { padding: 70, duration: 800 });
+
+      } catch (e) {
+        document.getElementById("routeSummary").textContent = "Could not calculate route.";
+      }
     }
 
     function startLiveLocation() {
@@ -712,7 +769,7 @@ Accuracy ${fmt(accuracy, 1)}m
         const lng = pos.coords.longitude;
 
         try {
-          const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`);
+          const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m&temperature_unit=fahrenheit`);
           const data = await r.json();
           const temp = data?.current?.temperature_2m;
           document.getElementById("weatherChip").textContent =
@@ -720,27 +777,6 @@ Accuracy ${fmt(accuracy, 1)}m
         } catch {
           document.getElementById("weatherChip").textContent = "--°";
         }
-      });
-    }
-
-    function setupSearch() {
-      const input = document.getElementById("searchInput");
-      let timer;
-
-      input.addEventListener("input", () => {
-        clearTimeout(timer);
-        const q = input.value.trim();
-        if (q.length < 3) {
-          document.getElementById("searchResults").style.display = "none";
-          return;
-        }
-        timer = setTimeout(() => doSearch(q), 350);
-      });
-
-      input.addEventListener("blur", () => {
-        setTimeout(() => {
-          document.getElementById("searchResults").style.display = "none";
-        }, 200);
       });
     }
 
@@ -768,7 +804,7 @@ Accuracy ${fmt(accuracy, 1)}m
       map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/mapbox/light-v11",
-        center: KINGSBRIDGE,
+        center: DEFAULT_CENTER,
         zoom: 13.8,
         pitch: 55,
         bearing: -12,
@@ -826,7 +862,7 @@ Accuracy ${fmt(accuracy, 1)}m
           }
         });
 
-        map.addSource("destination-line", {
+        map.addSource("route-line", {
           type: "geojson",
           data: {
             type: "Feature",
@@ -835,23 +871,49 @@ Accuracy ${fmt(accuracy, 1)}m
         });
 
         map.addLayer({
-          id: "destination-line-layer",
+          id: "route-line-layer",
           type: "line",
-          source: "destination-line",
+          source: "route-line",
           layout: {
             "line-cap": "round",
             "line-join": "round"
           },
           paint: {
             "line-color": "#2563eb",
-            "line-width": 4,
-            "line-opacity": 0.9
+            "line-width": 5,
+            "line-opacity": 0.92
           }
         });
 
         updateLiveTrackLayer();
         startLiveLocation();
         loadWeather();
+      });
+
+      document.getElementById("useMyLocationBtn").addEventListener("click", () => {
+        if (!liveMarker) return;
+        const lngLat = liveMarker.getLngLat();
+        startPlace = {
+          name: "My Location",
+          center: [lngLat.lng, lngLat.lat]
+        };
+        document.getElementById("startInput").value = "My Location";
+        setStartMarker(startPlace.center);
+        maybeBuildRoute();
+      });
+
+      document.getElementById("swapBtn").addEventListener("click", async () => {
+        const temp = startPlace;
+        startPlace = destPlace;
+        destPlace = temp;
+
+        document.getElementById("startInput").value = startPlace?.name || "";
+        document.getElementById("destInput").value = destPlace?.name || "";
+
+        if (startPlace) setStartMarker(startPlace.center);
+        if (destPlace) setDestMarker(destPlace.center);
+
+        await maybeBuildRoute();
       });
 
       document.getElementById("centerBtn").addEventListener("click", () => {
@@ -868,27 +930,8 @@ Accuracy ${fmt(accuracy, 1)}m
 
       document.getElementById("clearTrackBtn").addEventListener("click", clearSavedTrack);
 
-      document.getElementById("kingsbridgeBtn").addEventListener("click", () => {
-        map.flyTo({
-          center: KINGSBRIDGE,
-          zoom: 14.2,
-          pitch: 60,
-          bearing: -18,
-          duration: 900
-        });
-      });
-
-      document.getElementById("coopBtn").addEventListener("click", () => {
-        map.flyTo({
-          center: COOP_CITY,
-          zoom: 14.2,
-          pitch: 50,
-          bearing: 0,
-          duration: 900
-        });
-      });
-
-      setupSearch();
+      setupSearch("startInput", "startResults", "start");
+      setupSearch("destInput", "destResults", "dest");
       setupCardToggle();
     }
 
