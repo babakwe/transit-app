@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TownTrip Pathgrade Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>TownTrip</title>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
@@ -15,8 +15,9 @@
       padding: 0;
       height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #ffffff;
+      background: #fff;
       color: #111827;
+      overflow: hidden;
     }
 
     #map {
@@ -24,68 +25,173 @@
       inset: 0;
     }
 
-    .panel {
+    #topbar {
       position: fixed;
-      top: 14px;
-      left: 14px;
-      width: min(430px, calc(100vw - 28px));
-      max-height: calc(100vh - 28px);
-      overflow: auto;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #brand {
+      height: 42px;
+      min-width: 42px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #2563eb;
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    #searchWrap {
+      flex: 1;
+      position: relative;
+    }
+
+    #searchInput {
+      width: 100%;
+      height: 42px;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      padding: 0 14px;
+      font-size: 14px;
+      outline: none;
+      backdrop-filter: blur(10px);
+    }
+
+    #searchResults {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+      overflow: hidden;
+      display: none;
+    }
+
+    .search-item {
+      padding: 10px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .search-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-item:hover {
+      background: #f8fafc;
+    }
+
+    #weatherChip {
+      min-width: 86px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    #bottomCard {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 20;
       background: rgba(255,255,255,0.96);
       border: 1px solid rgba(0,0,0,0.08);
       border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.14);
       backdrop-filter: blur(10px);
-      z-index: 10;
+      overflow: hidden;
     }
 
-    .title {
-      font-size: 18px;
+    #cardHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    #cardTitle {
+      font-size: 16px;
       font-weight: 800;
       letter-spacing: -0.02em;
-      margin-bottom: 4px;
     }
 
-    .subtitle {
+    #cardToggle {
+      appearance: none;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: #fff;
+      border-radius: 10px;
+      height: 32px;
+      min-width: 32px;
+      padding: 0 10px;
+      cursor: pointer;
       font-size: 13px;
-      color: #6b7280;
-      line-height: 1.45;
-      margin-bottom: 12px;
+      font-weight: 700;
     }
 
-    .section {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(0,0,0,0.08);
+    #cardBody {
+      padding: 12px 14px 14px;
     }
 
-    .section:first-of-type {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
+    #bottomCard.collapsed #cardBody {
+      display: none;
+    }
+
+    .row {
+      margin-bottom: 10px;
     }
 
     .label {
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       color: #6b7280;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .value {
-      font-size: 14px;
-      line-height: 1.5;
+      font-size: 13px;
+      line-height: 1.45;
       color: #111827;
-      word-break: break-word;
+    }
+
+    .muted {
+      color: #6b7280;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 14px;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 8px;
     }
 
     .metric {
@@ -95,7 +201,7 @@
       padding: 10px 12px;
     }
 
-    .metric .m-label {
+    .metric-label {
       font-size: 11px;
       color: #6b7280;
       text-transform: uppercase;
@@ -103,87 +209,47 @@
       margin-bottom: 4px;
     }
 
-    .metric .m-value {
-      font-size: 20px;
+    .metric-value {
+      font-size: 21px;
       font-weight: 800;
       letter-spacing: -0.03em;
     }
 
-    .buttons {
+    .actions {
       display: flex;
       gap: 10px;
-      margin-top: 12px;
       flex-wrap: wrap;
+      margin-top: 12px;
     }
 
-    button {
+    .action-btn {
       appearance: none;
       border: 1px solid rgba(0,0,0,0.08);
-      background: #ffffff;
+      background: #fff;
       color: #111827;
       border-radius: 12px;
-      height: 40px;
-      padding: 0 14px;
+      height: 38px;
+      padding: 0 12px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
     }
 
-    button:hover {
-      background: #f8fafc;
-    }
-
-    .primary {
+    .action-btn.primary {
       background: #111827;
-      color: white;
+      color: #fff;
       border-color: #111827;
-    }
-
-    .primary:hover {
-      background: #1f2937;
-    }
-
-    .small {
-      font-size: 12px;
-      color: #6b7280;
-      line-height: 1.5;
     }
 
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-line;
     }
 
-    .legend {
-      position: fixed;
-      right: 14px;
-      bottom: 14px;
-      background: rgba(255,255,255,0.95);
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 14px;
-      padding: 10px 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-      z-index: 10;
-      font-size: 12px;
-      color: #374151;
-    }
-
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .a-dot { background: #2563eb; }
-    .b-dot { background: #dc2626; }
-    .line-dot { background: #111827; }
-    .live-dot { background: #16a34a; }
-
-    .status-good { color: #15803d; font-weight: 700; }
-    .status-bad { color: #b91c1c; font-weight: 700; }
+    .good { color: #15803d; font-weight: 700; }
+    .bad { color: #b91c1c; font-weight: 700; }
 
     .live-marker {
       width: 18px;
@@ -192,30 +258,28 @@
       background: #16a34a;
       border: 3px solid white;
       box-shadow: 0 0 0 0 rgba(22,163,74,0.55);
-      animation: tt-pulse 1.8s infinite;
+      animation: pulse 1.8s infinite;
     }
 
-    @keyframes tt-pulse {
+    @keyframes pulse {
       0%   { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
       70%  { box-shadow: 0 0 0 14px rgba(22,163,74,0); }
       100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
     }
 
-    @media (max-width: 640px) {
-      .panel {
-        width: calc(100vw - 20px);
-        left: 10px;
-        top: 10px;
-        padding: 14px;
+    @media (max-width: 700px) {
+      #topbar {
+        gap: 8px;
+      }
+
+      #weatherChip {
+        min-width: 72px;
+        padding: 0 10px;
+        font-size: 12px;
       }
 
       .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .legend {
-        right: 10px;
-        bottom: 10px;
+        grid-template-columns: 1fr 1fr;
       }
     }
   </style>
@@ -223,114 +287,89 @@
 <body>
   <div id="map"></div>
 
-  <div class="panel">
-    <div class="title">TownTrip Pathgrade Map</div>
-    <div class="subtitle">
-      Terrain-first navigation foundation. Click once for <b>Point A</b>, click again for <b>Point B</b>.
-      You can also turn on <b>live location tracking</b> and watch yourself move over the map.
+  <div id="topbar">
+    <div id="brand">TT</div>
+
+    <div id="searchWrap">
+      <input id="searchInput" type="text" placeholder="Enter destination..." autocomplete="off" />
+      <div id="searchResults"></div>
     </div>
 
-    <div class="section">
-      <div class="label">Live location</div>
-      <div id="liveStatus" class="value small">Tracking is off.</div>
-      <div class="buttons">
-        <button id="startLiveBtn" class="primary">Start live location</button>
-        <button id="stopLiveBtn">Stop live location</button>
-        <button id="centerLiveBtn">Center on me</button>
-      </div>
-      <div class="small" style="margin-top:8px;">
-        While tracking is on, your path points are collected in your browser’s local storage for later model work.
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="label">Map controls</div>
-      <div class="small">
-        1. Click the map to place Point A.<br/>
-        2. Click again to place Point B.<br/>
-        3. A third click starts a new path from scratch.
-      </div>
-      <div class="buttons">
-        <button id="resetBtn">Reset points</button>
-        <button id="coopBtn">Go to Kingsbridge</button>
-        <button id="clearTrackBtn">Clear saved track</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="label">Point A</div>
-      <div id="pointA" class="value small">Not set yet.</div>
-    </div>
-
-    <div class="section">
-      <div class="label">Point B</div>
-      <div id="pointB" class="value small">Not set yet.</div>
-    </div>
-
-    <div class="section">
-      <div class="label">Path metrics</div>
-      <div class="grid">
-        <div class="metric">
-          <div class="m-label">Distance</div>
-          <div id="distanceVal" class="m-value">—</div>
-        </div>
-        <div class="metric">
-          <div class="m-label">Pathgrade v0.1</div>
-          <div id="pathgradeVal" class="m-value">—</div>
-        </div>
-        <div class="metric">
-          <div class="m-label">Elevation gain</div>
-          <div id="gainVal" class="m-value">—</div>
-        </div>
-        <div class="metric">
-          <div class="m-label">Elevation loss</div>
-          <div id="lossVal" class="m-value">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="label">Live rider position</div>
-      <div id="livePointInfo" class="small">No live GPS point yet.</div>
-    </div>
-
-    <div class="section">
-      <div class="label">Notes</div>
-      <div class="small">
-        <b>Pointgrade</b> here means local terrain steepness and uphill direction at a point.<br/>
-        <b>Pathgrade v0.1</b> here is an experimental flat-equivalent burden score based on distance and slope sampling along the path.
-      </div>
-    </div>
+    <div id="weatherChip">--°</div>
   </div>
 
-  <div class="legend">
-    <div><span class="dot a-dot"></span>Point A</div>
-    <div><span class="dot b-dot"></span>Point B</div>
-    <div><span class="dot line-dot"></span>Path A→B</div>
-    <div><span class="dot live-dot"></span>Live rider</div>
+  <div id="bottomCard">
+    <div id="cardHeader">
+      <div id="cardTitle">TownTrip</div>
+      <button id="cardToggle">Hide</button>
+    </div>
+
+    <div id="cardBody">
+      <div class="row">
+        <div class="label">Status</div>
+        <div id="liveStatus" class="value muted">Requesting live location…</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Destination</div>
+        <div id="destinationText" class="value muted">No destination selected yet.</div>
+      </div>
+
+      <div class="grid">
+        <div class="metric">
+          <div class="metric-label">Elevation</div>
+          <div id="elevationVal" class="metric-value">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Pointgrade</div>
+          <div id="pointgradeVal" class="metric-value">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Distance</div>
+          <div id="distanceVal" class="metric-value">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Pathgrade</div>
+          <div id="pathgradeVal" class="metric-value">—</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div class="label">Live coordinates</div>
+        <div id="liveCoords" class="mono muted">No live GPS point yet.</div>
+      </div>
+
+      <div class="actions">
+        <button id="centerBtn" class="action-btn primary">Center on me</button>
+        <button id="clearTrackBtn" class="action-btn">Clear track</button>
+        <button id="kingsbridgeBtn" class="action-btn">Kingsbridge</button>
+        <button id="coopBtn" class="action-btn">Co-op City</button>
+      </div>
+    </div>
   </div>
 
   <script>
     let map;
-    let pointA = null;
-    let pointB = null;
-    let markerA = null;
-    let markerB = null;
-
     let liveWatchId = null;
     let liveMarker = null;
     let liveCoords = [];
     let lastAcceptedCoord = null;
+    let destination = null;
+    let destinationMarker = null;
+    let destinationLineSet = false;
 
+    const TRACK_STORAGE_KEY = "towntrip_live_track_v3";
     const KINGSBRIDGE = [-73.9035, 40.8817];
-    const TRACK_STORAGE_KEY = "towntrip_live_track_v1";
+    const COOP_CITY = [-73.8292, 40.8748];
 
     function fmt(n, digits = 2) {
       return Number.isFinite(n) ? n.toFixed(digits) : "—";
     }
 
-    function metersToFeet(m) {
-      return m * 3.28084;
+    function offsetLngLat([lng, lat], eastMeters, northMeters) {
+      const dLat = northMeters / 111320;
+      const dLng = eastMeters / (111320 * Math.cos(lat * Math.PI / 180));
+      return [lng + dLng, lat + dLat];
     }
 
     function haversineMeters(lng1, lat1, lng2, lat2) {
@@ -342,12 +381,6 @@
                 Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
                 Math.sin(dLng / 2) ** 2;
       return 2 * R * Math.asin(Math.sqrt(a));
-    }
-
-    function offsetLngLat([lng, lat], eastMeters, northMeters) {
-      const dLat = northMeters / 111320;
-      const dLng = eastMeters / (111320 * Math.cos(lat * Math.PI / 180));
-      return [lng + dLng, lat + dLat];
     }
 
     function interpolate(a, b, t) {
@@ -366,20 +399,20 @@
       return dirs[idx];
     }
 
-    function makeMarker(color) {
+    function makeLiveMarker() {
+      const el = document.createElement("div");
+      el.className = "live-marker";
+      return el;
+    }
+
+    function makeDestinationMarker() {
       const el = document.createElement("div");
       el.style.width = "16px";
       el.style.height = "16px";
       el.style.borderRadius = "50%";
-      el.style.background = color;
+      el.style.background = "#2563eb";
       el.style.border = "3px solid white";
       el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-      return el;
-    }
-
-    function makeLiveMarker() {
-      const el = document.createElement("div");
-      el.className = "live-marker";
       return el;
     }
 
@@ -404,7 +437,7 @@
       ]);
 
       if ([eW, eE, eS, eN, eC].some(v => v == null)) {
-        return { elevation: eC, slopePct: null, uphillDir: "—", eastSlope: null, northSlope: null };
+        return { elevation: eC, slopePct: null, uphillDir: "—" };
       }
 
       const eastSlope  = (eE - eW) / (2 * sample);
@@ -414,9 +447,7 @@
       return {
         elevation: eC,
         slopePct: slope * 100,
-        uphillDir: bearingFromVector(eastSlope, northSlope),
-        eastSlope,
-        northSlope
+        uphillDir: bearingFromVector(eastSlope, northSlope)
       };
     }
 
@@ -463,52 +494,6 @@
       };
     }
 
-    function updatePointDisplay(id, label, coord, data) {
-      const el = document.getElementById(id);
-      if (!coord || !data) {
-        el.innerHTML = "Not set yet.";
-        return;
-      }
-
-      el.innerHTML = `
-        <div><b>${label}</b></div>
-        <div class="mono">Lng ${fmt(coord[0], 5)}, Lat ${fmt(coord[1], 5)}</div>
-        <div>Elevation: <b>${fmt(data.elevation, 1)} m</b> / ${fmt(metersToFeet(data.elevation), 0)} ft</div>
-        <div>Pointgrade: <b>${data.slopePct == null ? "—" : fmt(data.slopePct, 2) + "%"}</b></div>
-        <div>Uphill direction: <b>${data.uphillDir}</b></div>
-      `;
-    }
-
-    function updatePathDisplay(data) {
-      document.getElementById("distanceVal").textContent =
-        data ? `${fmt(data.distanceMeters, 0)}m` : "—";
-      document.getElementById("pathgradeVal").textContent =
-        data ? `${fmt(data.pathgrade, 0)}` : "—";
-      document.getElementById("gainVal").textContent =
-        data ? `${fmt(data.gainMeters, 1)}m` : "—";
-      document.getElementById("lossVal").textContent =
-        data ? `${fmt(data.lossMeters, 1)}m` : "—";
-    }
-
-    function clearPoints() {
-      pointA = null;
-      pointB = null;
-
-      if (markerA) { markerA.remove(); markerA = null; }
-      if (markerB) { markerB.remove(); markerB = null; }
-
-      if (map.getSource("path-line")) {
-        map.getSource("path-line").setData({
-          type: "Feature",
-          geometry: { type: "LineString", coordinates: [] }
-        });
-      }
-
-      updatePointDisplay("pointA");
-      updatePointDisplay("pointB");
-      updatePathDisplay(null);
-    }
-
     function loadSavedTrack() {
       try {
         const raw = localStorage.getItem(TRACK_STORAGE_KEY);
@@ -542,92 +527,124 @@
       lastAcceptedCoord = null;
       localStorage.removeItem(TRACK_STORAGE_KEY);
       updateLiveTrackLayer();
-      document.getElementById("livePointInfo").textContent = "No live GPS point yet.";
+      document.getElementById("liveCoords").textContent = "No live GPS point yet.";
     }
 
     async function updateLiveInfo(coord, accuracy) {
-      const infoEl = document.getElementById("livePointInfo");
       const pg = await getPointgrade(coord);
 
-      infoEl.innerHTML = `
-        <div class="mono">Lng ${fmt(coord[0], 5)}, Lat ${fmt(coord[1], 5)}</div>
-        <div>Accuracy: <b>${fmt(accuracy, 1)} m</b></div>
-        <div>Elevation: <b>${pg.elevation == null ? "—" : fmt(pg.elevation, 1) + " m"}</b></div>
-        <div>Pointgrade: <b>${pg.slopePct == null ? "—" : fmt(pg.slopePct, 2) + "%"}</b></div>
-        <div>Uphill direction: <b>${pg.uphillDir}</b></div>
-        <div>Collected points: <b>${liveCoords.length}</b></div>
-      `;
+      document.getElementById("elevationVal").textContent =
+        pg.elevation == null ? "—" : `${fmt(pg.elevation, 1)}m`;
+
+      document.getElementById("pointgradeVal").textContent =
+        pg.slopePct == null ? "—" : `${fmt(pg.slopePct, 2)}%`;
+
+      document.getElementById("liveCoords").innerHTML = `
+Lng ${fmt(coord[0], 5)}, Lat ${fmt(coord[1], 5)}
+${pg.uphillDir === "—" ? "" : "\nUphill direction: " + pg.uphillDir}
+Accuracy ${fmt(accuracy, 1)}m
+      `.trim();
+
+      if (destination) {
+        await updateDestinationMetrics(coord, destination.center);
+      }
     }
 
-    async function handleMapClick(e) {
-      const coord = [e.lngLat.lng, e.lngLat.lat];
+    async function updateDestinationMetrics(fromCoord, toCoord) {
+      const path = await getPathgrade(fromCoord, toCoord);
+      if (!path) return;
 
-      if (!pointA) {
-        pointA = coord;
-        if (markerA) markerA.remove();
-        markerA = new mapboxgl.Marker({ element: makeMarker("#2563eb") })
-          .setLngLat(pointA)
-          .addTo(map);
+      document.getElementById("distanceVal").textContent =
+        `${fmt(path.distanceMeters, 0)}m`;
 
-        const aData = await getPointgrade(pointA);
-        updatePointDisplay("pointA", "Point A", pointA, aData);
-        updatePointDisplay("pointB");
-        updatePathDisplay(null);
+      document.getElementById("pathgradeVal").textContent =
+        `${fmt(path.pathgrade, 0)}`;
+
+      map.getSource("destination-line").setData({
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [fromCoord, toCoord]
+        }
+      });
+    }
+
+    async function doSearch(q) {
+      try {
+        const tkRes = await fetch("/api/mapboxtoken");
+        const { token } = await tkRes.json();
+
+        const r = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${token}&country=US&proximity=-73.9035,40.8817&limit=5`
+        );
+        const d = await r.json();
+        renderSearchResults(d.features || []);
+      } catch {
+        document.getElementById("searchResults").style.display = "none";
+      }
+    }
+
+    function renderSearchResults(features) {
+      const box = document.getElementById("searchResults");
+      box.innerHTML = "";
+
+      if (!features.length) {
+        box.style.display = "none";
         return;
       }
 
-      if (!pointB) {
-        pointB = coord;
-        if (markerB) markerB.remove();
-        markerB = new mapboxgl.Marker({ element: makeMarker("#dc2626") })
-          .setLngLat(pointB)
-          .addTo(map);
+      features.forEach(f => {
+        const item = document.createElement("div");
+        item.className = "search-item";
+        item.textContent = f.place_name;
+        item.addEventListener("click", async () => {
+          destination = {
+            name: f.place_name,
+            center: f.center
+          };
 
-        map.getSource("path-line").setData({
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: [pointA, pointB]
+          document.getElementById("destinationText").textContent = f.place_name;
+          document.getElementById("searchInput").value = f.place_name;
+          box.style.display = "none";
+
+          if (destinationMarker) destinationMarker.remove();
+          destinationMarker = new mapboxgl.Marker({ element: makeDestinationMarker() })
+            .setLngLat(f.center)
+            .addTo(map);
+
+          map.flyTo({
+            center: f.center,
+            zoom: 15,
+            duration: 700
+          });
+
+          if (liveMarker) {
+            const lngLat = liveMarker.getLngLat();
+            await updateDestinationMetrics([lngLat.lng, lngLat.lat], f.center);
+
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend([lngLat.lng, lngLat.lat]);
+            bounds.extend(f.center);
+            map.fitBounds(bounds, { padding: 80, duration: 700 });
           }
         });
+        box.appendChild(item);
+      });
 
-        const [aData, bData, pathData] = await Promise.all([
-          getPointgrade(pointA),
-          getPointgrade(pointB),
-          getPathgrade(pointA, pointB)
-        ]);
-
-        updatePointDisplay("pointA", "Point A", pointA, aData);
-        updatePointDisplay("pointB", "Point B", pointB, bData);
-        updatePathDisplay(pathData);
-
-        const bounds = new mapboxgl.LngLatBounds();
-        bounds.extend(pointA);
-        bounds.extend(pointB);
-        map.fitBounds(bounds, { padding: 100, duration: 700 });
-        return;
-      }
-
-      clearPoints();
-
-      pointA = coord;
-      markerA = new mapboxgl.Marker({ element: makeMarker("#2563eb") })
-        .setLngLat(pointA)
-        .addTo(map);
-
-      const aData = await getPointgrade(pointA);
-      updatePointDisplay("pointA", "Point A", pointA, aData);
+      box.style.display = "block";
     }
 
     function startLiveLocation() {
       if (!navigator.geolocation) {
-        document.getElementById("liveStatus").innerHTML = `<span class="status-bad">This device does not support geolocation.</span>`;
+        document.getElementById("liveStatus").innerHTML =
+          `<span class="bad">This device does not support geolocation.</span>`;
         return;
       }
 
       if (liveWatchId !== null) return;
 
-      document.getElementById("liveStatus").innerHTML = `<span class="status-good">Starting live tracking…</span>`;
+      document.getElementById("liveStatus").innerHTML =
+        `<span class="good">Starting live tracking…</span>`;
 
       liveWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
@@ -640,13 +657,23 @@
             liveMarker = new mapboxgl.Marker({ element: makeLiveMarker(), anchor: "center" })
               .setLngLat(coord)
               .addTo(map);
+
+            map.flyTo({
+              center: coord,
+              zoom: 16,
+              pitch: 60,
+              duration: 700
+            });
           } else {
             liveMarker.setLngLat(coord);
           }
 
           let acceptPoint = true;
           if (lastAcceptedCoord) {
-            const d = haversineMeters(lastAcceptedCoord[0], lastAcceptedCoord[1], coord[0], coord[1]);
+            const d = haversineMeters(
+              lastAcceptedCoord[0], lastAcceptedCoord[1],
+              coord[0], coord[1]
+            );
             if (d < 3) acceptPoint = false;
           }
 
@@ -661,13 +688,13 @@
           }
 
           document.getElementById("liveStatus").innerHTML =
-            `<span class="status-good">Live tracking on.</span> GPS accuracy ${fmt(accuracy, 1)} m.`;
+            `<span class="good">Live tracking on.</span> GPS accuracy ${fmt(accuracy, 1)}m.`;
 
           await updateLiveInfo(coord, accuracy);
         },
         (err) => {
           document.getElementById("liveStatus").innerHTML =
-            `<span class="status-bad">Location error:</span> ${err.message}`;
+            `<span class="bad">Location error:</span> ${err.message}`;
         },
         {
           enableHighAccuracy: true,
@@ -677,24 +704,60 @@
       );
     }
 
-    function stopLiveLocation() {
-      if (liveWatchId !== null) {
-        navigator.geolocation.clearWatch(liveWatchId);
-        liveWatchId = null;
-      }
-      document.getElementById("liveStatus").textContent = "Tracking is off.";
+    async function loadWeather() {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        try {
+          const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`);
+          const data = await r.json();
+          const temp = data?.current?.temperature_2m;
+          document.getElementById("weatherChip").textContent =
+            Number.isFinite(temp) ? `${Math.round(temp)}°` : "--°";
+        } catch {
+          document.getElementById("weatherChip").textContent = "--°";
+        }
+      });
     }
 
-    function centerOnLive() {
-      if (liveMarker) {
-        const lngLat = liveMarker.getLngLat();
-        map.flyTo({
-          center: [lngLat.lng, lngLat.lat],
-          zoom: Math.max(map.getZoom(), 16),
-          pitch: 60,
-          duration: 700
-        });
+    function setupSearch() {
+      const input = document.getElementById("searchInput");
+      let timer;
+
+      input.addEventListener("input", () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 3) {
+          document.getElementById("searchResults").style.display = "none";
+          return;
+        }
+        timer = setTimeout(() => doSearch(q), 350);
+      });
+
+      input.addEventListener("blur", () => {
+        setTimeout(() => {
+          document.getElementById("searchResults").style.display = "none";
+        }, 200);
+      });
+    }
+
+    function setupCardToggle() {
+      const card = document.getElementById("bottomCard");
+      const btn = document.getElementById("cardToggle");
+
+      function sync() {
+        btn.textContent = card.classList.contains("collapsed") ? "Show" : "Hide";
       }
+
+      btn.addEventListener("click", () => {
+        card.classList.toggle("collapsed");
+        sync();
+      });
+
+      sync();
     }
 
     async function initMap() {
@@ -732,32 +795,9 @@
           type: "hillshade",
           source: "mapbox-dem",
           paint: {
-            "hillshade-shadow-color": "#64748b",
+            "hillshade-shadow-color": "#94a3b8",
             "hillshade-highlight-color": "#ffffff",
             "hillshade-accent-color": "#cbd5e1"
-          }
-        });
-
-        map.addSource("path-line", {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            geometry: { type: "LineString", coordinates: [] }
-          }
-        });
-
-        map.addLayer({
-          id: "path-line-layer",
-          type: "line",
-          source: "path-line",
-          layout: {
-            "line-cap": "round",
-            "line-join": "round"
-          },
-          paint: {
-            "line-color": "#111827",
-            "line-width": 4,
-            "line-opacity": 0.9
           }
         });
 
@@ -780,17 +820,55 @@
             "line-join": "round"
           },
           paint: {
-            "line-color": "#16a34a",
-            "line-width": 5,
-            "line-opacity": 0.8
+            "line-color": "#111827",
+            "line-width": 4,
+            "line-opacity": 0.82
           }
         });
 
-        map.on("click", handleMapClick);
+        map.addSource("destination-line", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: [] }
+          }
+        });
+
+        map.addLayer({
+          id: "destination-line-layer",
+          type: "line",
+          source: "destination-line",
+          layout: {
+            "line-cap": "round",
+            "line-join": "round"
+          },
+          paint: {
+            "line-color": "#2563eb",
+            "line-width": 4,
+            "line-opacity": 0.9
+          }
+        });
+
+        updateLiveTrackLayer();
+        startLiveLocation();
+        loadWeather();
       });
 
-      document.getElementById("resetBtn").addEventListener("click", clearPoints);
-      document.getElementById("coopBtn").addEventListener("click", () => {
+      document.getElementById("centerBtn").addEventListener("click", () => {
+        if (liveMarker) {
+          const lngLat = liveMarker.getLngLat();
+          map.flyTo({
+            center: [lngLat.lng, lngLat.lat],
+            zoom: Math.max(map.getZoom(), 16),
+            pitch: 60,
+            duration: 700
+          });
+        }
+      });
+
+      document.getElementById("clearTrackBtn").addEventListener("click", clearSavedTrack);
+
+      document.getElementById("kingsbridgeBtn").addEventListener("click", () => {
         map.flyTo({
           center: KINGSBRIDGE,
           zoom: 14.2,
@@ -800,10 +878,18 @@
         });
       });
 
-      document.getElementById("startLiveBtn").addEventListener("click", startLiveLocation);
-      document.getElementById("stopLiveBtn").addEventListener("click", stopLiveLocation);
-      document.getElementById("centerLiveBtn").addEventListener("click", centerOnLive);
-      document.getElementById("clearTrackBtn").addEventListener("click", clearSavedTrack);
+      document.getElementById("coopBtn").addEventListener("click", () => {
+        map.flyTo({
+          center: COOP_CITY,
+          zoom: 14.2,
+          pitch: 50,
+          bearing: 0,
+          duration: 900
+        });
+      });
+
+      setupSearch();
+      setupCardToggle();
     }
 
     initMap();
